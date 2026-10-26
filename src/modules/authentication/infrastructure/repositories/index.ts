@@ -2,9 +2,9 @@ import type { Provider } from '@nestjs/common';
 
 //Infrastructure
 import { AUTHENTICATION_PROVIDER_TOKENS } from '../constants';
-import { CloudAuthenticationRepository } from './cloud-authentication.repository';
-import { SessionRepository } from './session.repository';
-import { UserAccountRepository } from './user-account.repository';
+import { CloudAuthenticationRepository } from './cloud/authentication.repository';
+import { SessionRepository } from './local/session.repository';
+import { UserAccountRepository } from './local/user-account.repository';
 
 export const AUTHENTICATION_REPOSITORIES_PROVIDERS: Provider[] = [
   {

@@ -1,1 +1,2 @@
-export * from './authentication.router';
+export * from './cloud';
+export * from './local';

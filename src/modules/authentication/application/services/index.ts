@@ -1,10 +1,10 @@
 import type { Provider } from '@nestjs/common';
 
 //Application
-import { AuthenticationService } from './authentication.service';
-import { LocalService } from './local.service';
-import { MfaService } from './mfa.service';
-import { PasswordService } from './password.service';
+import { AuthenticationService } from './cloud/authentication.service';
+import { LocalService } from './local/authentication.service';
+import { MfaService } from './cloud/mfa.service';
+import { PasswordService } from './cloud/password.service';
 
 //Infrastructure
 import { AUTHENTICATION_PROVIDER_TOKENS } from '../../infrastructure/constants';
