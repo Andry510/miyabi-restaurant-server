@@ -1,0 +1,8 @@
+export const PAIRING_PROVIDER_TOKENS = Object.freeze({
+  SERVICES: {
+    PAIRING: Symbol('PAIRING_SERVICE'),
+  },
+  REPOSITORIES: {
+    CLOUD_SERVER: Symbol('PAIRING_CLOUD_SERVER_REPOSITORY'),
+  },
+});

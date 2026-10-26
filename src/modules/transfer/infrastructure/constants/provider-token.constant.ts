@@ -1,0 +1,8 @@
+export const TRANSFER_PROVIDER_TOKENS = Object.freeze({
+  SERVICES: {
+    TRANSFER: Symbol('TRANSFER_SERVICE'),
+  },
+  REPOSITORIES: {
+    CLOUD_TRANSFER: Symbol('TRANSFER_CLOUD_TRANSFER_REPOSITORY'),
+  },
+});

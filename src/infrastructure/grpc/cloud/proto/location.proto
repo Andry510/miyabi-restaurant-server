@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+package location;
+
+service location_service {
+  rpc locations(locations_request) returns (locations_response) {}
+}
+
+/*<----------- Request ----------->*/
+message locations_request {
+  optional int32 page = 1;
+  optional int32 limit = 2;
+  optional string name = 3;
+  optional string phone_number = 4;
+  optional string type = 5;
+}
+
+/*<----------- Response ----------->*/
+message locations_response {
+  string message = 1;
+  repeated locations_data data = 2;
+  pagination_metadata meta = 3;
+  string timestamp = 4;
+}
+
+/*<----------- Data ----------->*/
+message locations_data {
+  string id  = 1;
+  string name = 2;
+  string picture = 3;
+  bool status = 4;
+  string type = 5;
+}
+
+/*<----------- Metadata ----------->*/
+message pagination_metadata {
+  int32 page = 1;
+  int32 limit = 2;
+  int32 total = 3;
+  int32 total_pages = 4;
+  bool next_page = 5;
+  bool prev_page = 6;
+}

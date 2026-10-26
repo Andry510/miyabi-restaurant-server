@@ -1,0 +1,5 @@
+export const API_TRANSFER_ITEM_MESSAGE = Object.freeze({
+  SUCCESS: {
+    ITEMS_RETRIEVED: 'SUCCESS_TRANSFER_ITEMS_RETRIEVED',
+  },
+});

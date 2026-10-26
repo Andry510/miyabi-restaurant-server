@@ -1,0 +1,8 @@
+export const LOCATION_PROVIDER_TOKENS = Object.freeze({
+  SERVICES: {
+    LOCATION: Symbol('LOCATION_SERVICE'),
+  },
+  REPOSITORIES: {
+    CLOUD_LOCATION: Symbol('LOCATION_CLOUD_LOCATION_REPOSITORY'),
+  },
+});

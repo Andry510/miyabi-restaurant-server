@@ -1,0 +1,7 @@
+export const USER_LOGGER_NAME = Object.freeze({
+  SERVICES: {
+    USER: 'USER-SERVICE',
+    SESSION: 'USER-SESSION-SERVICE',
+    ATTENDANCE: 'USER-ATTENDANCE-SERVICE',
+  },
+});

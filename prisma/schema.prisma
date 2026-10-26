@@ -1,0 +1,524 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum units {
+  box
+  piece
+  pack
+  bag
+  crate
+  sack
+  kg
+  liter
+}
+
+enum session_status {
+  active
+  expired
+  revoked
+}
+
+enum transfer_draft_status {
+  open
+  sending
+  sent
+  partially_sent
+}
+
+enum transfer_dispatch_status {
+  pending
+  sent
+  failed
+}
+
+enum request_status {
+  draft
+  submitted
+  approved
+  partially_fulfilled
+  fulfilled
+  rejected
+  cancelled
+}
+
+enum inventory_movement_type {
+  initial_stock
+  receipt
+  issue
+  adjustment_increase
+  adjustment_decrease
+}
+
+enum shift_status {
+  scheduled
+  completed
+  cancelled
+}
+
+enum attendance_status {
+  present
+  absent
+  excused
+  incomplete
+}
+
+enum incident_type {
+  late_arrival
+  early_departure
+  late_departure
+  absence
+  missed_clock_in
+  missed_clock_out
+}
+
+model server_settings {
+  id String @id @default("server")
+
+  timezone           String    @default("UTC") @db.VarChar(50)
+  products_synced_at DateTime?
+
+  updated_at DateTime @updatedAt
+}
+
+model users {
+  id String @id @default(uuid(7))
+
+  status Boolean @default(true)
+
+  profile        profiles?
+  authentication authentications?
+
+  sessions             sessions[]           @relation("user_sessions")
+  assignments          user_assignments[]   @relation("user_to_assignments")
+  recorded_attendances attendance_records[] @relation("recorded_by_user")
+
+  deleted_at DateTime?
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+}
+
+model profiles {
+  id String @id @default(uuid(7))
+
+  first_name String @db.VarChar(100)
+  last_name  String @db.VarChar(100)
+
+  user_id String @unique
+  user    users  @relation(fields: [user_id], references: [id])
+
+  updated_at DateTime @updatedAt
+
+  @@index([first_name, last_name])
+}
+
+model authentications {
+  id String @id @default(uuid(7))
+
+  email        String  @unique @db.VarChar(255)
+  password     String  @db.VarChar(255)
+  phone_number String? @unique @db.VarChar(20)
+
+  password_need_reset Boolean @default(true)
+
+  user_id String @unique
+  user    users  @relation(fields: [user_id], references: [id])
+
+  updated_at DateTime @updatedAt
+
+  @@index([email, phone_number])
+}
+
+model sessions {
+  id String @id @default(uuid(7))
+
+  secret_key         String         @unique @db.VarChar(255)
+  refresh_token_hash String         @db.VarChar(255)
+  status             session_status @default(active)
+
+  requester_ip String? @db.VarChar(50)
+  device       String? @db.VarChar(150)
+  browser      String? @db.VarChar(150)
+
+  revoked_by String?   @db.Text()
+  revoked_at DateTime?
+
+  expire_at      DateTime?
+  last_access_at DateTime?
+
+  user_id String
+  user    users  @relation("user_sessions", fields: [user_id], references: [id])
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([status, expire_at, last_access_at])
+}
+
+model work_areas {
+  id String @id @default(uuid(7))
+
+  name        String  @unique @db.VarChar(100)
+  description String? @db.VarChar(255)
+
+  status Boolean @default(true)
+
+  area_job_positions area_job_positions[] @relation("area_to_job_positions")
+  area_products      area_products[]      @relation("area_to_products")
+  inventory_requests inventory_requests[] @relation("area_inventory_requests")
+
+  deleted_at DateTime?
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+}
+
+model job_positions {
+  id String @id @default(uuid(7))
+
+  name        String  @unique @db.VarChar(100)
+  description String? @db.VarChar(255)
+
+  status Boolean @default(true)
+
+  area_job_positions area_job_positions[] @relation("job_position_to_areas")
+
+  deleted_at DateTime?
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+}
+
+model products {
+  id       String @id @default(uuid(7))
+  cloud_id String @unique
+
+  name         String  @db.VarChar(150)
+  description  String? @db.VarChar(255)
+  picture      String? @db.VarChar(255)
+  barcode      String? @db.VarChar(100)
+  storage_code String  @unique @db.VarChar(100)
+  unit         units
+
+  status Boolean @default(true)
+
+  area_products           area_products[]           @relation("product_to_areas")
+  inventory_stock         inventory_stocks?         @relation("product_stock")
+  inventory_request_items inventory_request_items[] @relation("product_request_items")
+  inventory_movements     inventory_movements[]     @relation("product_movements")
+  transfer_draft_items    transfer_draft_items[]    @relation("product_draft_items")
+  transfer_draft_requests transfer_draft_requests[] @relation("product_draft_requests")
+
+  cloud_updated_at DateTime
+
+  deleted_at DateTime?
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+
+  @@index([name, barcode, storage_code])
+}
+
+model work_schedules {
+  id String @id @default(uuid(7))
+
+  name                   String   @db.VarChar(100)
+  start_time             DateTime @db.Time(0)
+  end_time               DateTime @db.Time(0)
+  break_minutes          Int      @default(0)
+  late_tolerance_minutes Int      @default(5)
+
+  status Boolean @default(true)
+
+  shifts employee_shifts[] @relation("schedule_shifts")
+
+  deleted_at DateTime?
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+}
+
+model transfer_drafts {
+  id String @id @default(uuid(7))
+
+  business_date DateTime @db.Date
+
+  status transfer_draft_status @default(open)
+  note   String?               @db.VarChar(500)
+
+  reviewed_by_cloud_user_id String?   @db.Uuid
+  reviewed_at               DateTime?
+
+  requests   transfer_draft_requests[]
+  items      transfer_draft_items[]
+  dispatches transfer_draft_dispatches[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([business_date, status])
+}
+
+// <--------------- Groups --------------->
+model area_job_positions {
+  id String @id @default(uuid(7))
+
+  work_area_id String
+  work_area    work_areas @relation("area_to_job_positions", fields: [work_area_id], references: [id])
+
+  job_position_id String
+  job_position    job_positions @relation("job_position_to_areas", fields: [job_position_id], references: [id])
+
+  user_assignments user_assignments[] @relation("area_job_position_assignments")
+
+  deleted_at DateTime?
+  created_at DateTime  @default(now())
+
+  @@unique([work_area_id, job_position_id])
+}
+
+model user_assignments {
+  id String @id @default(uuid(7))
+
+  user_id String
+  user    users  @relation("user_to_assignments", fields: [user_id], references: [id])
+
+  area_job_position_id String
+  area_job_position    area_job_positions @relation("area_job_position_assignments", fields: [area_job_position_id], references: [id])
+
+  status Boolean @default(true)
+
+  shifts                  employee_shifts[]         @relation("assignment_shifts")
+  requested_inventory     inventory_requests[]      @relation("requested_by_assignment")
+  approved_inventory      inventory_requests[]      @relation("approved_by_assignment")
+  inventory_movements     inventory_movements[]     @relation("performed_by_assignment")
+  transfer_draft_requests transfer_draft_requests[] @relation("created_draft_requests")
+
+  deleted_at DateTime?
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+
+  @@unique([user_id])
+}
+
+model area_products {
+  id String @id @default(uuid(7))
+
+  work_area_id String
+  work_area    work_areas @relation("area_to_products", fields: [work_area_id], references: [id])
+
+  product_id String
+  product    products @relation("product_to_areas", fields: [product_id], references: [id], onDelete: Cascade)
+
+  deleted_at DateTime?
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+
+  @@unique([work_area_id, product_id])
+}
+
+model transfer_draft_requests {
+  id String @id @default(uuid(7))
+
+  transfer_draft_id String
+  transfer_draft    transfer_drafts @relation(fields: [transfer_draft_id], references: [id], onDelete: Cascade)
+
+  created_by_id String
+  created_by    user_assignments @relation("created_draft_requests", fields: [created_by_id], references: [id])
+
+  product_id String
+  product    products @relation("product_draft_requests", fields: [product_id], references: [id])
+
+  requested_qty Int
+  note          String? @db.VarChar(255)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([transfer_draft_id, created_by_id])
+}
+
+model transfer_draft_items {
+  id String @id @default(uuid(7))
+
+  transfer_draft_id String
+  transfer_draft    transfer_drafts @relation(fields: [transfer_draft_id], references: [id], onDelete: Cascade)
+
+  product_id String
+  product    products @relation("product_draft_items", fields: [product_id], references: [id])
+
+  requested_qty Int
+
+  to_location_id String? @db.Uuid
+
+  transfer_draft_dispatch_id String?
+  transfer_draft_dispatch    transfer_draft_dispatches? @relation(fields: [transfer_draft_dispatch_id], references: [id])
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@unique([transfer_draft_id, product_id])
+}
+
+model transfer_draft_dispatches {
+  id String @id @default(uuid(7))
+
+  transfer_draft_id String
+  transfer_draft    transfer_drafts @relation(fields: [transfer_draft_id], references: [id], onDelete: Cascade)
+
+  to_location_id String @db.Uuid
+
+  status transfer_dispatch_status @default(pending)
+
+  idempotency_key String @unique @db.Uuid
+
+  transfer_id String?   @unique @db.Uuid
+  last_error  String?   @db.VarChar(255)
+  sent_at     DateTime?
+
+  items transfer_draft_items[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@unique([transfer_draft_id, to_location_id])
+}
+
+model inventory_stocks {
+  id String @id @default(uuid(7))
+
+  product_id String   @unique
+  product    products @relation("product_stock", fields: [product_id], references: [id], onDelete: Cascade)
+
+  quantity Int @default(0)
+  min_qty  Int @default(0)
+
+  updated_at DateTime @updatedAt
+}
+
+model inventory_requests {
+  id String @id @default(uuid(7))
+
+  work_area_id String
+  work_area    work_areas @relation("area_inventory_requests", fields: [work_area_id], references: [id])
+
+  requested_by_id String
+  requested_by    user_assignments @relation("requested_by_assignment", fields: [requested_by_id], references: [id])
+
+  approved_by_id String?
+  approved_by    user_assignments? @relation("approved_by_assignment", fields: [approved_by_id], references: [id])
+
+  status request_status @default(draft)
+  note   String?        @db.VarChar(500)
+
+  approved_at  DateTime?
+  fulfilled_at DateTime?
+
+  items inventory_request_items[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([work_area_id, status])
+}
+
+model inventory_request_items {
+  id String @id @default(uuid(7))
+
+  inventory_request_id String
+  inventory_request    inventory_requests @relation(fields: [inventory_request_id], references: [id], onDelete: Cascade)
+
+  product_id String
+  product    products @relation("product_request_items", fields: [product_id], references: [id])
+
+  requested_qty Int
+  delivered_qty Int     @default(0)
+  note          String? @db.VarChar(255)
+
+  movements inventory_movements[] @relation("request_item_movements")
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@unique([inventory_request_id, product_id])
+}
+
+model inventory_movements {
+  id String @id @default(uuid(7))
+
+  product_id String
+  product    products @relation("product_movements", fields: [product_id], references: [id])
+
+  type     inventory_movement_type
+  quantity Int
+
+  inventory_request_item_id String?
+  inventory_request_item    inventory_request_items? @relation("request_item_movements", fields: [inventory_request_item_id], references: [id])
+
+  transfer_id String? @db.Uuid
+
+  performed_by_id String?
+  performed_by    user_assignments? @relation("performed_by_assignment", fields: [performed_by_id], references: [id])
+
+  note        String?  @db.VarChar(500)
+  occurred_at DateTime @default(now())
+  created_at  DateTime @default(now())
+
+  @@index([product_id, occurred_at])
+}
+
+model employee_shifts {
+  id String @id @default(uuid(7))
+
+  user_assignment_id String
+  user_assignment    user_assignments @relation("assignment_shifts", fields: [user_assignment_id], references: [id])
+
+  work_schedule_id String
+  work_schedule    work_schedules @relation("schedule_shifts", fields: [work_schedule_id], references: [id])
+
+  scheduled_start DateTime
+  scheduled_end   DateTime
+  status          shift_status @default(scheduled)
+  note            String?      @db.VarChar(500)
+
+  attendance_record attendance_records? @relation("shift_attendance")
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([user_assignment_id, scheduled_start])
+}
+
+model attendance_records {
+  id String @id @default(uuid(7))
+
+  employee_shift_id String          @unique
+  employee_shift    employee_shifts @relation("shift_attendance", fields: [employee_shift_id], references: [id])
+
+  status    attendance_status @default(incomplete)
+  clock_in  DateTime?
+  clock_out DateTime?
+  note      String?           @db.VarChar(500)
+
+  recorded_by_id String?
+  recorded_by    users?  @relation("recorded_by_user", fields: [recorded_by_id], references: [id])
+
+  incidents attendance_incidents[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model attendance_incidents {
+  id String @id @default(uuid(7))
+
+  attendance_record_id String
+  attendance_record    attendance_records @relation(fields: [attendance_record_id], references: [id], onDelete: Cascade)
+
+  type        incident_type
+  minutes     Int?
+  description String?       @db.VarChar(500)
+
+  created_at DateTime @default(now())
+}

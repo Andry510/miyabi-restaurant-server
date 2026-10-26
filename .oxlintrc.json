@@ -1,0 +1,48 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "options": {
+    "typeAware": true
+  },
+  "env": {
+    "node": true
+  },
+  "ignorePatterns": [
+    "dist",
+    "node_modules",
+    "coverage"
+  ],
+  "rules": {
+    "no-console": ["error", { "allow": ["warn", "error"] }],
+    "no-var": "error",
+    "prefer-const": "error",
+    "eqeqeq": ["error", "always"],
+    "curly": ["error", "all"],
+    "no-unused-expressions": "error",
+    "arrow-body-style": ["error", "as-needed"],
+    "complexity": ["error", 20],
+    "max-depth": ["error", 4],
+    "max-params": ["error", 7],
+    "max-lines": ["error", { "max": 400, "skipBlankLines": true }],
+    "max-statements": ["error", 75],
+
+    "typescript/consistent-type-imports": [
+      "error",
+      { "prefer": "type-imports", "fixStyle": "inline-type-imports" }
+    ],
+    "typescript/no-floating-promises": "error",
+    "typescript/no-misused-promises": [
+      "error",
+      { "checksVoidReturn": false }
+    ],
+    "typescript/no-unused-vars": [
+      "error",
+      { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }
+    ],
+    "typescript/array-type": ["error", { "default": "array-simple" }],
+    "typescript/consistent-type-definitions": "off",
+    "typescript/explicit-function-return-type": "warn",
+
+    "import/no-duplicates": "error",
+    "import/no-cycle": "warn"
+  }
+}

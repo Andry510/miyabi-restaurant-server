@@ -1,0 +1,5 @@
+export const AUTHENTICATION_LOGGER_NAME = Object.freeze({
+  SERVICE: {
+    LOCAL: 'AUTHENTICATION-LOCAL-SERVICE',
+  },
+});

@@ -1,0 +1,8 @@
+export const JOB_POSITION_PROVIDER_TOKENS = Object.freeze({
+  SERVICES: {
+    JOB_POSITION: Symbol('JOB_POSITION_SERVICE'),
+  },
+  REPOSITORIES: {
+    JOB_POSITION: Symbol('JOB_POSITION_REPOSITORY'),
+  },
+});

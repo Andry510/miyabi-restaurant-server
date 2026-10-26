@@ -1,0 +1,69 @@
+syntax = "proto3";
+
+package supplier;
+
+service supplier_service {
+  rpc suppliers(suppliers_request) returns (suppliers_response) {}
+  rpc supplier(supplier_request) returns (supplier_response) {}
+}
+
+/*<----------- Request ----------->*/
+message suppliers_request {
+  optional int32 page = 1;
+  optional int32 limit = 2;
+  optional string first_name = 3;
+  optional string last_name = 4;
+  optional string email = 5;
+  repeated string phone_number = 6;
+}
+
+message supplier_request {
+  string id = 1;
+}
+
+/*<----------- Response ----------->*/
+message suppliers_response {
+  string message = 1;
+  repeated suppliers_data data = 2;
+  pagination_metadata meta = 3;
+  string timestamp = 4;
+}
+
+message supplier_response {
+  string message = 1;
+  supplier_data data = 2;
+  string timestamp = 3;
+}
+
+/*<----------- Data ----------->*/
+message supplier_data {
+  string id = 1;
+  string first_name = 2;
+  string last_name = 3;
+  string email = 4;
+  string phone_number = 5;
+  string address = 6;
+  bool status = 7;
+  string created_at = 8;
+  string updated_at = 9;
+  optional string picture = 10;
+}
+
+message suppliers_data {
+  string id = 1;
+  string full_name = 2;
+  string email = 4;
+  string phone_number = 5;
+  string picture = 6;
+  bool status = 7;
+}
+
+/*<----------- Metadata ----------->*/
+message pagination_metadata {
+  int32 page = 1;
+  int32 limit = 2;
+  int32 total = 3;
+  int32 total_pages = 4;
+  bool next_page = 5;
+  bool prev_page = 6;
+}

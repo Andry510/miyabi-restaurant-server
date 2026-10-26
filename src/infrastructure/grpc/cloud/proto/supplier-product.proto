@@ -1,0 +1,107 @@
+syntax = "proto3";
+
+package supplier_product;
+
+service supplier_product_service {
+  rpc supplier_product(supplier_product_request) returns (supplier_product_response) {}
+  rpc supplier_products(supplier_products_request) returns (supplier_products_response) {}
+  rpc product_suppliers(product_suppliers_request) returns (product_suppliers_response) {}
+}
+
+/*<----------- Request ----------->*/
+message supplier_product_request {
+  string supplier_id = 1;
+  string product_id = 2;
+}
+
+message supplier_products_request {
+  string id = 1;
+  optional int32 page = 2;
+  optional int32 limit = 3;
+  optional string name = 4;
+  optional string barcode = 5;
+  optional string storage_code = 6;
+  repeated string units = 7;
+}
+
+message product_suppliers_request {
+  string id = 1;
+  optional int32 page = 2;
+  optional int32 limit = 3;
+  optional string first_name = 4;
+  optional string last_name = 5;
+  optional string email = 6;
+  optional string phone_number = 7;
+}
+
+/*<----------- Response ----------->*/
+message supplier_product_response {
+  string message = 1;
+  supplier_product_data data = 2;
+  string timestamp = 3;
+}
+
+message supplier_products_response {
+  string message = 1;
+  repeated supplier_products_data data = 2;
+  pagination_metadata meta = 3;
+  string timestamp = 4;
+}
+
+message product_suppliers_response {
+  string message = 1;
+  repeated product_suppliers_data data = 2;
+  pagination_metadata meta = 3;
+  string timestamp = 4;
+}
+
+/*<----------- Data ----------->*/
+message supplier_product_data {
+  supplier_summary_metadata supplier = 1;
+  product_summary_metadata product = 2;
+  string price = 3;
+  int32 min_order_qty = 4;
+  optional string note = 5;
+  bool status = 6;
+  string created_at = 7;
+  string updated_at = 8;
+}
+
+message supplier_products_data {
+  string id = 1;
+  string name = 2;
+  string picture = 3;
+  bool status = 4;
+}
+
+message product_suppliers_data {
+  string id = 1;
+  string full_name = 2;
+  string email = 3;
+  string phone_number = 4;
+  string picture = 5;
+  bool status = 6;
+}
+
+/*<----------- Metadata ----------->*/
+message supplier_summary_metadata {
+  string id = 1;
+  string full_name = 2;
+  string picture = 3;
+}
+
+message product_summary_metadata {
+  string id = 1;
+  string name = 2;
+  string picture = 3;
+  string unit = 4;
+}
+
+message pagination_metadata {
+  int32 page = 1;
+  int32 limit = 2;
+  int32 total = 3;
+  int32 total_pages = 4;
+  bool next_page = 5;
+  bool prev_page = 6;
+}

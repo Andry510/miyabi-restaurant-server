@@ -1,0 +1,91 @@
+syntax = "proto3";
+
+package me;
+
+service me_service {
+  rpc location(location_request) returns (location_response) {}
+  rpc user(user_request) returns (user_response) {}
+  rpc upload_picture(upload_picture_request) returns (upload_picture_response) {}
+  rpc remove_picture(user_request) returns (remove_picture_response) {}
+}
+
+/*<----------- Request ----------->*/
+message location_request {
+}
+
+message user_request {
+}
+
+/*<----------- Response ----------->*/
+message location_response {
+  string message = 1;
+  location_metadata data = 2;
+  string timestamp = 3;
+}
+
+message user_response {
+  string message = 1;
+  user_data data = 2;
+  string timestamp = 3;
+}
+
+/*<----------- Data ----------->*/
+message location_data {
+  string id = 1;
+  string name = 2;
+  string address = 3;
+  string phone_number = 4;
+  string picture = 5;
+  bool status = 6;
+  string type = 7;
+  string created_at = 8;
+  string updated_at = 9;
+}
+
+message server_data {
+  string id = 1;
+  string name = 2;
+  string version = 3;
+  string instance_id = 4;
+  bool status = 5;
+  string last_seen = 6;
+  string last_sync = 7;
+  string created_at = 8;
+  string updated_at = 9;
+  bool online = 10;
+}
+
+message user_data {
+  string id = 1;
+  bool status = 2;
+  string first_name = 3;
+  string last_name = 4;
+  string picture = 5;
+  string email = 6;
+  string phone_number = 7;
+  string role = 8;
+  string created_at = 9;
+  string updated_at = 10;
+}
+
+/*<----------- Metadata ----------->*/
+message location_metadata {
+  location_data location = 1;
+  server_data server = 2;
+}
+
+/*<----------- Picture ----------->*/
+message upload_picture_request {
+  bytes picture = 1;
+}
+
+message upload_picture_response {
+  string message = 1;
+  string data = 2;
+  string timestamp = 3;
+}
+
+message remove_picture_response {
+  string message = 1;
+  string timestamp = 2;
+}

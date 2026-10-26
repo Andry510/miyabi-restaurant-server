@@ -1,0 +1,5 @@
+export const SERVER_PRODUCT_LOGGER_NAME = Object.freeze({
+  SERVICE: {
+    HYDRATION: 'SERVER-PRODUCT-HYDRATION-SERVICE',
+  },
+});

@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package session;
+
+service session_service {
+  rpc refresh_token(refresh_token_request) returns (refresh_token_response) {}
+  rpc logout(logout_request) returns(logout_response) {}
+  rpc validate(validate_request) returns (validate_response) {}
+}
+
+/*<----------- Request ----------->*/
+message refresh_token_request {
+  string requester_ip = 1;
+  string browser = 2;
+  string device = 3;
+}
+
+message logout_request {
+}
+
+message validate_request {
+}
+
+/*<----------- Response ----------->*/
+message refresh_token_response {
+  string message = 1;
+  refresh_token_data data = 2;
+  string timestamp = 3;
+}
+
+message logout_response {
+  string message = 1;
+  string timestamp = 2;
+}
+
+message validate_response {
+  string message = 1;
+  string timestamp = 2;
+}
+
+/*<----------- Metadata ----------->*/
+message refresh_token_data {
+  string access_token = 1;
+  string refresh_token = 2;
+}

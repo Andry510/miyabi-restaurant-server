@@ -1,0 +1,8 @@
+export const SUPPLIER_PROVIDER_TOKENS = Object.freeze({
+  SERVICES: {
+    SUPPLIER: Symbol('SUPPLIER_SERVICE'),
+  },
+  REPOSITORIES: {
+    CLOUD_SUPPLIER: Symbol('SUPPLIER_CLOUD_SUPPLIER_REPOSITORY'),
+  },
+});

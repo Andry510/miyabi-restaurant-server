@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package server_product;
+
+service server_product_service {
+  rpc server_products(server_products_request) returns (server_products_response) {}
+}
+
+/*<----------- Request ------------>*/
+message server_products_request {
+  optional string updated_since = 1;
+}
+
+/*<----------- Response ----------->*/
+message server_products_response {
+  string message = 1;
+  repeated product_data data = 2;
+  string timestamp = 3;
+  repeated string removed_ids = 4;
+  string synced_at = 5;
+}
+
+/*<----------- Data ----------->*/
+message product_data {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  string picture = 4;
+  string barcode = 5;
+  string storage_code = 6;
+  string unit = 7;
+  bool status = 8;
+  string created_at = 9;
+  string updated_at = 10;
+}
+
+/*<----------- Metadata ----------->*/

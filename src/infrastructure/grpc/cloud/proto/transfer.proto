@@ -1,0 +1,148 @@
+syntax = "proto3";
+
+package transfer;
+
+service transfer_service {
+  rpc register(register_transfer_request) returns (register_transfer_response) {}
+  rpc transfers(transfers_request) returns (transfers_response) {}
+  rpc transfer(transfer_request) returns (transfer_response) {}
+  rpc accept_transfer(accept_transfer_request) returns (transfer_response) {}
+  rpc assign_delivery(assign_delivery_request) returns (transfer_response) {}
+  rpc reject_transfer(reject_transfer_request) returns (transfer_response) {}
+  rpc ship_transfer(ship_transfer_request) returns (transfer_response) {}
+  rpc receive_transfer(receive_transfer_request) returns (transfer_response) {}
+  rpc cancel_transfer(transfer_request) returns (transfer_response) {}
+}
+
+/*<----------- Request ----------->*/
+message register_transfer_request {
+  string to_location_id = 1;
+  repeated transfer_item_metadata items = 2;
+  optional string note = 3;
+  optional string idempotency_key = 4;
+}
+
+message transfers_request {
+  optional int32 page = 1;
+  optional int32 limit = 2;
+  repeated string status = 3;
+  optional string created_from = 4;
+  optional string created_to = 5;
+  optional string from_location_id = 6;
+  optional string to_location_id = 7;
+}
+
+message transfer_request {
+  string id = 1;
+}
+
+message accept_transfer_request {
+  string id = 1;
+  repeated item_quantity_metadata items = 2;
+  optional string delivery_id = 3;
+}
+
+message assign_delivery_request {
+  string id = 1;
+  string delivery_id = 2;
+}
+
+message reject_transfer_request {
+  string id = 1;
+  string rejection_reason = 2;
+}
+
+message ship_transfer_request {
+  string id = 1;
+  repeated item_quantity_metadata items = 2;
+}
+
+message receive_transfer_request {
+  string id = 1;
+  repeated receive_item_metadata items = 2;
+}
+
+/*<----------- Response ----------->*/
+message register_transfer_response {
+  string message = 1;
+  string timestamp = 2;
+  transfer_data data = 3;
+}
+
+message transfers_response {
+  string message = 1;
+  repeated transfers_data data = 2;
+  pagination_metadata meta = 3;
+  string timestamp = 4;
+}
+
+message transfer_response {
+  string message = 1;
+  transfer_data data = 2;
+  string timestamp = 3;
+}
+
+/*<----------- Data ----------->*/
+message transfers_data {
+  string id = 1;
+  location_metadata from = 2;
+  location_metadata to = 3;
+  int32 items_count = 4;
+  string status = 5;
+  string created_at = 6;
+}
+
+message transfer_data {
+  string id = 1;
+  location_metadata from = 2;
+  location_metadata to = 3;
+  string status = 4;
+  optional string note = 5;
+  user_metadata requested_by = 6;
+  optional string accepted_at = 7;
+  optional string rejected_at = 8;
+  optional string rejection_reason = 9;
+  optional string shipped_at = 10;
+  optional string received_at = 11;
+  optional string cancelled_at = 12;
+  string created_at = 13;
+  string updated_at = 14;
+  optional user_metadata delivery = 15;
+}
+
+/*<----------- Metadata ----------->*/
+message location_metadata {
+  string id  = 1;
+  string name = 2;
+  string picture = 3;
+}
+
+message user_metadata {
+  string id = 1;
+  string full_name = 2;
+}
+
+message transfer_item_metadata {
+  string product_id = 1;
+  string requested_qty = 2;
+}
+
+message item_quantity_metadata {
+  string item_id = 1;
+  string quantity = 2;
+}
+
+message receive_item_metadata {
+  string item_id = 1;
+  string quantity = 2;
+  optional string issue_note = 3;
+}
+
+message pagination_metadata {
+  int32 page = 1;
+  int32 limit = 2;
+  int32 total = 3;
+  int32 total_pages = 4;
+  bool next_page = 5;
+  bool prev_page = 6;
+}

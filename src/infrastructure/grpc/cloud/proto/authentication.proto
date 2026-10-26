@@ -1,0 +1,98 @@
+syntax = "proto3";
+
+package authentication;
+
+service authentication_service {
+  rpc login(login_request) returns (login_response) {}
+  rpc mfa_qr(mfa_qr_request) returns (mfa_qr_response) {}
+  rpc mfa_code(mfa_code_request) returns (mfa_code_response) {}
+  rpc reset_password(reset_password_request) returns(reset_password_response) {}
+}
+
+/*<----------- Request ----------->*/
+message login_request {
+  string email = 1;
+  string password = 2;
+  string requester_ip = 3;
+  string browser = 4;
+  string device = 5;
+}
+
+message mfa_qr_request {}
+
+message mfa_code_request {
+  string code = 2;
+  string requester_ip = 3;
+  string browser = 4;
+  string device = 5;
+}
+
+message reset_password_request {
+  string new_password = 1;
+  string confirm_password = 2;
+  string requester_ip = 4;
+  string browser = 5;
+  string device = 6;
+}
+
+/*<----------- Response ----------->*/
+message login_response {
+  string message = 1;
+  login_data data = 3;
+  string timestamp = 4;
+}
+
+message mfa_qr_response {
+  string message = 1;
+  string data = 2;
+  string timestamp = 3;
+}
+
+message mfa_code_response {
+  string message = 1;
+  mfa_code_data data = 2;
+  string timestamp = 3;
+}
+
+message reset_password_response {
+  string message = 1;
+  password_data data = 2;
+  string timestamp = 3;
+}
+
+/*<----------- Data ----------->*/
+message login_data {
+  oneof data {
+    require_mfa mfa = 1;
+    require_password password = 2;
+    authentication_complete access = 3;
+  }
+}
+
+message mfa_code_data {
+  oneof data {
+    require_password password = 1;
+    authentication_complete access = 2;
+  }
+}
+
+message password_data {
+  authentication_complete access = 1;
+}
+
+/*<----------- Metadata ----------->*/
+message require_mfa {
+  bool mfa_required = 1;
+  bool mfa_reset_required = 2;
+  string mfa_token = 3;
+}
+
+message require_password {
+  bool password_reset_required = 1;
+  string password_reset_token = 2;
+}
+
+message authentication_complete {
+  string access_token = 1;
+  string refresh_token = 2;
+}

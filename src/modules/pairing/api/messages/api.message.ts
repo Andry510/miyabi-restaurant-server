@@ -1,0 +1,8 @@
+export const API_PAIRING_MESSAGE = Object.freeze({
+  ERROR: {
+    ALREADY_PAIRED: 'ERROR_SERVER_ALREADY_PAIRED',
+  },
+  SUCCESS: {
+    SERVER_PAIRED: 'SUCCESS_SERVER_PAIRED',
+  },
+});

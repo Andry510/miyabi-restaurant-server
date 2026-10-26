@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+package transfer_item;
+
+service transfer_item_service {
+  rpc transfer_items (transfer_items_request) returns (transfer_items_response) {}
+}
+
+/*<----------- Request ----------->*/
+message transfer_items_request {
+  string id = 1;
+  optional int32 page = 2;
+  optional int32 limit = 3;
+  optional string name = 4;
+  optional string barcode = 5;
+  optional string storage_code = 6;
+  repeated string units = 7;
+  repeated string status = 8;
+}
+
+/*<----------- Response ----------->*/
+message transfer_items_response {
+  string message = 1;
+  repeated transfer_items_data data = 2;
+  pagination_metadata meta = 3;
+  string timestamp = 4;
+}
+
+/*<----------- Data ----------->*/
+message transfer_items_data {
+  string id = 1;
+  product_metadata product = 2;
+  string status = 3;
+  string requested_qty = 4;
+  optional string accepted_qty = 5;
+  optional string sent_qty = 6;
+  optional string received_qty = 7;
+  optional string issue_note = 8;
+}
+
+/*<----------- Metadata ----------->*/
+message product_metadata {
+  string id = 1;
+  string name = 2;
+  string picture = 3;
+  string unit = 4;
+}
+
+message pagination_metadata {
+  int32 page = 1;
+  int32 limit = 2;
+  int32 total = 3;
+  int32 total_pages = 4;
+  bool next_page = 5;
+  bool prev_page = 6;
+}

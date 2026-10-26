@@ -1,0 +1,68 @@
+syntax = "proto3";
+
+package product;
+
+service product_service {
+  rpc products(products_request) returns (products_response) {}
+  rpc product(product_request) returns (product_response) {}
+}
+
+/*<----------- Request ----------->*/
+message products_request {
+  optional int32 page = 1;
+  optional int32 limit = 2;
+  optional string name = 3;
+  optional string barcode = 4;
+  optional string storage_code = 5;
+  repeated string units = 6;
+}
+
+message product_request {
+  string id = 1;
+}
+
+/*<----------- Response ----------->*/
+message products_response {
+  string message = 1;
+  repeated products_data data = 2;
+  pagination_metadata meta = 3;
+  string timestamp = 4;
+}
+
+message product_response {
+  string message = 1;
+  product_data data = 2;
+  string timestamp = 3;
+}
+
+/*<----------- Data ----------->*/
+message product_data {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  bool status = 4;
+  string picture = 5;
+  string barcode = 6;
+  string storage_code = 7;
+  string unit = 8;
+  string created_at = 9;
+  string updated_at = 10;
+}
+
+message products_data {
+  string id = 1;
+  string name = 2;
+  string picture = 3;
+  bool status = 4;
+  string unit = 8;
+}
+
+/*<----------- Metadata ----------->*/
+message pagination_metadata {
+  int32 page = 1;
+  int32 limit = 2;
+  int32 total = 3;
+  int32 total_pages = 4;
+  bool next_page = 5;
+  bool prev_page = 6;
+}
