@@ -1,1 +1,1 @@
-export * from './area-job-position.interface';
+export * from './local';

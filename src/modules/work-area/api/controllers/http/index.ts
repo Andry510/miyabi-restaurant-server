@@ -1,1 +1,1 @@
-export * from './work-area.controller';
+export * from './local';

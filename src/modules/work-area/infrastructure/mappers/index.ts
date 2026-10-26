@@ -1,1 +1,1 @@
-export * from './work-area.mapper';
+export * from './local';

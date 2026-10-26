@@ -1,1 +1,1 @@
-export * from './work-area.router';
+export * from './local';

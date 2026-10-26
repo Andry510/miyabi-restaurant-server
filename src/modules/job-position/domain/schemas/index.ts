@@ -1,1 +1,1 @@
-export * from './job-position.schema';
+export * from './local';

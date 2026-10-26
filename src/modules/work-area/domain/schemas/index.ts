@@ -1,1 +1,1 @@
-export * from './work-area.schema';
+export * from './local';

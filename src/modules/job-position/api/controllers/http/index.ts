@@ -1,1 +1,1 @@
-export * from './job-position.controller';
+export * from './local';

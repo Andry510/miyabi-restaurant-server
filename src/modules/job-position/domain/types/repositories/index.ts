@@ -1,1 +1,1 @@
-export * from './job-position.type';
+export * from './local';

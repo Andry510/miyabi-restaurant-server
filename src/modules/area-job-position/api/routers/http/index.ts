@@ -1,1 +1,1 @@
-export * from './area-job-position.router';
+export * from './local';

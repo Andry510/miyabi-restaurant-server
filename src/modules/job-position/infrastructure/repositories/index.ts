@@ -2,7 +2,7 @@ import type { Provider } from '@nestjs/common';
 
 //Infrastructure
 import { JOB_POSITION_PROVIDER_TOKENS } from '../constants';
-import { JobPositionRepository } from './job-position.repository';
+import { JobPositionRepository } from './local/job-position.repository';
 
 export const JOB_POSITION_REPOSITORIES_PROVIDERS: Provider[] = [
   {

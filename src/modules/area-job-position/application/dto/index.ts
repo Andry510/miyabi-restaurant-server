@@ -1,1 +1,1 @@
-export * from './area-job-position.dto';
+export * from './local';

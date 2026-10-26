@@ -1,1 +1,1 @@
-export * from './job-position.mapper';
+export * from './local';

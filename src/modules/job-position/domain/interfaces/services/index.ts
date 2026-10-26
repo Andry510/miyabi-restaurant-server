@@ -1,1 +1,1 @@
-export * from './job-position.interface';
+export * from './local';
