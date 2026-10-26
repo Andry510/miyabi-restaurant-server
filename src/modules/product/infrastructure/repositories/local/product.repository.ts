@@ -5,14 +5,14 @@ import { Injectable } from '@nestjs/common';
 //Domain
 import { ResultPattern } from '@domain/patterns/results';
 import type { TPaginationRepository } from '@domain/types/shared';
-import type { IProductRepository } from '../../domain/interfaces/repositories';
-import type { TLocalProductsQuerySchema } from '../../domain/schemas';
-import type { TLocalProductOutput } from '../../domain/types/entities';
+import type { IProductRepository } from '../../../domain/interfaces/repositories';
+import type { TLocalProductsQuerySchema } from '../../../domain/schemas';
+import type { TLocalProductOutput } from '../../../domain/types/entities';
 
 //Infrastructure
 // oxlint-disable-next-line typescript/consistent-type-imports
 import { DatabaseManager } from '@infrastructure/database';
-import { ProductMapper } from '../mappers';
+import { ProductMapper } from '../../mappers';
 
 @Injectable()
 export class ProductRepository implements IProductRepository {

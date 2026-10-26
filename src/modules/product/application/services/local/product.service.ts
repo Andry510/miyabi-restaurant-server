@@ -8,10 +8,10 @@ import type { ServiceError } from '@domain/errors';
 import type { ResultPattern } from '@domain/patterns/results';
 import type { TUserDetail } from '@domain/types/entities';
 import type { TPaginationService } from '@domain/types/shared';
-import type { IProductRepository } from '../../domain/interfaces/repositories';
-import type { ILocalService } from '../../domain/interfaces/services';
-import type { TLocalProductsQuerySchema } from '../../domain/schemas';
-import type { TLocalProductOutput } from '../../domain/types/entities';
+import type { IProductRepository } from '../../../domain/interfaces/repositories';
+import type { ILocalService } from '../../../domain/interfaces/services';
+import type { TLocalProductsQuerySchema } from '../../../domain/schemas';
+import type { TLocalProductOutput } from '../../../domain/types/entities';
 
 //Infrastructure
 import { Logger } from '@infrastructure/audits';
@@ -19,7 +19,7 @@ import { ServiceResultMapper } from '@infrastructure/mappers/shared';
 import {
   PRODUCT_LOGGER_NAME,
   PRODUCT_PROVIDER_TOKENS,
-} from '../../infrastructure/constants';
+} from '../../../infrastructure/constants';
 
 @Injectable()
 export class LocalService implements ILocalService {
@@ -44,7 +44,7 @@ export class LocalService implements ILocalService {
 
     const productsResult = await this.product_repository.findManyByWorkArea(
       input,
-      user.assignment.work_area_id,
+      user.assignment.work_area.id,
     );
 
     if (productsResult.IsFailure) {

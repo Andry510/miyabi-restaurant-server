@@ -12,15 +12,15 @@ import type {
   TPaginationResponse,
   TPaginationService,
 } from '@domain/types/shared';
-import type { ICloudProductRepository } from '../../domain/interfaces/repositories';
+import type { ICloudProductRepository } from '../../../domain/interfaces/repositories';
 import type {
   TProductParamSchema,
   TProductsQuerySchema,
-} from '../../domain/schemas';
+} from '../../../domain/schemas';
 import type {
   TProductOutput,
   TProductsOutput,
-} from '../../domain/types/entities';
+} from '../../../domain/types/entities';
 
 //Infrastructure
 import {

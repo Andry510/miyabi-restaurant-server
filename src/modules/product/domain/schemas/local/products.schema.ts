@@ -1,7 +1,7 @@
 import { type InferOutput, pipe, transform } from 'valibot';
 
 //Domain
-import { ProductsQuerySchema } from './products.schema';
+import { ProductsQuerySchema } from '../products.schema';
 
 export const LocalProductsQuerySchema = pipe(
   ProductsQuerySchema,

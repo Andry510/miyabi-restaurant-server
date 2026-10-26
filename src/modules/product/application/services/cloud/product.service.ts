@@ -4,19 +4,19 @@ import { Inject, Injectable } from '@nestjs/common';
 import type { ServiceError } from '@domain/errors';
 import type { ResultPattern } from '@domain/patterns/results';
 import type { TPaginationService } from '@domain/types/shared';
-import type { ICloudProductRepository } from '../../domain/interfaces/repositories';
-import type { IProductService } from '../../domain/interfaces/services';
+import type { ICloudProductRepository } from '../../../domain/interfaces/repositories';
+import type { IProductService } from '../../../domain/interfaces/services';
 import type {
   TProductParamSchema,
   TProductsQuerySchema,
-} from '../../domain/schemas';
+} from '../../../domain/schemas';
 import type {
   TProductOutput,
   TProductsOutput,
-} from '../../domain/types/entities';
+} from '../../../domain/types/entities';
 
 //Infrastructure
-import { PRODUCT_PROVIDER_TOKENS } from '../../infrastructure/constants';
+import { PRODUCT_PROVIDER_TOKENS } from '../../../infrastructure/constants';
 
 @Injectable()
 export class ProductService implements IProductService {

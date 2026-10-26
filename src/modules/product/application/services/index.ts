@@ -1,8 +1,8 @@
 import type { Provider } from '@nestjs/common';
 
 //Application
-import { LocalService } from './local.service';
-import { ProductService } from './product.service';
+import { LocalService } from './local/product.service';
+import { ProductService } from './cloud/product.service';
 
 //Infrastructure
 import { PRODUCT_PROVIDER_TOKENS } from '../../infrastructure/constants';

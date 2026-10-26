@@ -1,7 +1,7 @@
 import type { products } from '@generated/prisma/client';
 
 //Domain
-import type { TLocalProductOutput } from '../../domain/types/entities';
+import type { TLocalProductOutput } from '../../../domain/types/entities';
 
 type TLocalProductRow = Pick<
   products,

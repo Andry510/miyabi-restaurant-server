@@ -11,31 +11,31 @@ import {
 import type { Response } from 'express';
 
 //Api
-import { API_PRODUCT_MESSAGE } from '../../messages';
-import { HTTP_PRODUCT_ROUTER } from '../../routers';
+import { API_PRODUCT_MESSAGE } from '../../../messages';
+import { HTTP_CLOUD_PRODUCT_ROUTER } from '../../../routers';
 
 //Application
 // oxlint-disable-next-line typescript/consistent-type-imports
-import { ProductParamDto, ProductsQueryDto } from '../../../application/dto';
+import { ProductParamDto, ProductsQueryDto } from '../../../../application/dto';
 
 //Common
 import { HttpAuthorization } from '@common/decorators/request';
 import { HttpValibotPipe } from '@common/pipes';
 
 //Domain
-import type { IProductService } from '../../../domain/interfaces/services';
+import type { IProductService } from '../../../../domain/interfaces/services';
 import type {
   TProductParamSchema,
   TProductsQuerySchema,
-} from '../../../domain/schemas';
-import type { TProductOutput } from '../../../domain/types/entities';
+} from '../../../../domain/schemas';
+import type { TProductOutput } from '../../../../domain/types/entities';
 
 //Infrastructure
 import {
   ControllerResponseMapper,
   HttpErrorMapper,
 } from '@infrastructure/mappers/shared';
-import { PRODUCT_PROVIDER_TOKENS } from '../../../infrastructure/constants';
+import { PRODUCT_PROVIDER_TOKENS } from '../../../../infrastructure/constants';
 
 @Controller()
 @UsePipes(HttpValibotPipe)
@@ -45,7 +45,7 @@ export class ProductHttpController {
     private readonly service: IProductService,
   ) {}
 
-  @Get(HTTP_PRODUCT_ROUTER.PRODUCT.PRODUCTS)
+  @Get(HTTP_CLOUD_PRODUCT_ROUTER.PRODUCTS)
   async products(
     @Query() query: ProductsQueryDto,
     @HttpAuthorization() access_token: string | null,
@@ -69,7 +69,7 @@ export class ProductHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
-  @Get(HTTP_PRODUCT_ROUTER.PRODUCT.PRODUCT)
+  @Get(HTTP_CLOUD_PRODUCT_ROUTER.PRODUCT)
   async product(
     @Param() params: ProductParamDto,
     @HttpAuthorization() access_token: string | null,

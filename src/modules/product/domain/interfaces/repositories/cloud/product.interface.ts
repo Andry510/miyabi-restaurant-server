@@ -1,18 +1,21 @@
 //Domain
 import type { ServiceError } from '@domain/errors';
 import type { ResultPattern } from '@domain/patterns/results';
-import type { TPaginationService } from '@domain/types/shared';
-import type { TProductParamSchema, TProductsQuerySchema } from '../../schemas';
-import type { TProductOutput, TProductsOutput } from '../../types/entities';
+import type { TCloudTokens, TPaginationService } from '@domain/types/shared';
+import type {
+  TProductParamSchema,
+  TProductsQuerySchema,
+} from '../../../schemas';
+import type { TProductOutput, TProductsOutput } from '../../../types/entities';
 
-export interface IProductService {
+export interface ICloudProductRepository {
   products(
     input: TProductsQuerySchema,
-    accessToken: string | null,
+    tokens: TCloudTokens,
   ): Promise<ResultPattern<TPaginationService<TProductsOutput>, ServiceError>>;
 
   product(
     input: TProductParamSchema,
-    accessToken: string | null,
+    tokens: TCloudTokens,
   ): Promise<ResultPattern<TProductOutput, ServiceError>>;
 }
