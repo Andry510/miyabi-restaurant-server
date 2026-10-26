@@ -1,0 +1,8 @@
+export const WORK_SCHEDULE_PROVIDER_TOKENS = Object.freeze({
+  SERVICES: {
+    WORK_SCHEDULE: Symbol('WORK_SCHEDULE_SERVICE'),
+  },
+  REPOSITORIES: {
+    WORK_SCHEDULE: Symbol('WORK_SCHEDULE_REPOSITORY'),
+  },
+});
