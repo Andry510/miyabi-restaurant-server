@@ -61,6 +61,24 @@ enum shift_status {
   cancelled
 }
 
+enum tip_period {
+  day
+  week
+  shift
+}
+
+enum tip_split_method {
+  equal
+  minutes
+  position_weight
+  manual
+}
+
+enum tip_pool_status {
+  open
+  closed
+}
+
 enum attendance_status {
   present
   absent
@@ -80,8 +98,10 @@ enum incident_type {
 model server_settings {
   id String @id @default("server")
 
-  timezone           String    @default("UTC") @db.VarChar(50)
-  products_synced_at DateTime?
+  timezone                String     @default("UTC") @db.VarChar(50)
+  clock_in_window_minutes Int        @default(30) @db.SmallInt
+  tip_period              tip_period @default(day)
+  products_synced_at      DateTime?
 
   updated_at DateTime @updatedAt
 }
@@ -171,6 +191,8 @@ model work_areas {
   area_job_positions area_job_positions[] @relation("area_to_job_positions")
   area_products      area_products[]      @relation("area_to_products")
   inventory_requests inventory_requests[] @relation("area_inventory_requests")
+  tip_rule           tip_area_rules?      @relation("area_tip_rule")
+  tip_pool_areas     tip_pool_areas[]     @relation("area_tip_pool_areas")
 
   deleted_at DateTime?
   created_at DateTime  @default(now())
@@ -232,7 +254,8 @@ model work_schedules {
 
   status Boolean @default(true)
 
-  shifts employee_shifts[] @relation("schedule_shifts")
+  shifts    employee_shifts[] @relation("schedule_shifts")
+  tip_pools tip_pools[]       @relation("schedule_tip_pools")
 
   deleted_at DateTime?
   created_at DateTime  @default(now())
@@ -244,8 +267,9 @@ model transfer_drafts {
 
   business_date DateTime @db.Date
 
-  status transfer_draft_status @default(open)
-  note   String?               @db.VarChar(500)
+  status    transfer_draft_status @default(open)
+  open_lock Boolean?              @unique @default(true)
+  note      String?               @db.VarChar(500)
 
   reviewed_by_cloud_user_id String?   @db.Uuid
   reviewed_at               DateTime?
@@ -269,6 +293,8 @@ model area_job_positions {
 
   job_position_id String
   job_position    job_positions @relation("job_position_to_areas", fields: [job_position_id], references: [id])
+
+  tip_weight Decimal @default(1) @db.Decimal(4, 2)
 
   user_assignments user_assignments[] @relation("area_job_position_assignments")
 
@@ -294,6 +320,7 @@ model user_assignments {
   approved_inventory      inventory_requests[]      @relation("approved_by_assignment")
   inventory_movements     inventory_movements[]     @relation("performed_by_assignment")
   transfer_draft_requests transfer_draft_requests[] @relation("created_draft_requests")
+  tip_allocations         tip_allocations[]         @relation("assignment_tip_allocations")
 
   deleted_at DateTime?
   created_at DateTime  @default(now())
@@ -336,6 +363,7 @@ model transfer_draft_requests {
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
+  @@unique([transfer_draft_id, created_by_id, product_id])
   @@index([transfer_draft_id, created_by_id])
 }
 
@@ -483,6 +511,7 @@ model employee_shifts {
   note            String?      @db.VarChar(500)
 
   attendance_record attendance_records? @relation("shift_attendance")
+  tip_pool_shift    tip_pool_shifts?    @relation("shift_tip_pool")
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -521,4 +550,88 @@ model attendance_incidents {
   description String?       @db.VarChar(500)
 
   created_at DateTime @default(now())
+}
+
+model tip_area_rules {
+  id String @id @default(uuid(7))
+
+  work_area_id String     @unique
+  work_area    work_areas @relation("area_tip_rule", fields: [work_area_id], references: [id])
+
+  percentage Decimal          @db.Decimal(5, 2)
+  method     tip_split_method @default(minutes)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model tip_pools {
+  id String @id @default(uuid(7))
+
+  period    tip_period
+  start_day DateTime   @db.Date
+  end_day   DateTime   @db.Date
+
+  work_schedule_id String?
+  work_schedule    work_schedules? @relation("schedule_tip_pools", fields: [work_schedule_id], references: [id])
+
+  amount    Decimal         @db.Decimal(12, 2)
+  status    tip_pool_status @default(open)
+  note      String?         @db.VarChar(500)
+  closed_at DateTime?
+
+  areas  tip_pool_areas[]  @relation("pool_areas")
+  shifts tip_pool_shifts[] @relation("pool_shifts")
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([start_day, end_day])
+}
+
+model tip_pool_areas {
+  id String @id @default(uuid(7))
+
+  tip_pool_id String
+  tip_pool    tip_pools @relation("pool_areas", fields: [tip_pool_id], references: [id], onDelete: Cascade)
+
+  work_area_id String
+  work_area    work_areas @relation("area_tip_pool_areas", fields: [work_area_id], references: [id])
+
+  percentage Decimal          @db.Decimal(5, 2)
+  method     tip_split_method
+  amount     Decimal          @db.Decimal(12, 2)
+
+  allocations tip_allocations[] @relation("pool_area_allocations")
+
+  @@unique([tip_pool_id, work_area_id])
+}
+
+model tip_allocations {
+  id String @id @default(uuid(7))
+
+  tip_pool_area_id String
+  tip_pool_area    tip_pool_areas @relation("pool_area_allocations", fields: [tip_pool_area_id], references: [id], onDelete: Cascade)
+
+  user_assignment_id String
+  user_assignment    user_assignments @relation("assignment_tip_allocations", fields: [user_assignment_id], references: [id])
+
+  minutes Int
+  weight  Decimal @db.Decimal(4, 2)
+  amount  Decimal @db.Decimal(12, 2)
+
+  @@unique([tip_pool_area_id, user_assignment_id])
+  @@index([user_assignment_id])
+}
+
+model tip_pool_shifts {
+  id String @id @default(uuid(7))
+
+  tip_pool_id String
+  tip_pool    tip_pools @relation("pool_shifts", fields: [tip_pool_id], references: [id], onDelete: Cascade)
+
+  employee_shift_id String          @unique
+  employee_shift    employee_shifts @relation("shift_tip_pool", fields: [employee_shift_id], references: [id])
+
+  @@index([tip_pool_id])
 }
