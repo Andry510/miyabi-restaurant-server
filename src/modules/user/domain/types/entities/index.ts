@@ -1,2 +1,1 @@
-export * from './attendance.type';
-export * from './user.type';
+export * from './local';

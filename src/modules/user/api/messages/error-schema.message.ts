@@ -39,16 +39,4 @@ export const ERROR_MESSAGE_SCHEMA = Object.freeze({
   assignment: {
     pair: 'El área de trabajo y el puesto se envían juntos',
   },
-  from: {
-    type: 'La fecha inicial debe ser un texto válido',
-    date: 'La fecha inicial debe tener el formato AAAA-MM-DD',
-  },
-  to: {
-    type: 'La fecha final debe ser un texto válido',
-    date: 'La fecha final debe tener el formato AAAA-MM-DD',
-  },
-  range: {
-    order: 'La fecha final no puede ser anterior a la inicial',
-    max: 'El rango no puede ser mayor a 92 días',
-  },
 });

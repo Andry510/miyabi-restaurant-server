@@ -1,1 +1,1 @@
-export * from './attendance.aggregate';
+export * from './local';
