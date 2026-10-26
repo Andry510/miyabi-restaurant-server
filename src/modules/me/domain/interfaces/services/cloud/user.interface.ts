@@ -1,7 +1,7 @@
 //Domain
 import type { ServiceError } from '@domain/errors';
 import type { ResultPattern } from '@domain/patterns/results';
-import type { TUserOutput } from '../../types/entities';
+import type { TUserOutput } from '../../../types/entities';
 
 export interface IUserService {
   user(

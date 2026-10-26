@@ -1,1 +1,1 @@
-export * from './picture.dto';
+export * from './cloud';

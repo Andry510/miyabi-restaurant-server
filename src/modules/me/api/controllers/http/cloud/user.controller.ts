@@ -13,12 +13,12 @@ import {
 import type { Response } from 'express';
 
 //Api
-import { API_ME_MESSAGE } from '../../messages';
-import { HTTP_ME_ROUTER } from '../../routers';
+import { API_ME_MESSAGE } from '../../../messages';
+import { HTTP_CLOUD_ME_ROUTER } from '../../../routers';
 
 //Application
 // oxlint-disable-next-line typescript/consistent-type-imports
-import { PictureFileDto } from '../../../application/dto';
+import { PictureFileDto } from '../../../../application/dto';
 
 //Common
 import { HttpAuthorization } from '@common/decorators/request';
@@ -27,16 +27,16 @@ import { API_MESSAGE_GLOBAL } from '@common/messages';
 import { HttpValibotPipe } from '@common/pipes';
 
 //Domain
-import type { IUserService } from '../../../domain/interfaces/services';
-import type { TPictureFileSchema } from '../../../domain/schemas';
-import type { TUserOutput } from '../../../domain/types/entities';
+import type { IUserService } from '../../../../domain/interfaces/services';
+import type { TPictureFileSchema } from '../../../../domain/schemas';
+import type { TUserOutput } from '../../../../domain/types/entities';
 
 //Infrastructure
 import {
   ControllerResponseMapper,
   HttpErrorMapper,
 } from '@infrastructure/mappers/shared';
-import { ME_PROVIDER_TOKENS } from '../../../infrastructure/constants';
+import { ME_PROVIDER_TOKENS } from '../../../../infrastructure/constants';
 
 @Controller()
 @UsePipes(HttpValibotPipe)
@@ -46,7 +46,7 @@ export class UserHttpController {
     private readonly service: IUserService,
   ) {}
 
-  @Get(HTTP_ME_ROUTER.USER.USER)
+  @Get(HTTP_CLOUD_ME_ROUTER.USER.USER)
   async user(
     @HttpAuthorization() access_token: string | null,
     @Res() res: Response,
@@ -66,7 +66,7 @@ export class UserHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
-  @Post(HTTP_ME_ROUTER.USER.UPLOAD_PICTURE)
+  @Post(HTTP_CLOUD_ME_ROUTER.USER.UPLOAD_PICTURE)
   @UseInterceptors(HttpPictureInterceptor)
   async uploadPicture(
     @UploadedFile() picture: PictureFileDto,
@@ -90,7 +90,7 @@ export class UserHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
-  @Delete(HTTP_ME_ROUTER.USER.REMOVE_PICTURE)
+  @Delete(HTTP_CLOUD_ME_ROUTER.USER.REMOVE_PICTURE)
   async removePicture(
     @HttpAuthorization() access_token: string | null,
     @Res() res: Response,

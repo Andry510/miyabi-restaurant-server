@@ -3,12 +3,12 @@ import { Inject, Injectable } from '@nestjs/common';
 //Domain
 import type { ServiceError } from '@domain/errors';
 import type { ResultPattern } from '@domain/patterns/results';
-import type { ICloudMeRepository } from '../../domain/interfaces/repositories';
-import type { IUserService } from '../../domain/interfaces/services';
-import type { TUserOutput } from '../../domain/types/entities';
+import type { ICloudMeRepository } from '../../../domain/interfaces/repositories';
+import type { IUserService } from '../../../domain/interfaces/services';
+import type { TUserOutput } from '../../../domain/types/entities';
 
 //Infrastructure
-import { ME_PROVIDER_TOKENS } from '../../infrastructure/constants';
+import { ME_PROVIDER_TOKENS } from '../../../infrastructure/constants';
 
 @Injectable()
 export class UserService implements IUserService {

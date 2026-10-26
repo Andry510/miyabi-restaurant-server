@@ -1,7 +1,7 @@
 import { type InferOutput, looseObject, pipe, transform } from 'valibot';
 
 //Api
-import { ERROR_MESSAGE_SCHEMA } from '../../api/messages';
+import { ERROR_MESSAGE_SCHEMA } from '../../../api/messages';
 
 //Domain
 import { PictureBytesSchema } from '@domain/schemas/shared';

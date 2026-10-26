@@ -9,23 +9,23 @@ import {
 import type { Response } from 'express';
 
 //Api
-import { API_ME_MESSAGE } from '../../messages';
-import { HTTP_ME_ROUTER } from '../../routers';
+import { API_ME_MESSAGE } from '../../../messages';
+import { HTTP_CLOUD_ME_ROUTER } from '../../../routers';
 
 //Common
 import { HttpAuthorization } from '@common/decorators/request';
 import { HttpValibotPipe } from '@common/pipes';
 
 //Domain
-import type { ILocationService } from '../../../domain/interfaces/services';
-import type { TLocationOutput } from '../../../domain/types/entities';
+import type { ILocationService } from '../../../../domain/interfaces/services';
+import type { TLocationOutput } from '../../../../domain/types/entities';
 
 //Infrastructure
 import {
   ControllerResponseMapper,
   HttpErrorMapper,
 } from '@infrastructure/mappers/shared';
-import { ME_PROVIDER_TOKENS } from '../../../infrastructure/constants';
+import { ME_PROVIDER_TOKENS } from '../../../../infrastructure/constants';
 
 @Controller()
 @UsePipes(HttpValibotPipe)
@@ -35,7 +35,7 @@ export class LocationHttpController {
     private readonly service: ILocationService,
   ) {}
 
-  @Get(HTTP_ME_ROUTER.LOCATION.LOCATION)
+  @Get(HTTP_CLOUD_ME_ROUTER.LOCATION.LOCATION)
   async location(
     @HttpAuthorization() access_token: string | null,
     @Res() res: Response,

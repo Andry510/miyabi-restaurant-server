@@ -1,2 +1,2 @@
-export * from './location.controller';
-export * from './user.controller';
+export * from './cloud';
+export * from './local';

@@ -11,8 +11,11 @@ import type {
   TDataResponse,
   TMessageResponse,
 } from '@domain/types/shared';
-import type { ICloudMeRepository } from '../../domain/interfaces/repositories';
-import type { TLocationOutput, TUserOutput } from '../../domain/types/entities';
+import type { ICloudMeRepository } from '../../../domain/interfaces/repositories';
+import type {
+  TLocationOutput,
+  TUserOutput,
+} from '../../../domain/types/entities';
 
 //Infrastructure
 import {

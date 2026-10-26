@@ -2,6 +2,7 @@ export const ME_PROVIDER_TOKENS = Object.freeze({
   SERVICES: {
     USER: Symbol('ME_USER_SERVICE'),
     LOCATION: Symbol('ME_LOCATION_SERVICE'),
+    LOCAL: Symbol('ME_LOCAL_SERVICE'),
   },
   REPOSITORIES: {
     CLOUD_ME: Symbol('ME_CLOUD_ME_REPOSITORY'),

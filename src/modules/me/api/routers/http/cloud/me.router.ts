@@ -1,4 +1,4 @@
-export const HTTP_ME_ROUTER = Object.freeze({
+export const HTTP_CLOUD_ME_ROUTER = Object.freeze({
   USER: {
     USER: 'me/cloud',
     UPLOAD_PICTURE: 'me/cloud/picture',

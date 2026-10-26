@@ -1,2 +1,2 @@
-export * from './location.interface';
-export * from './user.interface';
+export * from './cloud';
+export * from './local';

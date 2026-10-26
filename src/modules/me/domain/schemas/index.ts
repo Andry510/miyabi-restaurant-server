@@ -1,1 +1,1 @@
-export * from './picture.schema';
+export * from './cloud';
