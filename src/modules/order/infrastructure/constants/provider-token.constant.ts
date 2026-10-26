@@ -1,0 +1,10 @@
+export const ORDER_PROVIDER_TOKENS = Object.freeze({
+  SERVICES: {
+    ORDER: Symbol('ORDER_SERVICE'),
+    REQUEST: Symbol('ORDER_REQUEST_SERVICE'),
+  },
+  REPOSITORIES: {
+    ORDER: Symbol('ORDER_REPOSITORY'),
+    REQUEST: Symbol('ORDER_REQUEST_REPOSITORY'),
+  },
+});
