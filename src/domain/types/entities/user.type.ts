@@ -1,7 +1,10 @@
+//Domain
+import type { TReference } from '../shared';
+
 export type TUserAssignment = {
   id: string;
-  work_area_id: string;
-  job_position_id: string;
+  work_area: TReference;
+  job_position: TReference;
 };
 
 export type TUserDetail = {

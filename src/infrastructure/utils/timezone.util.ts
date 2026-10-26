@@ -1,4 +1,4 @@
-const DAY_MS = 24 * 60 * 60 * 1000;
+import { Duration } from './duration.util';
 
 const offsetMs = (instant: number, timeZone: string): number => {
   const parts = new Intl.DateTimeFormat('en-US', {
@@ -28,18 +28,31 @@ const offsetMs = (instant: number, timeZone: string): number => {
 };
 
 export class TimeZone {
-  static startOfDay = (day: string, timeZone: string): Date => {
-    const midnight = Date.parse(`${day}T00:00:00Z`);
-    const firstGuess = midnight - offsetMs(midnight, timeZone);
+  static at = (day: string, time: string, timeZone: string): Date => {
+    const wallClock = Date.parse(`${day}T${time}:00Z`);
+    const firstGuess = wallClock - offsetMs(wallClock, timeZone);
 
-    return new Date(midnight - offsetMs(firstGuess, timeZone));
+    return new Date(wallClock - offsetMs(firstGuess, timeZone));
   };
 
-  static startOfNextDay = (day: string, timeZone: string): Date => {
-    const next = new Date(Date.parse(`${day}T00:00:00Z`) + DAY_MS)
+  static dayOf = (instant: Date, timeZone: string): string =>
+    new Intl.DateTimeFormat('en-CA', {
+      timeZone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(instant);
+
+  static addDays = (day: string, days: number): string =>
+    new Date(Date.parse(`${day}T00:00:00Z`) + days * Duration.DAY_MS)
       .toISOString()
       .slice(0, 10);
 
-    return TimeZone.startOfDay(next, timeZone);
-  };
+  static nextDay = (day: string): string => TimeZone.addDays(day, 1);
+
+  static startOfDay = (day: string, timeZone: string): Date =>
+    TimeZone.at(day, '00:00', timeZone);
+
+  static startOfNextDay = (day: string, timeZone: string): Date =>
+    TimeZone.startOfDay(TimeZone.nextDay(day), timeZone);
 }

@@ -1,0 +1,1 @@
+export const CHECK_OUT_GRACE_MINUTES = 240;

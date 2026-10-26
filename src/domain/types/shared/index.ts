@@ -3,5 +3,6 @@ export * from './client.type';
 export * from './cloud-token.type';
 export * from './function.type';
 export * from './pagination.type';
+export * from './reference.type';
 export * from './response.type';
 export * from './service-error-code.type';

@@ -1,0 +1,15 @@
+export enum TIMEZONE {
+  UTC = 'UTC',
+  MEXICO_CITY = 'America/Mexico_City',
+  MONTERREY = 'America/Monterrey',
+  MERIDA = 'America/Merida',
+  CANCUN = 'America/Cancun',
+  CHIHUAHUA = 'America/Chihuahua',
+  CIUDAD_JUAREZ = 'America/Ciudad_Juarez',
+  MATAMOROS = 'America/Matamoros',
+  OJINAGA = 'America/Ojinaga',
+  MAZATLAN = 'America/Mazatlan',
+  BAHIA_BANDERAS = 'America/Bahia_Banderas',
+  HERMOSILLO = 'America/Hermosillo',
+  TIJUANA = 'America/Tijuana',
+}

@@ -1,3 +1,4 @@
+export * from './attendance.constant';
 export * from './grpc';
 export * from './http';
 export * from './logger.constants';
