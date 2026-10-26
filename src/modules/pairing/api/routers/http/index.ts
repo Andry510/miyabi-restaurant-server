@@ -1,1 +1,1 @@
-export * from './pairing.router';
+export * from './cloud';

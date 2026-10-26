@@ -1,1 +1,1 @@
-export * from './cloud-transfer.interface';
+export * from './cloud';

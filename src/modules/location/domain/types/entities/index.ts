@@ -1,1 +1,1 @@
-export * from './location.type';
+export * from './cloud';

@@ -1,1 +1,1 @@
-export * from './supplier-product.type';
+export * from './cloud';

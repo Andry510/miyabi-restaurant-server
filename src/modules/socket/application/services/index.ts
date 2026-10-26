@@ -1,7 +1,7 @@
 import type { Provider } from '@nestjs/common';
 
 //Application
-import { SocketService } from './socket.service';
+import { SocketService } from './cloud/socket.service';
 
 //Infrastructure
 import { SOCKET_PROVIDER_TOKENS } from '../../infrastructure/constants';

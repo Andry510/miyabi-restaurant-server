@@ -1,7 +1,7 @@
 import type { Provider } from '@nestjs/common';
 
 //Application
-import { PairingService } from './pairing.service';
+import { PairingService } from './cloud/pairing.service';
 
 //Infrastructure
 import { PAIRING_PROVIDER_TOKENS } from '../../infrastructure/constants';

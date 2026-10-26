@@ -1,1 +1,1 @@
-export * from './transfer.type';
+export * from './cloud';

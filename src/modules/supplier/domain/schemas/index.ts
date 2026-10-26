@@ -1,2 +1,1 @@
-export * from './param.schema';
-export * from './suppliers.schema';
+export * from './cloud';

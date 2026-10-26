@@ -1,1 +1,1 @@
-export * from './supplier-product.router';
+export * from './cloud';

@@ -1,1 +1,1 @@
-export * from './locations.dto';
+export * from './cloud';

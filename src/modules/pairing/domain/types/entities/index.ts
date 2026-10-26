@@ -1,1 +1,1 @@
-export * from './pairing.type';
+export * from './cloud';

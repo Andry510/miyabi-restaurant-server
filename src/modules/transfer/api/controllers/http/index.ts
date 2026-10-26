@@ -1,1 +1,1 @@
-export * from './transfer.controller';
+export * from './cloud';

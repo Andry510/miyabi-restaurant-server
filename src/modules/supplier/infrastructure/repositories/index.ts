@@ -2,7 +2,7 @@ import type { Provider } from '@nestjs/common';
 
 //Infrastructure
 import { SUPPLIER_PROVIDER_TOKENS } from '../constants';
-import { CloudSupplierRepository } from './cloud-supplier.repository';
+import { CloudSupplierRepository } from './cloud/supplier.repository';
 
 export const SUPPLIER_REPOSITORIES_PROVIDERS: Provider[] = [
   {

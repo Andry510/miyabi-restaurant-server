@@ -1,1 +1,1 @@
-export * from './cloud-location.interface';
+export * from './cloud';

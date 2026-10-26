@@ -1,1 +1,1 @@
-export * from './location.controller';
+export * from './cloud';

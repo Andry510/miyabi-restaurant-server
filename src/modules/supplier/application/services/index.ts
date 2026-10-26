@@ -1,7 +1,7 @@
 import type { Provider } from '@nestjs/common';
 
 //Application
-import { SupplierService } from './supplier.service';
+import { SupplierService } from './cloud/supplier.service';
 
 //Infrastructure
 import { SUPPLIER_PROVIDER_TOKENS } from '../../infrastructure/constants';

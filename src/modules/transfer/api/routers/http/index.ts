@@ -1,1 +1,1 @@
-export * from './transfer.router';
+export * from './cloud';

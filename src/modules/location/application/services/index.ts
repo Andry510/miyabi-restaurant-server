@@ -1,7 +1,7 @@
 import type { Provider } from '@nestjs/common';
 
 //Application
-import { LocationService } from './location.service';
+import { LocationService } from './cloud/location.service';
 
 //Infrastructure
 import { LOCATION_PROVIDER_TOKENS } from '../../infrastructure/constants';

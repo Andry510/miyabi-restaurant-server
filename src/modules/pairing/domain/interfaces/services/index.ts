@@ -1,1 +1,1 @@
-export * from './pairing.interface';
+export * from './cloud';
