@@ -2,9 +2,9 @@ import type { Provider } from '@nestjs/common';
 
 //Infrastructure
 import { REPOSITORY_PROVIDER_TOKENS } from '../constants';
-import { CatalogRepository } from './catalog.repository';
-import { CloudSessionRepository } from './cloud-session.repository';
-import { UserSessionRepository } from './user-session.repository';
+import { CatalogRepository } from './local/catalog.repository';
+import { CloudSessionRepository } from './cloud/session.repository';
+import { UserSessionRepository } from './local/user-session.repository';
 
 export const REPOSITORY_REPOSITORIES_PROVIDERS: Provider[] = [
   {

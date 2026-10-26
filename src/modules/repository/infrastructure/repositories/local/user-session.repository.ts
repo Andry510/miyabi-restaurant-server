@@ -3,13 +3,13 @@ import { Injectable } from '@nestjs/common';
 
 //Domain
 import { ResultPattern } from '@domain/patterns/results';
-import type { UserAggregate } from '../../domain/aggregates';
-import type { IUserSessionRepository } from '../../domain/interfaces/repositories';
+import type { UserAggregate } from '../../../domain/aggregates';
+import type { IUserSessionRepository } from '../../../domain/interfaces/repositories';
 
 //Infrastructure
 // oxlint-disable-next-line typescript/consistent-type-imports
 import { DatabaseManager } from '@infrastructure/database';
-import { UserMapper } from '../mappers';
+import { UserMapper } from '../../mappers';
 
 @Injectable()
 export class UserSessionRepository implements IUserSessionRepository {
@@ -48,7 +48,10 @@ export class UserSessionRepository implements IUserSessionRepository {
                   select: {
                     id: true,
                     area_job_position: {
-                      select: { work_area_id: true, job_position_id: true },
+                      select: {
+                        work_area: { select: { id: true, name: true } },
+                        job_position: { select: { id: true, name: true } },
+                      },
                     },
                   },
                   take: 1,

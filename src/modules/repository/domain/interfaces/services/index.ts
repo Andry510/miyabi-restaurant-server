@@ -1,2 +1,2 @@
-export * from './catalog.interface';
+export * from './local';
 export * from './service.interface';

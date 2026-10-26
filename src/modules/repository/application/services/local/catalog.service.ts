@@ -3,8 +3,8 @@ import { Inject, Injectable } from '@nestjs/common';
 //Domain
 import type { ServiceError } from '@domain/errors';
 import type { ResultPattern } from '@domain/patterns/results';
-import type { ICatalogRepository } from '../../domain/interfaces/repositories';
-import type { ICatalogService } from '../../domain/interfaces/services';
+import type { ICatalogRepository } from '../../../domain/interfaces/repositories';
+import type { ICatalogService } from '../../../domain/interfaces/services';
 
 //Infrastructure
 import { Logger } from '@infrastructure/audits';
@@ -12,7 +12,7 @@ import { ServiceResultMapper } from '@infrastructure/mappers/shared';
 import {
   REPOSITORY_LOGGER_NAME,
   REPOSITORY_PROVIDER_TOKENS,
-} from '../../infrastructure/constants';
+} from '../../../infrastructure/constants';
 
 @Injectable()
 export class CatalogService implements ICatalogService {
@@ -34,6 +34,12 @@ export class CatalogService implements ICatalogService {
   ): Promise<ResultPattern<boolean, ServiceError>> {
     return this.allExist(ids, (list) =>
       this.catalog_repository.countJobPositions(list),
+    );
+  }
+
+  productsExist(ids: string[]): Promise<ResultPattern<boolean, ServiceError>> {
+    return this.allExist(ids, (list) =>
+      this.catalog_repository.countProducts(list),
     );
   }
 

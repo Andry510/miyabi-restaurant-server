@@ -1,6 +1,6 @@
 //Domain
 import type { ResultPattern } from '@domain/patterns/results';
-import type { UserAggregate } from '../../aggregates';
+import type { UserAggregate } from '../../../aggregates';
 
 export interface IUserSessionRepository {
   findOneByEmailAndSession(

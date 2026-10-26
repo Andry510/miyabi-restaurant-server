@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common';
 
 //Domain
 import { ResultPattern } from '@domain/patterns/results';
-import type { ICatalogRepository } from '../../domain/interfaces/repositories';
+import type { ICatalogRepository } from '../../../domain/interfaces/repositories';
 
 //Infrastructure
 // oxlint-disable-next-line typescript/consistent-type-imports
@@ -27,6 +27,13 @@ export class CatalogRepository implements ICatalogRepository {
   countJobPositions = (ids: string[]): Promise<ResultPattern<number>> =>
     ResultPattern.tryCatchAsync('Infrastructure', CatalogRepository.name, () =>
       this.primaryDatabase.job_positions.count({
+        where: { id: { in: ids }, deleted_at: null },
+      }),
+    );
+
+  countProducts = (ids: string[]): Promise<ResultPattern<number>> =>
+    ResultPattern.tryCatchAsync('Infrastructure', CatalogRepository.name, () =>
+      this.primaryDatabase.products.count({
         where: { id: { in: ids }, deleted_at: null },
       }),
     );

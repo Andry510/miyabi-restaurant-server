@@ -8,4 +8,6 @@ export interface ICatalogService {
   jobPositionsExist(
     ids: string[],
   ): Promise<ResultPattern<boolean, ServiceError>>;
+
+  productsExist(ids: string[]): Promise<ResultPattern<boolean, ServiceError>>;
 }

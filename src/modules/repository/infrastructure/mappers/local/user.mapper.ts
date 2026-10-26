@@ -1,23 +1,24 @@
 import type {
-  area_job_positions,
   authentications,
+  job_positions,
   profiles,
   user_assignments,
   users,
+  work_areas,
 } from '@generated/prisma/client';
 
 //Domain
-import { UserAggregate } from '../../domain/aggregates';
+import { UserAggregate } from '../../../domain/aggregates';
 
 type TUserSessionRow = Pick<authentications, 'email' | 'phone_number'> & {
   user: Pick<users, 'id' | 'status'> & {
     profile: Pick<profiles, 'first_name' | 'last_name'> | null;
     assignments: Array<
       Pick<user_assignments, 'id'> & {
-        area_job_position: Pick<
-          area_job_positions,
-          'work_area_id' | 'job_position_id'
-        >;
+        area_job_position: {
+          work_area: Pick<work_areas, 'id' | 'name'>;
+          job_position: Pick<job_positions, 'id' | 'name'>;
+        };
       }
     >;
   };
@@ -38,8 +39,8 @@ export class UserMapper {
       assignment: assignment
         ? {
             id: assignment.id,
-            work_area_id: assignment.area_job_position.work_area_id,
-            job_position_id: assignment.area_job_position.job_position_id,
+            work_area: { ...assignment.area_job_position.work_area },
+            job_position: { ...assignment.area_job_position.job_position },
           }
         : null,
     });

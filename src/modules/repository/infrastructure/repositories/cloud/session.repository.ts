@@ -7,7 +7,7 @@ import type { Observable } from 'rxjs';
 import type { ServiceError } from '@domain/errors';
 import { ResultPattern } from '@domain/patterns/results';
 import type { TCloudTokens, TMessageResponse } from '@domain/types/shared';
-import type { ICloudSessionRepository } from '../../domain/interfaces/repositories';
+import type { ICloudSessionRepository } from '../../../domain/interfaces/repositories';
 
 //Infrastructure
 import {
