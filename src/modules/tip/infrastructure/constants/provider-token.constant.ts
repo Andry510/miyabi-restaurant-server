@@ -1,0 +1,12 @@
+export const TIP_PROVIDER_TOKENS = Object.freeze({
+  SERVICES: {
+    ALLOCATION: Symbol('TIP_ALLOCATION_SERVICE'),
+    RULE: Symbol('TIP_RULE_SERVICE'),
+    TIP: Symbol('TIP_SERVICE'),
+  },
+  REPOSITORIES: {
+    ALLOCATION: Symbol('TIP_ALLOCATION_REPOSITORY'),
+    RULE: Symbol('TIP_RULE_REPOSITORY'),
+    TIP: Symbol('TIP_REPOSITORY'),
+  },
+});
