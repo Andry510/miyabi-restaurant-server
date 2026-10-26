@@ -4,11 +4,11 @@ import type { products, units } from '@generated/prisma/client';
 //Domain
 import { DomainErrorFactory } from '@domain/patterns/errors';
 import { ResultPattern } from '@domain/patterns/results';
-import { Product } from '../../domain/entities';
+import { Product } from '../../../domain/entities';
 import {
   CloudProductRemovedSchema,
   CloudProductSchema,
-} from '../../domain/schemas';
+} from '../../../domain/schemas';
 
 type TProductPersistence = Omit<products, 'id' | 'created_at' | 'updated_at'>;
 

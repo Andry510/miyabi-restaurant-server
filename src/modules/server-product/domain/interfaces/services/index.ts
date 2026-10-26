@@ -1,1 +1,1 @@
-export * from './hydration.interface';
+export * from './local';

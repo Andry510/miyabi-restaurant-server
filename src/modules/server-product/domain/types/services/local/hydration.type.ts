@@ -1,5 +1,5 @@
 //Domain
-import type { Product } from '../../entities';
+import type { Product } from '../../../entities';
 
 export type TApplySyncInput = {
   products: Product[];

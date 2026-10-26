@@ -7,11 +7,11 @@ import type { Observable } from 'rxjs';
 import type { ServiceError } from '@domain/errors';
 import { ResultPattern } from '@domain/patterns/results';
 import type { TDataResponse } from '@domain/types/shared';
-import type { ICloudServerProductRepository } from '../../domain/interfaces/repositories';
+import type { ICloudServerProductRepository } from '../../../domain/interfaces/repositories';
 import type {
   TCloudServerProductsInput,
   TCloudServerProductsOutput,
-} from '../../domain/types/services';
+} from '../../../domain/types/services';
 
 //Infrastructure
 import {

@@ -4,25 +4,25 @@ import { Inject, Injectable, type OnModuleInit } from '@nestjs/common';
 import { SYSTEM_MESSAGE } from '@common/messages';
 
 //Domain
-import type { Product } from '../../domain/entities';
+import type { Product } from '../../../domain/entities';
 import type {
   ICloudServerProductRepository,
   IProductRepository,
-} from '../../domain/interfaces/repositories';
-import type { IHydrationService } from '../../domain/interfaces/services';
-import type { ISocketService } from '../../../socket/domain/interfaces/services';
+} from '../../../domain/interfaces/repositories';
+import type { IHydrationService } from '../../../domain/interfaces/services';
+import type { ISocketService } from '../../../../socket/domain/interfaces/services';
 
 //Infrastructure
 import { Logger } from '@infrastructure/audits';
-import { ProductMapper } from '../../infrastructure/mappers';
+import { ProductMapper } from '../../../infrastructure/mappers';
 import {
   SERVER_PRODUCT_LOGGER_NAME,
   SERVER_PRODUCT_PROVIDER_TOKENS,
-} from '../../infrastructure/constants';
+} from '../../../infrastructure/constants';
 import {
   SOCKET_EVENT,
   SOCKET_PROVIDER_TOKENS,
-} from '../../../socket/infrastructure/constants';
+} from '../../../../socket/infrastructure/constants';
 
 @Injectable()
 export class HydrationService implements IHydrationService, OnModuleInit {

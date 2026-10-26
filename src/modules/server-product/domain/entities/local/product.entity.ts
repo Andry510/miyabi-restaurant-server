@@ -1,5 +1,5 @@
 //Domain
-import type { TProductOutput, TProductProps } from '../types/entities';
+import type { TProductOutput, TProductProps } from '../../types/entities';
 
 export class Product {
   private readonly props: TProductProps;

@@ -3,15 +3,15 @@ import { Injectable } from '@nestjs/common';
 
 //Domain
 import { ResultPattern } from '@domain/patterns/results';
-import type { Product } from '../../domain/entities';
-import type { IProductRepository } from '../../domain/interfaces/repositories';
-import type { TApplySyncInput } from '../../domain/types/services';
+import type { Product } from '../../../domain/entities';
+import type { IProductRepository } from '../../../domain/interfaces/repositories';
+import type { TApplySyncInput } from '../../../domain/types/services';
 
 //Infrastructure
 // oxlint-disable-next-line typescript/consistent-type-imports
 import { DatabaseManager } from '@infrastructure/database';
 import { SERVER_SETTINGS_ID } from '@infrastructure/constants';
-import { ProductMapper } from '../mappers';
+import { ProductMapper } from '../../mappers';
 
 const SYNC_TIMEOUT_MS = 60_000;
 

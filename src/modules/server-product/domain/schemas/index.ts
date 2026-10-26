@@ -1,1 +1,1 @@
-export * from './cloud-product.schema';
+export * from './cloud';

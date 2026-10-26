@@ -1,2 +1,2 @@
-export * from './cloud-server-product.interface';
-export * from './product.interface';
+export * from './cloud';
+export * from './local';
