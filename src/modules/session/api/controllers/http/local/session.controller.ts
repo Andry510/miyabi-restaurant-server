@@ -11,8 +11,8 @@ import {
 import type { Response } from 'express';
 
 //Api
-import { API_SESSION_MESSAGE } from '../../messages';
-import { HTTP_SESSION_ROUTER } from '../../routers';
+import { API_SESSION_MESSAGE } from '../../../messages';
+import { HTTP_LOCAL_SESSION_ROUTER } from '../../../routers';
 
 //Common
 import { HttpAuthorization } from '@common/decorators/request';
@@ -20,8 +20,8 @@ import { API_MESSAGE_GLOBAL } from '@common/messages';
 import { HttpValibotPipe } from '@common/pipes';
 
 //Domain
-import type { ILocalService } from '../../../domain/interfaces/services';
-import type { TRefreshTokenOutput } from '../../../domain/types/entities';
+import type { ILocalService } from '../../../../domain/interfaces/services';
+import type { TRefreshTokenOutput } from '../../../../domain/types/entities';
 
 //Infrastructure
 import { ExtractClient } from '@infrastructure/http';
@@ -30,7 +30,7 @@ import {
   HttpErrorMapper,
   ServiceResultMapper,
 } from '@infrastructure/mappers/shared';
-import { SESSION_PROVIDER_TOKENS } from '../../../infrastructure/constants';
+import { SESSION_PROVIDER_TOKENS } from '../../../../infrastructure/constants';
 
 @Controller()
 @UsePipes(HttpValibotPipe)
@@ -40,7 +40,7 @@ export class LocalHttpController {
     private readonly service: ILocalService,
   ) {}
 
-  @Post(HTTP_SESSION_ROUTER.LOCAL.REFRESH_TOKEN)
+  @Post(HTTP_LOCAL_SESSION_ROUTER.REFRESH_TOKEN)
   async refreshToken(
     @Ip() ip: string,
     @Headers('user-agent') userAgent: string | undefined,
@@ -71,7 +71,7 @@ export class LocalHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
-  @Post(HTTP_SESSION_ROUTER.LOCAL.LOGOUT)
+  @Post(HTTP_LOCAL_SESSION_ROUTER.LOGOUT)
   async logout(
     @HttpAuthorization() refresh_token: string | null,
     @Res() res: Response,

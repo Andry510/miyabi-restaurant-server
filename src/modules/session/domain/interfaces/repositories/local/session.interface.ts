@@ -1,7 +1,7 @@
 //Domain
 import type { ResultPattern } from '@domain/patterns/results';
-import type { SessionAggregate } from '../../aggregates';
-import type { UserSession } from '../../entities';
+import type { SessionAggregate } from '../../../aggregates';
+import type { UserSession } from '../../../entities';
 
 export interface ISessionRepository {
   findActiveByUserAndKey(

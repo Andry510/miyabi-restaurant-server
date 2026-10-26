@@ -1,6 +1,6 @@
 //Domain
-import { UserSession } from '../entities';
-import type { TSessionProps } from '../types/entities';
+import { UserSession } from '../../entities';
+import type { TSessionProps } from '../../types/entities';
 
 export class SessionAggregate {
   private readonly session: UserSession;

@@ -7,8 +7,8 @@ import type { sessionsUpdateInput } from '@generated/prisma/models';
 
 //Domain
 import type { SESSION_STATUS } from '@domain/enums/shared';
-import { SessionAggregate } from '../../domain/aggregates';
-import type { UserSession } from '../../domain/entities';
+import { SessionAggregate } from '../../../domain/aggregates';
+import type { UserSession } from '../../../domain/entities';
 
 type TSessionPrisma = Pick<
   sessions,

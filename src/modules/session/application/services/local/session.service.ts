@@ -7,11 +7,11 @@ import { API_MESSAGE_GLOBAL, SYSTEM_MESSAGE } from '@common/messages';
 import type { ServiceError } from '@domain/errors';
 import { ResultPattern } from '@domain/patterns/results';
 import type { TClientInput } from '@domain/types/shared';
-import type { SessionAggregate } from '../../domain/aggregates';
-import type { UserSession } from '../../domain/entities';
-import type { ISessionRepository } from '../../domain/interfaces/repositories';
-import type { ILocalService } from '../../domain/interfaces/services';
-import type { TRefreshTokenOutput } from '../../domain/types/entities';
+import type { SessionAggregate } from '../../../domain/aggregates';
+import type { UserSession } from '../../../domain/entities';
+import type { ISessionRepository } from '../../../domain/interfaces/repositories';
+import type { ILocalService } from '../../../domain/interfaces/services';
+import type { TRefreshTokenOutput } from '../../../domain/types/entities';
 
 //Infrastructure
 import { Logger } from '@infrastructure/audits';
@@ -23,7 +23,7 @@ import { Argon2, JwtManager } from '@infrastructure/securities';
 import {
   SESSION_LOGGER_NAME,
   SESSION_PROVIDER_TOKENS,
-} from '../../infrastructure/constants';
+} from '../../../infrastructure/constants';
 
 @Injectable()
 export class LocalService implements ILocalService {

@@ -1,1 +1,1 @@
-export * from './session.aggregate';
+export * from './local';

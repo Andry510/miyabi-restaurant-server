@@ -4,14 +4,14 @@ import { Injectable } from '@nestjs/common';
 
 //Domain
 import { ResultPattern } from '@domain/patterns/results';
-import type { SessionAggregate } from '../../domain/aggregates';
-import type { UserSession } from '../../domain/entities';
-import type { ISessionRepository } from '../../domain/interfaces/repositories';
+import type { SessionAggregate } from '../../../domain/aggregates';
+import type { UserSession } from '../../../domain/entities';
+import type { ISessionRepository } from '../../../domain/interfaces/repositories';
 
 //Infrastructure
 // oxlint-disable-next-line typescript/consistent-type-imports
 import { DatabaseManager } from '@infrastructure/database';
-import { SessionMapper } from '../mappers';
+import { SessionMapper } from '../../mappers';
 
 const SESSION_SELECT = {
   id: true,

@@ -1,6 +1,6 @@
 //Domain
 import { SESSION_STATUS } from '@domain/enums/shared';
-import type { TSessionProps } from '../types/entities';
+import type { TSessionProps } from '../../types/entities';
 
 export class UserSession {
   private readonly id: string;

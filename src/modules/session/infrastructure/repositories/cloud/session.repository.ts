@@ -12,8 +12,8 @@ import type {
   TDataResponse,
   TMessageResponse,
 } from '@domain/types/shared';
-import type { ICloudSessionRepository } from '../../domain/interfaces/repositories';
-import type { TRefreshTokenOutput } from '../../domain/types/entities';
+import type { ICloudSessionRepository } from '../../../domain/interfaces/repositories';
+import type { TRefreshTokenOutput } from '../../../domain/types/entities';
 
 //Infrastructure
 import {

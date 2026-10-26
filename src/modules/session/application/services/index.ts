@@ -1,8 +1,8 @@
 import type { Provider } from '@nestjs/common';
 
 //Application
-import { LocalService } from './local.service';
-import { SessionService } from './session.service';
+import { LocalService } from './local/session.service';
+import { SessionService } from './cloud/session.service';
 
 //Infrastructure
 import { SESSION_PROVIDER_TOKENS } from '../../infrastructure/constants';

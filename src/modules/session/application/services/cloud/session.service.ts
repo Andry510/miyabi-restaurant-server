@@ -4,12 +4,12 @@ import { Inject, Injectable } from '@nestjs/common';
 import type { ServiceError } from '@domain/errors';
 import type { ResultPattern } from '@domain/patterns/results';
 import type { TClientInput } from '@domain/types/shared';
-import type { ICloudSessionRepository } from '../../domain/interfaces/repositories';
-import type { ISessionService } from '../../domain/interfaces/services';
-import type { TRefreshTokenOutput } from '../../domain/types/entities';
+import type { ICloudSessionRepository } from '../../../domain/interfaces/repositories';
+import type { ISessionService } from '../../../domain/interfaces/services';
+import type { TRefreshTokenOutput } from '../../../domain/types/entities';
 
 //Infrastructure
-import { SESSION_PROVIDER_TOKENS } from '../../infrastructure/constants';
+import { SESSION_PROVIDER_TOKENS } from '../../../infrastructure/constants';
 
 @Injectable()
 export class SessionService implements ISessionService {
