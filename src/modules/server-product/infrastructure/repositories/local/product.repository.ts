@@ -50,13 +50,14 @@ export class ProductRepository implements IProductRepository {
 
             await this.remove(transaction, input.removed_ids);
 
-            await transaction.server_settings.upsert({
+            await transaction.server_settings.createMany({
+              data: [{ id: SERVER_SETTINGS_ID }],
+              skipDuplicates: true,
+            });
+
+            await transaction.server_settings.update({
               where: { id: SERVER_SETTINGS_ID },
-              create: {
-                id: SERVER_SETTINGS_ID,
-                products_synced_at: input.synced_at,
-              },
-              update: { products_synced_at: input.synced_at },
+              data: { products_synced_at: input.synced_at },
             });
           },
           { timeout: SYNC_TIMEOUT_MS },

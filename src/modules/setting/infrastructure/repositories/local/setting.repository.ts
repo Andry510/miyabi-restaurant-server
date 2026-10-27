@@ -34,17 +34,22 @@ export class SettingRepository implements ISettingRepository {
       'Infrastructure',
       SettingRepository.name,
       async () => {
+        const existing = await this.primaryDatabase.server_settings.findUnique({
+          where: { id: SERVER_SETTINGS_ID },
+          select: SETTINGS_SELECT,
+        });
+
+        if (existing) {
+          return SettingMapper.toOutput(existing);
+        }
+
+        await this.ensureRow();
+
         const response =
-          (await this.primaryDatabase.server_settings.findUnique({
+          await this.primaryDatabase.server_settings.findUniqueOrThrow({
             where: { id: SERVER_SETTINGS_ID },
             select: SETTINGS_SELECT,
-          })) ??
-          (await this.primaryDatabase.server_settings.upsert({
-            where: { id: SERVER_SETTINGS_ID },
-            create: { id: SERVER_SETTINGS_ID },
-            update: {},
-            select: SETTINGS_SELECT,
-          }));
+          });
 
         return SettingMapper.toOutput(response);
       },
@@ -68,14 +73,23 @@ export class SettingRepository implements ISettingRepository {
       'Infrastructure',
       SettingRepository.name,
       async () => {
-        const response = await this.primaryDatabase.server_settings.upsert({
+        await this.ensureRow();
+
+        const response = await this.primaryDatabase.server_settings.update({
           where: { id: SERVER_SETTINGS_ID },
-          create: { id: SERVER_SETTINGS_ID, ...input },
-          update: input,
+          data: input,
           select: SETTINGS_SELECT,
         });
 
         return SettingMapper.toOutput(response);
       },
     );
+
+  //Functions
+  private async ensureRow(): Promise<void> {
+    await this.primaryDatabase.server_settings.createMany({
+      data: [{ id: SERVER_SETTINGS_ID }],
+      skipDuplicates: true,
+    });
+  }
 }
