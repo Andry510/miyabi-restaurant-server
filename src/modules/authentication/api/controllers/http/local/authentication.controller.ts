@@ -27,7 +27,7 @@ import { HttpAuthorization } from '@common/decorators/request';
 import { HttpValibotPipe } from '@common/pipes';
 
 //Domain
-import type { ILocalService } from '../../../../domain/interfaces/services';
+import type { ILocalAuthenticationService } from '../../../../domain/interfaces/services';
 import type {
   TLoginOutput,
   TResetPasswordOutput,
@@ -48,10 +48,10 @@ import { AUTHENTICATION_PROVIDER_TOKENS } from '../../../../infrastructure/const
 
 @Controller()
 @UsePipes(HttpValibotPipe)
-export class LocalHttpController {
+export class LocalAuthenticationHttpController {
   constructor(
     @Inject(AUTHENTICATION_PROVIDER_TOKENS.SERVICES.LOCAL)
-    private readonly service: ILocalService,
+    private readonly service: ILocalAuthenticationService,
   ) {}
 
   @Post(HTTP_LOCAL_AUTHENTICATION_ROUTER.LOGIN)

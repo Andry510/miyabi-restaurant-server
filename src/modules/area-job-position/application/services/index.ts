@@ -1,8 +1,7 @@
 import type { Provider } from '@nestjs/common';
 
 //Application
-import { JobPositionService } from './local/job-position.service';
-import { WorkAreaService } from './local/work-area.service';
+import { JobPositionService, WorkAreaService } from './local';
 
 //Infrastructure
 import { AREA_JOB_POSITION_PROVIDER_TOKENS } from '../../infrastructure/constants';

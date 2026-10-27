@@ -1,7 +1,7 @@
 import type { Provider } from '@nestjs/common';
 
 //Application
-import { HydrationService } from './local/hydration.service';
+import { HydrationService } from './local';
 
 //Infrastructure
 import { SERVER_PRODUCT_PROVIDER_TOKENS } from '../../infrastructure/constants';

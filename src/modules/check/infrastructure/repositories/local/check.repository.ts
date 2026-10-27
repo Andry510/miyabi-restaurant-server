@@ -1,4 +1,4 @@
-import { Prisma, type PrismaClient } from '@generated/prisma/client';
+import type { PrismaClient } from '@generated/prisma/client';
 import { Injectable } from '@nestjs/common';
 
 //Domain
@@ -16,8 +16,9 @@ import type {
 } from '../../../domain/types/repositories';
 
 //Infrastructure
+import { PRISMA_ERROR_CODE } from '@infrastructure/constants';
 // oxlint-disable-next-line typescript/consistent-type-imports
-import { DatabaseManager } from '@infrastructure/database';
+import { DatabaseManager, PrismaError } from '@infrastructure/database';
 
 @Injectable()
 export class CheckRepository implements ICheckRepository {
@@ -88,10 +89,7 @@ export class CheckRepository implements ICheckRepository {
 
           return true;
         } catch (error) {
-          if (
-            error instanceof Prisma.PrismaClientKnownRequestError &&
-            error.code === 'P2002'
-          ) {
+          if (PrismaError.is(error, PRISMA_ERROR_CODE.UNIQUE)) {
             return false;
           }
 

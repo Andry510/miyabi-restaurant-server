@@ -1,7 +1,7 @@
 import type { Provider } from '@nestjs/common';
 
 //Application
-import { CatalogService } from './local/catalog.service';
+import { CatalogService } from './local';
 import { RepositoryService } from './repository.service';
 
 //Infrastructure

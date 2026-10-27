@@ -4,6 +4,6 @@ import type { ResultPattern } from '@domain/patterns/results';
 import type { TUserDetail } from '@domain/types/entities';
 import type { TLocalUserOutput } from '../../../types/entities';
 
-export interface ILocalService {
+export interface ILocalUserService {
   user(user: TUserDetail): ResultPattern<TLocalUserOutput, ServiceError>;
 }

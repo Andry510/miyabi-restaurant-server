@@ -6,7 +6,7 @@ import type { TPaginationService } from '@domain/types/shared';
 import type { TLocalProductsQuerySchema } from '../../../schemas';
 import type { TLocalProductOutput } from '../../../types/entities';
 
-export interface ILocalService {
+export interface ILocalProductService {
   products(
     input: TLocalProductsQuerySchema,
     user: TUserDetail,

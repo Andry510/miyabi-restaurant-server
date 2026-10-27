@@ -20,7 +20,7 @@ import { API_MESSAGE_GLOBAL } from '@common/messages';
 import { HttpValibotPipe } from '@common/pipes';
 
 //Domain
-import type { ILocalService } from '../../../../domain/interfaces/services';
+import type { ILocalSessionService } from '../../../../domain/interfaces/services';
 import type { TRefreshTokenOutput } from '../../../../domain/types/entities';
 
 //Infrastructure
@@ -34,10 +34,10 @@ import { SESSION_PROVIDER_TOKENS } from '../../../../infrastructure/constants';
 
 @Controller()
 @UsePipes(HttpValibotPipe)
-export class LocalHttpController {
+export class LocalSessionHttpController {
   constructor(
     @Inject(SESSION_PROVIDER_TOKENS.SERVICES.LOCAL)
-    private readonly service: ILocalService,
+    private readonly service: ILocalSessionService,
   ) {}
 
   @Post(HTTP_LOCAL_SESSION_ROUTER.REFRESH_TOKEN)

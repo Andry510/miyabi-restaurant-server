@@ -16,7 +16,7 @@ import type {
   ISessionRepository,
   IUserAccountRepository,
 } from '../../../domain/interfaces/repositories';
-import type { ILocalService } from '../../../domain/interfaces/services';
+import type { ILocalAuthenticationService } from '../../../domain/interfaces/services';
 import type {
   TAuthenticationComplete,
   TLoginOutput,
@@ -40,7 +40,7 @@ import {
 } from '../../../infrastructure/constants';
 
 @Injectable()
-export class LocalService implements ILocalService {
+export class LocalAuthenticationService implements ILocalAuthenticationService {
   private readonly logger = new Logger(
     AUTHENTICATION_LOGGER_NAME.SERVICE.LOCAL,
   );

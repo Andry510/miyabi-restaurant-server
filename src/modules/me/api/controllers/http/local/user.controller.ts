@@ -19,7 +19,7 @@ import { HttpValibotPipe } from '@common/pipes';
 
 //Domain
 import type { TUserDetail } from '@domain/types/entities';
-import type { ILocalService } from '../../../../domain/interfaces/services';
+import type { ILocalUserService } from '../../../../domain/interfaces/services';
 
 //Infrastructure
 import {
@@ -30,10 +30,10 @@ import { ME_PROVIDER_TOKENS } from '../../../../infrastructure/constants';
 
 @Controller()
 @UsePipes(HttpValibotPipe)
-export class LocalHttpController {
+export class LocalUserHttpController {
   constructor(
     @Inject(ME_PROVIDER_TOKENS.SERVICES.LOCAL)
-    private readonly service: ILocalService,
+    private readonly service: ILocalUserService,
   ) {}
 
   @Get(HTTP_LOCAL_ME_ROUTER.USER)

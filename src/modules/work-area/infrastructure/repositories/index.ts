@@ -2,7 +2,7 @@ import type { Provider } from '@nestjs/common';
 
 //Infrastructure
 import { WORK_AREA_PROVIDER_TOKENS } from '../constants';
-import { WorkAreaRepository } from './local/work-area.repository';
+import { WorkAreaRepository } from './local';
 
 export const WORK_AREA_REPOSITORIES_PROVIDERS: Provider[] = [
   {

@@ -4,14 +4,14 @@ import { Injectable } from '@nestjs/common';
 import type { ServiceError } from '@domain/errors';
 import type { ResultPattern } from '@domain/patterns/results';
 import type { TUserDetail } from '@domain/types/entities';
-import type { ILocalService } from '../../../domain/interfaces/services';
+import type { ILocalUserService } from '../../../domain/interfaces/services';
 import type { TLocalUserOutput } from '../../../domain/types/entities';
 
 //Infrastructure
 import { ServiceResultMapper } from '@infrastructure/mappers/shared';
 
 @Injectable()
-export class LocalService implements ILocalService {
+export class LocalUserService implements ILocalUserService {
   user(user: TUserDetail): ResultPattern<TLocalUserOutput, ServiceError> {
     return ServiceResultMapper.Ok({
       id: user.id,

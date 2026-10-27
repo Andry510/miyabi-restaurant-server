@@ -2,8 +2,8 @@ import type { Provider } from '@nestjs/common';
 
 //Infrastructure
 import { SESSION_PROVIDER_TOKENS } from '../constants';
-import { CloudSessionRepository } from './cloud/session.repository';
-import { SessionRepository } from './local/session.repository';
+import { CloudSessionRepository } from './cloud';
+import { SessionRepository } from './local';
 
 export const SESSION_REPOSITORIES_PROVIDERS: Provider[] = [
   {

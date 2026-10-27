@@ -2,7 +2,7 @@ import type { Provider } from '@nestjs/common';
 
 //Infrastructure
 import { AREA_PRODUCT_PROVIDER_TOKENS } from '../constants';
-import { AreaProductRepository } from './local/area-product.repository';
+import { AreaProductRepository } from './local';
 
 export const AREA_PRODUCT_REPOSITORIES_PROVIDERS: Provider[] = [
   {

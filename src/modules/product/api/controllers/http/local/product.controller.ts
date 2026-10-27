@@ -24,7 +24,7 @@ import { HttpValibotPipe } from '@common/pipes';
 
 //Domain
 import type { TUserDetail } from '@domain/types/entities';
-import type { ILocalService } from '../../../../domain/interfaces/services';
+import type { ILocalProductService } from '../../../../domain/interfaces/services';
 import type { TLocalProductsQuerySchema } from '../../../../domain/schemas';
 
 //Infrastructure
@@ -36,10 +36,10 @@ import { PRODUCT_PROVIDER_TOKENS } from '../../../../infrastructure/constants';
 
 @Controller()
 @UsePipes(HttpValibotPipe)
-export class LocalHttpController {
+export class LocalProductHttpController {
   constructor(
     @Inject(PRODUCT_PROVIDER_TOKENS.SERVICES.LOCAL)
-    private readonly service: ILocalService,
+    private readonly service: ILocalProductService,
   ) {}
 
   @Get(HTTP_LOCAL_PRODUCT_ROUTER.PRODUCTS)

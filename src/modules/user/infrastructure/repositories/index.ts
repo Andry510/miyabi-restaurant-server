@@ -2,9 +2,11 @@ import type { Provider } from '@nestjs/common';
 
 //Infrastructure
 import { USER_PROVIDER_TOKENS } from '../constants';
-import { AttendanceRepository } from './local/attendance.repository';
-import { SessionRepository } from './local/session.repository';
-import { UserRepository } from './local/user.repository';
+import {
+  AttendanceRepository,
+  SessionRepository,
+  UserRepository,
+} from './local';
 
 export const USER_REPOSITORIES_PROVIDERS: Provider[] = [
   {

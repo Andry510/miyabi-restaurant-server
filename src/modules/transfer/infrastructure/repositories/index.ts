@@ -2,7 +2,7 @@ import type { Provider } from '@nestjs/common';
 
 //Infrastructure
 import { TRANSFER_PROVIDER_TOKENS } from '../constants';
-import { CloudTransferRepository } from './cloud/transfer.repository';
+import { CloudTransferRepository } from './cloud';
 
 export const TRANSFER_REPOSITORIES_PROVIDERS: Provider[] = [
   {

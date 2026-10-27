@@ -1,4 +1,4 @@
-import { Prisma, type PrismaClient } from '@generated/prisma/client';
+import type { PrismaClient } from '@generated/prisma/client';
 import type { usersSelect, usersWhereInput } from '@generated/prisma/models';
 import { Injectable } from '@nestjs/common';
 
@@ -15,8 +15,9 @@ import type {
 } from '../../../domain/types/repositories';
 
 //Infrastructure
+import { PRISMA_ERROR_CODE } from '@infrastructure/constants';
 // oxlint-disable-next-line typescript/consistent-type-imports
-import { DatabaseManager } from '@infrastructure/database';
+import { DatabaseManager, PrismaError } from '@infrastructure/database';
 import { UserMapper } from '../../mappers';
 
 const USER_SELECT = {
@@ -300,10 +301,7 @@ export class UserRepository implements IUserRepository {
 
           return UserMapper.toOutput(response);
         } catch (error) {
-          if (
-            error instanceof Prisma.PrismaClientKnownRequestError &&
-            error.code === 'P2025'
-          ) {
+          if (PrismaError.is(error, PRISMA_ERROR_CODE.NOT_FOUND)) {
             return null;
           }
 

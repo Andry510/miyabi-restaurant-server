@@ -1,7 +1,7 @@
 import type { Provider } from '@nestjs/common';
 
 //Application
-import { TransferService } from './cloud/transfer.service';
+import { TransferService } from './cloud';
 
 //Infrastructure
 import { TRANSFER_ITEM_PROVIDER_TOKENS } from '../../infrastructure/constants';

@@ -1,7 +1,7 @@
 import type { Provider } from '@nestjs/common';
 
 //Application
-import { SettingService } from './local/setting.service';
+import { SettingService } from './local';
 
 //Infrastructure
 import { SETTING_PROVIDER_TOKENS } from '../../infrastructure/constants';

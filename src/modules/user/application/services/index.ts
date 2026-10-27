@@ -1,9 +1,7 @@
 import type { Provider } from '@nestjs/common';
 
 //Application
-import { AttendanceService } from './local/attendance.service';
-import { SessionService } from './local/session.service';
-import { UserService } from './local/user.service';
+import { AttendanceService, SessionService, UserService } from './local';
 
 //Infrastructure
 import { USER_PROVIDER_TOKENS } from '../../infrastructure/constants';

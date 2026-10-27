@@ -1,7 +1,7 @@
 import type { Provider } from '@nestjs/common';
 
 //Application
-import { CheckService } from './local/check.service';
+import { CheckService } from './local';
 
 //Infrastructure
 import { CHECK_PROVIDER_TOKENS } from '../../infrastructure/constants';

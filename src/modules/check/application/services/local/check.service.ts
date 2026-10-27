@@ -101,7 +101,11 @@ export class CheckService implements ICheckService {
 
     return ServiceResultMapper.Ok(
       shift
-        ? this.toOutput(shift, shift.attendance_record, window_ms, null)
+        ? this.toOutput(shift, shift.attendance_record, window_ms, {
+            late_minutes: shift.attendance_record?.clock_in
+              ? this.lateMinutes(shift, shift.attendance_record.clock_in)
+              : null,
+          })
         : null,
     );
   }
@@ -131,11 +135,7 @@ export class CheckService implements ICheckService {
       return ServiceResultMapper.Conflict(API_CHECK_MESSAGE.ERROR.TOO_EARLY);
     }
 
-    const elapsedMinutes = Duration.minutesBetween(next.scheduled_start, now);
-    const lateMinutes =
-      elapsedMinutes > next.work_schedule.late_tolerance_minutes
-        ? elapsedMinutes
-        : null;
+    const lateMinutes = this.lateMinutes(next, now);
 
     const checkInResult = await this.check_repository.checkIn({
       shift_id: next.id,
@@ -212,6 +212,17 @@ export class CheckService implements ICheckService {
   }
 
   //Functions
+  private lateMinutes(shift: TCheckCandidate, clockIn: Date): number | null {
+    const elapsedMinutes = Duration.minutesBetween(
+      shift.scheduled_start,
+      clockIn,
+    );
+
+    return elapsedMinutes > shift.work_schedule.late_tolerance_minutes
+      ? elapsedMinutes
+      : null;
+  }
+
   private toOutput(
     shift: TCheckCandidate,
     record: { clock_in: Date | null; clock_out: Date | null } | null,

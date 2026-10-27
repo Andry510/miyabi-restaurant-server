@@ -9,7 +9,7 @@ import type { ResultPattern } from '@domain/patterns/results';
 import type { TUserDetail } from '@domain/types/entities';
 import type { TPaginationService } from '@domain/types/shared';
 import type { IProductRepository } from '../../../domain/interfaces/repositories';
-import type { ILocalService } from '../../../domain/interfaces/services';
+import type { ILocalProductService } from '../../../domain/interfaces/services';
 import type { TLocalProductsQuerySchema } from '../../../domain/schemas';
 import type { TLocalProductOutput } from '../../../domain/types/entities';
 
@@ -22,7 +22,7 @@ import {
 } from '../../../infrastructure/constants';
 
 @Injectable()
-export class LocalService implements ILocalService {
+export class LocalProductService implements ILocalProductService {
   private readonly logger = new Logger(PRODUCT_LOGGER_NAME.SERVICE.LOCAL);
 
   constructor(

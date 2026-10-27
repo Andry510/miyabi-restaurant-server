@@ -21,31 +21,21 @@ import { HTTP_LOCAL_USER_ROUTER } from '../../../routers';
 //Application
 // oxlint-disable-next-line typescript/consistent-type-imports
 import {
-  AttendanceQueryDto,
   RegisterDto,
-  SessionsQueryDto,
   UpdateBodyDto,
   UserParamDto,
   UsersQueryDto,
 } from '../../../../application/dto';
 
 //Common
-import { HttpLocalAccess, HttpManagerAccess } from '@common/decorators/access';
-import { HttpUser } from '@common/decorators/request';
+import { HttpManagerAccess } from '@common/decorators/access';
 import { HttpValibotPipe } from '@common/pipes';
 
 //Domain
-import type { TUserDetail } from '@domain/types/entities';
 import type { TParamIdSchema } from '@domain/schemas/shared';
+import type { IUserService } from '../../../../domain/interfaces/services';
 import type {
-  IAttendanceService,
-  ISessionService,
-  IUserService,
-} from '../../../../domain/interfaces/services';
-import type {
-  TAttendanceQuerySchema,
   TRegisterSchema,
-  TSessionsQuerySchema,
   TUpdateBodySchema,
   TUsersQuerySchema,
 } from '../../../../domain/schemas';
@@ -62,11 +52,7 @@ import { USER_PROVIDER_TOKENS } from '../../../../infrastructure/constants';
 export class UserHttpController {
   constructor(
     @Inject(USER_PROVIDER_TOKENS.SERVICES.USER)
-    private readonly user_service: IUserService,
-    @Inject(USER_PROVIDER_TOKENS.SERVICES.SESSION)
-    private readonly session_service: ISessionService,
-    @Inject(USER_PROVIDER_TOKENS.SERVICES.ATTENDANCE)
-    private readonly attendance_service: IAttendanceService,
+    private readonly service: IUserService,
   ) {}
 
   @Get(HTTP_LOCAL_USER_ROUTER.USERS)
@@ -77,7 +63,7 @@ export class UserHttpController {
   ): Promise<Response> {
     const input = query as unknown as TUsersQuerySchema;
 
-    const usersResult = await this.user_service.users(input);
+    const usersResult = await this.service.users(input);
 
     if (usersResult.IsFailure) {
       return HttpErrorMapper.reply(res, usersResult.Error);
@@ -100,7 +86,7 @@ export class UserHttpController {
   ): Promise<Response> {
     const input = body as unknown as TRegisterSchema;
 
-    const registerResult = await this.user_service.register(input);
+    const registerResult = await this.service.register(input);
 
     if (registerResult.IsFailure) {
       return HttpErrorMapper.reply(res, registerResult.Error);
@@ -122,7 +108,7 @@ export class UserHttpController {
   ): Promise<Response> {
     const { id } = params as unknown as TParamIdSchema;
 
-    const userResult = await this.user_service.user(id);
+    const userResult = await this.service.user(id);
 
     if (userResult.IsFailure) {
       return HttpErrorMapper.reply(res, userResult.Error);
@@ -146,7 +132,7 @@ export class UserHttpController {
     const { id } = params as unknown as TParamIdSchema;
     const input = body as unknown as TUpdateBodySchema;
 
-    const updateResult = await this.user_service.update(id, input);
+    const updateResult = await this.service.update(id, input);
 
     if (updateResult.IsFailure) {
       return HttpErrorMapper.reply(res, updateResult.Error);
@@ -168,7 +154,7 @@ export class UserHttpController {
   ): Promise<Response> {
     const { id } = params as unknown as TParamIdSchema;
 
-    const removeResult = await this.user_service.remove(id);
+    const removeResult = await this.service.remove(id);
 
     if (removeResult.IsFailure) {
       return HttpErrorMapper.reply(res, removeResult.Error);
@@ -176,81 +162,6 @@ export class UserHttpController {
 
     const response = ControllerResponseMapper.toMessageResult(
       API_USER_MESSAGE.SUCCESS.USER_DELETED,
-    );
-
-    return res.status(HttpStatus.OK).json(response);
-  }
-
-  @Get(HTTP_LOCAL_USER_ROUTER.SESSIONS)
-  @HttpManagerAccess()
-  async sessions(
-    @Param() params: UserParamDto,
-    @Query() query: SessionsQueryDto,
-    @Res() res: Response,
-  ): Promise<Response> {
-    const { id } = params as unknown as TParamIdSchema;
-    const input = query as unknown as TSessionsQuerySchema;
-
-    const sessionsResult = await this.session_service.sessions(id, input);
-
-    if (sessionsResult.IsFailure) {
-      return HttpErrorMapper.reply(res, sessionsResult.Error);
-    }
-
-    const response = ControllerResponseMapper.toPaginationResult(
-      API_USER_MESSAGE.SUCCESS.SESSIONS_RETRIEVED,
-      sessionsResult.Value.data,
-      sessionsResult.Value.metadata,
-    );
-
-    return res.status(HttpStatus.OK).json(response);
-  }
-
-  @Get(HTTP_LOCAL_USER_ROUTER.ATTENDANCE)
-  @HttpManagerAccess()
-  async attendance(
-    @Param() params: UserParamDto,
-    @Query() query: AttendanceQueryDto,
-    @Res() res: Response,
-  ): Promise<Response> {
-    const { id } = params as unknown as TParamIdSchema;
-    const input = query as unknown as TAttendanceQuerySchema;
-
-    const attendanceResult = await this.attendance_service.attendance(
-      id,
-      input,
-    );
-
-    if (attendanceResult.IsFailure) {
-      return HttpErrorMapper.reply(res, attendanceResult.Error);
-    }
-
-    const response = ControllerResponseMapper.toDataResult(
-      API_USER_MESSAGE.SUCCESS.ATTENDANCE_RETRIEVED,
-      attendanceResult.Value,
-    );
-
-    return res.status(HttpStatus.OK).json(response);
-  }
-
-  @Get(HTTP_LOCAL_USER_ROUTER.MY_ATTENDANCE)
-  @HttpLocalAccess()
-  async myAttendance(
-    @Query() query: AttendanceQueryDto,
-    @HttpUser() user: TUserDetail,
-    @Res() res: Response,
-  ): Promise<Response> {
-    const input = query as unknown as TAttendanceQuerySchema;
-
-    const attendanceResult = await this.attendance_service.mine(user, input);
-
-    if (attendanceResult.IsFailure) {
-      return HttpErrorMapper.reply(res, attendanceResult.Error);
-    }
-
-    const response = ControllerResponseMapper.toDataResult(
-      API_USER_MESSAGE.SUCCESS.ATTENDANCE_RETRIEVED,
-      attendanceResult.Value,
     );
 
     return res.status(HttpStatus.OK).json(response);

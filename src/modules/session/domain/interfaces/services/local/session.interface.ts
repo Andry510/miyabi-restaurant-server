@@ -4,7 +4,7 @@ import type { ResultPattern } from '@domain/patterns/results';
 import type { TClientInput } from '@domain/types/shared';
 import type { TRefreshTokenOutput } from '../../../types/entities';
 
-export interface ILocalService {
+export interface ILocalSessionService {
   refreshToken(
     input: TClientInput,
     refreshToken: string,

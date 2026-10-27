@@ -1,7 +1,7 @@
 import type { Provider } from '@nestjs/common';
 
 //Application
-import { ShiftService } from './local/shift.service';
+import { ShiftService } from './local';
 
 //Infrastructure
 import { SHIFT_PROVIDER_TOKENS } from '../../infrastructure/constants';

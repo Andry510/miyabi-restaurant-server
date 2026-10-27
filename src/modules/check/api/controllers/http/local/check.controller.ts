@@ -1,4 +1,12 @@
-import { Controller, Get, HttpStatus, Inject, Post, Res } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  HttpStatus,
+  Inject,
+  Post,
+  Res,
+  UsePipes,
+} from '@nestjs/common';
 import type { Response } from 'express';
 
 //Api
@@ -8,6 +16,7 @@ import { HTTP_LOCAL_CHECK_ROUTER } from '../../../routers';
 //Common
 import { HttpLocalAccess } from '@common/decorators/access';
 import { HttpUser } from '@common/decorators/request';
+import { HttpValibotPipe } from '@common/pipes';
 
 //Domain
 import type { TUserDetail } from '@domain/types/entities';
@@ -21,6 +30,7 @@ import {
 import { CHECK_PROVIDER_TOKENS } from '../../../../infrastructure/constants';
 
 @Controller()
+@UsePipes(HttpValibotPipe)
 export class CheckHttpController {
   constructor(
     @Inject(CHECK_PROVIDER_TOKENS.SERVICES.CHECK)

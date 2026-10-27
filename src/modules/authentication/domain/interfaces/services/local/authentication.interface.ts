@@ -7,7 +7,7 @@ import type {
 } from '../../../types/entities';
 import type { TLoginInput, TResetPasswordInput } from '../../../types/services';
 
-export interface ILocalService {
+export interface ILocalAuthenticationService {
   login(input: TLoginInput): Promise<ResultPattern<TLoginOutput, ServiceError>>;
 
   resetPassword(

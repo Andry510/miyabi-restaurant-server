@@ -2,7 +2,7 @@ import type { Provider } from '@nestjs/common';
 
 //Infrastructure
 import { WORK_SCHEDULE_PROVIDER_TOKENS } from '../constants';
-import { WorkScheduleRepository } from './local/work-schedule.repository';
+import { WorkScheduleRepository } from './local';
 
 export const WORK_SCHEDULE_REPOSITORIES_PROVIDERS: Provider[] = [
   {

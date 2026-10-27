@@ -10,7 +10,7 @@ import type { TClientInput } from '@domain/types/shared';
 import type { SessionAggregate } from '../../../domain/aggregates';
 import type { UserSession } from '../../../domain/entities';
 import type { ISessionRepository } from '../../../domain/interfaces/repositories';
-import type { ILocalService } from '../../../domain/interfaces/services';
+import type { ILocalSessionService } from '../../../domain/interfaces/services';
 import type { TRefreshTokenOutput } from '../../../domain/types/entities';
 
 //Infrastructure
@@ -26,7 +26,7 @@ import {
 } from '../../../infrastructure/constants';
 
 @Injectable()
-export class LocalService implements ILocalService {
+export class LocalSessionService implements ILocalSessionService {
   private readonly logger = new Logger(SESSION_LOGGER_NAME.SERVICE.LOCAL);
 
   constructor(

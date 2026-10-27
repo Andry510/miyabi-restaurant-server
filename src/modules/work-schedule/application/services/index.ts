@@ -1,7 +1,7 @@
 import type { Provider } from '@nestjs/common';
 
 //Application
-import { WorkScheduleService } from './local/work-schedule.service';
+import { WorkScheduleService } from './local';
 
 //Infrastructure
 import { WORK_SCHEDULE_PROVIDER_TOKENS } from '../../infrastructure/constants';
