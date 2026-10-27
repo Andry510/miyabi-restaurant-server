@@ -37,24 +37,6 @@ enum transfer_dispatch_status {
   failed
 }
 
-enum request_status {
-  draft
-  submitted
-  approved
-  partially_fulfilled
-  fulfilled
-  rejected
-  cancelled
-}
-
-enum inventory_movement_type {
-  initial_stock
-  receipt
-  issue
-  adjustment_increase
-  adjustment_decrease
-}
-
 enum shift_status {
   scheduled
   completed
@@ -190,7 +172,6 @@ model work_areas {
 
   area_job_positions area_job_positions[] @relation("area_to_job_positions")
   area_products      area_products[]      @relation("area_to_products")
-  inventory_requests inventory_requests[] @relation("area_inventory_requests")
   tip_rule           tip_area_rules?      @relation("area_tip_rule")
   tip_pool_areas     tip_pool_areas[]     @relation("area_tip_pool_areas")
 
@@ -228,9 +209,6 @@ model products {
   status Boolean @default(true)
 
   area_products           area_products[]           @relation("product_to_areas")
-  inventory_stock         inventory_stocks?         @relation("product_stock")
-  inventory_request_items inventory_request_items[] @relation("product_request_items")
-  inventory_movements     inventory_movements[]     @relation("product_movements")
   transfer_draft_items    transfer_draft_items[]    @relation("product_draft_items")
   transfer_draft_requests transfer_draft_requests[] @relation("product_draft_requests")
 
@@ -269,10 +247,9 @@ model transfer_drafts {
 
   status    transfer_draft_status @default(open)
   open_lock Boolean?              @unique @default(true)
-  note      String?               @db.VarChar(500)
 
-  reviewed_by_cloud_user_id String?   @db.Uuid
-  reviewed_at               DateTime?
+  sent_by String?   @db.VarChar(255)
+  sent_at DateTime?
 
   requests   transfer_draft_requests[]
   items      transfer_draft_items[]
@@ -300,6 +277,7 @@ model area_job_positions {
 
   deleted_at DateTime?
   created_at DateTime  @default(now())
+  updated_at DateTime  @default(now()) @updatedAt
 
   @@unique([work_area_id, job_position_id])
 }
@@ -316,9 +294,6 @@ model user_assignments {
   status Boolean @default(true)
 
   shifts                  employee_shifts[]         @relation("assignment_shifts")
-  requested_inventory     inventory_requests[]      @relation("requested_by_assignment")
-  approved_inventory      inventory_requests[]      @relation("approved_by_assignment")
-  inventory_movements     inventory_movements[]     @relation("performed_by_assignment")
   transfer_draft_requests transfer_draft_requests[] @relation("created_draft_requests")
   tip_allocations         tip_allocations[]         @relation("assignment_tip_allocations")
 
@@ -376,7 +351,7 @@ model transfer_draft_items {
   product_id String
   product    products @relation("product_draft_items", fields: [product_id], references: [id])
 
-  requested_qty Int
+  quantity Int
 
   to_location_id String? @db.Uuid
 
@@ -411,89 +386,6 @@ model transfer_draft_dispatches {
   updated_at DateTime @updatedAt
 
   @@unique([transfer_draft_id, to_location_id])
-}
-
-model inventory_stocks {
-  id String @id @default(uuid(7))
-
-  product_id String   @unique
-  product    products @relation("product_stock", fields: [product_id], references: [id], onDelete: Cascade)
-
-  quantity Int @default(0)
-  min_qty  Int @default(0)
-
-  updated_at DateTime @updatedAt
-}
-
-model inventory_requests {
-  id String @id @default(uuid(7))
-
-  work_area_id String
-  work_area    work_areas @relation("area_inventory_requests", fields: [work_area_id], references: [id])
-
-  requested_by_id String
-  requested_by    user_assignments @relation("requested_by_assignment", fields: [requested_by_id], references: [id])
-
-  approved_by_id String?
-  approved_by    user_assignments? @relation("approved_by_assignment", fields: [approved_by_id], references: [id])
-
-  status request_status @default(draft)
-  note   String?        @db.VarChar(500)
-
-  approved_at  DateTime?
-  fulfilled_at DateTime?
-
-  items inventory_request_items[]
-
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-
-  @@index([work_area_id, status])
-}
-
-model inventory_request_items {
-  id String @id @default(uuid(7))
-
-  inventory_request_id String
-  inventory_request    inventory_requests @relation(fields: [inventory_request_id], references: [id], onDelete: Cascade)
-
-  product_id String
-  product    products @relation("product_request_items", fields: [product_id], references: [id])
-
-  requested_qty Int
-  delivered_qty Int     @default(0)
-  note          String? @db.VarChar(255)
-
-  movements inventory_movements[] @relation("request_item_movements")
-
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-
-  @@unique([inventory_request_id, product_id])
-}
-
-model inventory_movements {
-  id String @id @default(uuid(7))
-
-  product_id String
-  product    products @relation("product_movements", fields: [product_id], references: [id])
-
-  type     inventory_movement_type
-  quantity Int
-
-  inventory_request_item_id String?
-  inventory_request_item    inventory_request_items? @relation("request_item_movements", fields: [inventory_request_item_id], references: [id])
-
-  transfer_id String? @db.Uuid
-
-  performed_by_id String?
-  performed_by    user_assignments? @relation("performed_by_assignment", fields: [performed_by_id], references: [id])
-
-  note        String?  @db.VarChar(500)
-  occurred_at DateTime @default(now())
-  created_at  DateTime @default(now())
-
-  @@index([product_id, occurred_at])
 }
 
 model employee_shifts {

@@ -36,12 +36,6 @@ importers:
       '@nestjs/platform-express':
         specifier: ^11.2.8
         version: 11.2.8(@nestjs/common@11.2.8(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.2.8)
-      '@nestjs/platform-socket.io':
-        specifier: ^11.2.8
-        version: 11.2.8(@nestjs/common@11.2.8(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/websockets@11.2.8)(rxjs@7.8.2)
-      '@nestjs/websockets':
-        specifier: ^11.2.8
-        version: 11.2.8(@nestjs/common@11.2.8(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.2.8)(@nestjs/platform-socket.io@11.2.8)(reflect-metadata@0.2.2)(rxjs@7.8.2)
       '@prisma/adapter-pg':
         specifier: ^7.10.1
         version: 7.10.1
@@ -57,15 +51,15 @@ importers:
       pg:
         specifier: ^8.23.1
         version: 8.23.1
+      prisma:
+        specifier: ^7.10.1
+        version: 7.10.1(@types/node@24.19.2)(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@5.5.4)
       reflect-metadata:
         specifier: ^0.2.2
         version: 0.2.2
       rxjs:
         specifier: ^7.8.2
         version: 7.8.2
-      socket.io:
-        specifier: 4.8.3
-        version: 4.8.3
       socket.io-client:
         specifier: 4.8.3
         version: 4.8.3
@@ -97,9 +91,6 @@ importers:
       prettier:
         specifier: ^3.9.10
         version: 3.9.10
-      prisma:
-        specifier: ^7.10.1
-        version: 7.10.1(@types/node@24.19.2)(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(typescript@5.5.4)
       source-map-support:
         specifier: ^0.5.21
         version: 0.5.21
@@ -2921,6 +2912,7 @@ snapshots:
       - bufferutil
       - supports-color
       - utf-8-validate
+    optional: true
 
   '@nestjs/schematics@11.1.0(chokidar@4.0.3)(prettier@3.9.10)(typescript@5.5.4)':
     dependencies:
@@ -2959,6 +2951,7 @@ snapshots:
       tslib: 2.8.1
     optionalDependencies:
       '@nestjs/platform-socket.io': 11.2.8(@nestjs/common@11.2.8(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/websockets@11.2.8)(rxjs@7.8.2)
+    optional: true
 
   '@oxlint-tsgolint/darwin-arm64@7.0.2004':
     optional: true
@@ -3250,6 +3243,7 @@ snapshots:
   '@types/cors@2.8.19':
     dependencies:
       '@types/node': 24.19.2
+    optional: true
 
   '@types/d3-array@3.0.3': {}
 
@@ -3351,6 +3345,7 @@ snapshots:
   '@types/ws@8.18.2':
     dependencies:
       '@types/node': 24.19.2
+    optional: true
 
   '@visx/curve@4.0.1-alpha.0':
     dependencies:
@@ -3513,6 +3508,7 @@ snapshots:
     dependencies:
       mime-types: 2.1.35
       negotiator: 0.6.3
+    optional: true
 
   accepts@2.0.0:
     dependencies:
@@ -3600,7 +3596,8 @@ snapshots:
 
   base64-js@1.5.1: {}
 
-  base64id@2.0.0: {}
+  base64id@2.0.0:
+    optional: true
 
   baseline-browser-mapping@2.11.29: {}
 
@@ -3916,6 +3913,7 @@ snapshots:
       - bufferutil
       - supports-color
       - utf-8-validate
+    optional: true
 
   enhanced-resolve@5.26.0:
     dependencies:
@@ -4329,7 +4327,8 @@ snapshots:
     dependencies:
       lru.min: 1.1.5
 
-  negotiator@0.6.3: {}
+  negotiator@0.6.3:
+    optional: true
 
   negotiator@1.1.0:
     dependencies:
@@ -4351,7 +4350,8 @@ snapshots:
 
   object-assign@4.1.1: {}
 
-  object-hash@3.0.0: {}
+  object-hash@3.0.0:
+    optional: true
 
   object-inspect@1.13.4: {}
 
@@ -4726,6 +4726,7 @@ snapshots:
       - bufferutil
       - supports-color
       - utf-8-validate
+    optional: true
 
   socket.io-client@4.8.3:
     dependencies:
@@ -4758,6 +4759,7 @@ snapshots:
       - bufferutil
       - supports-color
       - utf-8-validate
+    optional: true
 
   source-map-support@0.5.21:
     dependencies:

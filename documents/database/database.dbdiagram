@@ -1,0 +1,160 @@
+{
+  "version": "2.0.0",
+  "darkMode": true,
+  "gridEnabling": false,
+  "currentViewName": null,
+  "defaultView": {
+    "detailLevel": "All",
+    "relationshipMode": "All",
+    "tablePositions": [
+      {
+        "name": "server_settings",
+        "schemaName": "public",
+        "x": -197.61043819832827,
+        "y": -582.4985704073276
+      },
+      {
+        "name": "users",
+        "schemaName": "public",
+        "x": 406.318359375,
+        "y": 12
+      },
+      {
+        "name": "profiles",
+        "schemaName": "public",
+        "x": -57.74079098366582,
+        "y": -174.68030356025315
+      },
+      {
+        "name": "authentications",
+        "schemaName": "public",
+        "x": -74.52716793679082,
+        "y": 95.84545409121165
+      },
+      {
+        "name": "sessions",
+        "schemaName": "public",
+        "x": -74.52716793679082,
+        "y": 410.49435984455897
+      },
+      {
+        "name": "work_areas",
+        "schemaName": "public",
+        "x": 406.318359375,
+        "y": 552
+      },
+      {
+        "name": "job_positions",
+        "schemaName": "public",
+        "x": 406.318359375,
+        "y": 250
+      },
+      {
+        "name": "area_job_positions",
+        "schemaName": "public",
+        "x": 1044.52099609375,
+        "y": 1141
+      },
+      {
+        "name": "user_assignments",
+        "schemaName": "public",
+        "x": 1744.166015625,
+        "y": 74
+      },
+      {
+        "name": "products",
+        "schemaName": "public",
+        "x": 406.318359375,
+        "y": 854
+      },
+      {
+        "name": "area_products",
+        "schemaName": "public",
+        "x": 1044.52099609375,
+        "y": 1713
+      },
+      {
+        "name": "work_schedules",
+        "schemaName": "public",
+        "x": 406.318359375,
+        "y": 1348
+      },
+      {
+        "name": "employee_shifts",
+        "schemaName": "public",
+        "x": 2292.77001953125,
+        "y": 53
+      },
+      {
+        "name": "attendance_records",
+        "schemaName": "public",
+        "x": 2790.4609375,
+        "y": 12
+      },
+      {
+        "name": "attendance_incidents",
+        "schemaName": "public",
+        "x": 3300.07373046875,
+        "y": 12
+      },
+      {
+        "name": "transfer_drafts",
+        "schemaName": "public",
+        "x": 406.318359375,
+        "y": 1746
+      },
+      {
+        "name": "transfer_draft_requests",
+        "schemaName": "public",
+        "x": 2292.77001953125,
+        "y": 419
+      },
+      {
+        "name": "transfer_draft_items",
+        "schemaName": "public",
+        "x": 1744.166015625,
+        "y": 377
+      },
+      {
+        "name": "transfer_draft_dispatches",
+        "schemaName": "public",
+        "x": 1044.52099609375,
+        "y": 1984
+      },
+      {
+        "name": "tip_area_rules",
+        "schemaName": "public",
+        "x": 1044.52099609375,
+        "y": 1443
+      },
+      {
+        "name": "tip_pools",
+        "schemaName": "public",
+        "x": 1044.52099609375,
+        "y": 2404
+      },
+      {
+        "name": "tip_pool_areas",
+        "schemaName": "public",
+        "x": 1744.166015625,
+        "y": 712
+      },
+      {
+        "name": "tip_allocations",
+        "schemaName": "public",
+        "x": 2292.77001953125,
+        "y": 753
+      },
+      {
+        "name": "tip_pool_shifts",
+        "schemaName": "public",
+        "x": 2790.4609375,
+        "y": 378
+      }
+    ],
+    "tableGroupCollapseStates": [],
+    "stickyNoteLayouts": [],
+    "referencePaths": []
+  },
+  "views": {}
+}

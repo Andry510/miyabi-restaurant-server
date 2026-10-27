@@ -1,0 +1,509 @@
+//<---------------------- ENUMS ---------------------->
+ENUM units {
+  box [note: 'Caja']
+  piece [note: 'Pieza']
+  pack [note: 'Paquete']
+  bag [note: 'Bolsa']
+  crate [note: 'Rejilla o cajón']
+  sack [note: 'Costal']
+  kg [note: 'Kilogramo']
+  liter [note: 'Litro']
+}
+
+ENUM session_status {
+  active [note: 'La sesión se puede usar']
+  expired [note: 'Venció el tiempo de la sesión']
+  revoked [note: 'Se cerró a mano o por seguridad']
+}
+
+ENUM shift_status {
+  scheduled [note: 'Turno programado, todavía no se completa']
+  completed [note: 'El empleado checó salida']
+  cancelled [note: 'Turno cancelado; no cuenta para asistencia ni propinas']
+}
+
+ENUM attendance_status {
+  present [note: 'Checó entrada y salida']
+  absent [note: 'Faltó']
+  excused [note: 'Falta justificada']
+  incomplete [note: 'Checó entrada y todavía no checa salida']
+}
+
+ENUM incident_type {
+  late_arrival [note: 'Llegó después de la tolerancia del horario']
+  early_departure [note: 'Salió antes del fin del turno']
+  late_departure [note: 'Salió después del fin del turno (reservado, hoy no se registra)']
+  absence [note: 'Falta (reservado, hoy no se registra)']
+  missed_clock_in [note: 'No checó entrada (reservado, hoy no se registra)']
+  missed_clock_out [note: 'No checó salida (reservado, hoy no se registra)']
+}
+
+ENUM transfer_draft_status {
+  open [note: 'Pedido del día abierto; los empleados pueden pedir']
+  sending [note: 'El gerente lo está enviando a la nube']
+  sent [note: 'Todos los almacenes recibieron su transferencia']
+  partially_sent [note: 'Algún almacén falló; se puede reintentar']
+}
+
+ENUM transfer_dispatch_status {
+  pending [note: 'Envío a un almacén todavía no hecho']
+  sent [note: 'La nube creó la transferencia']
+  failed [note: 'La nube rechazó el envío; ver last_error']
+}
+
+ENUM tip_period {
+  day [note: 'Un reparto por día']
+  week [note: 'Un reparto por 7 días desde la fecha que elige el gerente']
+  shift [note: 'Un reparto por horario (ej. Matutino) en un día']
+}
+
+ENUM tip_split_method {
+  equal [note: 'Partes iguales entre quienes trabajaron']
+  minutes [note: 'Proporcional a los minutos trabajados']
+  position_weight [note: 'Minutos trabajados por el peso del puesto']
+  manual [note: 'El gerente escribe el monto de cada persona']
+}
+
+ENUM tip_pool_status {
+  open [note: 'Reparto en revisión; se recalcula y se puede ajustar']
+  closed [note: 'Reparto cerrado y fijo; el empleado lo ve']
+}
+
+//<---------------------- TABLAS ---------------------->
+
+TABLE server_settings {
+  id varchar [pk, default: 'server', note: 'Fila única de configuración; siempre vale server']
+
+  timezone varchar(50) [default: 'UTC', note: 'Zona horaria del restaurante; define dónde empieza y termina un día']
+  clock_in_window_minutes smallint [default: 30, note: 'Minutos antes del turno en que se puede checar entrada (0 a 240)']
+  tip_period tip_period [default: 'day', note: 'Modo de reparto de propinas; no cambia si hay un reparto abierto']
+  products_synced_at timestamp [null, note: 'Última sincronización de productos con la nube']
+
+  updated_at timestamp [note: 'Fecha de la última modificación']
+}
+
+TABLE users {
+  id uuid [pk, note: 'ID único del empleado']
+
+  status boolean [default: true, note: 'Estado de la cuenta; desactivado no puede entrar']
+
+  deleted_at timestamp [null, note: 'Fecha de baja; no se borra para conservar historial']
+  created_at timestamp [default: 'now()', note: 'Fecha de registro']
+  updated_at timestamp [note: 'Fecha de la última modificación']
+}
+
+TABLE profiles {
+  id uuid [pk, note: 'ID único del perfil']
+
+  first_name varchar(100) [note: 'Nombre']
+  last_name varchar(100) [note: 'Apellido']
+
+  user_id uuid [unique, ref: - users.id, note: 'Empleado al que pertenece']
+
+  updated_at timestamp [note: 'Fecha de la última modificación']
+
+  indexes {
+    (first_name, last_name)
+  }
+}
+
+TABLE authentications {
+  id uuid [pk, note: 'ID único de las credenciales']
+
+  email varchar(255) [unique, note: 'Correo con el que entra a la app']
+  password varchar(255) [note: 'Contraseña cifrada con argon2']
+  phone_number varchar(20) [unique, null, note: 'Teléfono']
+  password_need_reset boolean [default: true, note: 'Debe cambiar su contraseña al entrar']
+
+  user_id uuid [unique, ref: - users.id, note: 'Empleado al que pertenece']
+
+  updated_at timestamp [note: 'Fecha de la última modificación']
+
+  indexes {
+    (email, phone_number)
+  }
+}
+
+TABLE sessions {
+  id uuid [pk, note: 'ID único de la sesión']
+
+  secret_key varchar(255) [unique, note: 'Llave de la sesión que viaja dentro de los tokens']
+  refresh_token_hash varchar(255) [note: 'Refresh token cifrado con argon2']
+  status session_status [default: 'active', note: 'Estado de la sesión']
+
+  requester_ip varchar(50) [null, note: 'IP desde donde se abrió o se usó por última vez']
+  device varchar(150) [null, note: 'Dispositivo; si cambia, la sesión se revoca']
+  browser varchar(150) [null, note: 'Navegador o app; si cambia, la sesión se revoca']
+
+  revoked_by text [null, note: 'Quién la revocó: el sistema, el gerente o el propio empleado']
+  revoked_at timestamp [null, note: 'Fecha de revocación']
+
+  expire_at timestamp [null, note: 'Fecha de vencimiento']
+  last_access_at timestamp [null, note: 'Último uso']
+
+  user_id uuid [ref: > users.id, note: 'Empleado dueño de la sesión']
+
+  created_at timestamp [default: 'now()', note: 'Fecha de inicio de sesión']
+  updated_at timestamp [note: 'Fecha de la última modificación']
+
+  indexes {
+    (status, expire_at, last_access_at)
+  }
+}
+
+TABLE work_areas {
+  id uuid [pk, note: 'ID único del área de trabajo']
+
+  name varchar(100) [unique, note: 'Nombre, ej. Cocina o Salón; no se repite sin importar mayúsculas']
+  description varchar(255) [null, note: 'Descripción']
+  status boolean [default: true, note: 'Estado del área']
+
+  deleted_at timestamp [null, note: 'Fecha de eliminación; no se borra si tiene empleados']
+  created_at timestamp [default: 'now()', note: 'Fecha de registro']
+  updated_at timestamp [note: 'Fecha de la última modificación']
+}
+
+TABLE job_positions {
+  id uuid [pk, note: 'ID único del puesto']
+
+  name varchar(100) [unique, note: 'Nombre, ej. Mesero o Cocinero; no se repite sin importar mayúsculas']
+  description varchar(255) [null, note: 'Descripción']
+  status boolean [default: true, note: 'Estado del puesto']
+
+  deleted_at timestamp [null, note: 'Fecha de eliminación; no se borra si tiene empleados']
+  created_at timestamp [default: 'now()', note: 'Fecha de registro']
+  updated_at timestamp [note: 'Fecha de la última modificación']
+}
+
+TABLE area_job_positions {
+  id uuid [pk, note: 'ID único de la liga área-puesto']
+
+  work_area_id uuid [ref: > work_areas.id, note: 'Área']
+  job_position_id uuid [ref: > job_positions.id, note: 'Puesto que existe en esa área']
+
+  tip_weight numeric(4,2) [default: 1, note: 'Peso del puesto en el reparto de propinas por peso (ej. Capitán 1.5)']
+
+  deleted_at timestamp [null, note: 'Fecha en que se quitó la liga; no se quita si hay empleados en ella']
+  created_at timestamp [default: 'now()', note: 'Fecha de registro']
+  updated_at timestamp [default: 'now()', note: 'Fecha de la última modificación']
+
+  indexes {
+    (work_area_id, job_position_id) [unique]
+  }
+}
+
+TABLE user_assignments {
+  id uuid [pk, note: 'ID único de la asignación']
+
+  user_id uuid [unique, ref: > users.id, note: 'Empleado; tiene una sola asignación']
+  area_job_position_id uuid [ref: > area_job_positions.id, note: 'Área y puesto donde trabaja']
+
+  status boolean [default: true, note: 'Estado de la asignación; sin asignación activa no puede checar']
+
+  deleted_at timestamp [null, note: 'Fecha de eliminación']
+  created_at timestamp [default: 'now()', note: 'Fecha de registro']
+  updated_at timestamp [note: 'Fecha de la última modificación']
+}
+
+TABLE products {
+  id uuid [pk, note: 'ID único del producto en el servidor local']
+  cloud_id uuid [unique, note: 'ID del producto en la nube; se usa al crear transferencias']
+
+  name varchar(150) [note: 'Nombre']
+  description varchar(255) [null, note: 'Descripción']
+  picture varchar(255) [null, note: 'URL de la imagen']
+  barcode varchar(100) [null, note: 'Código de barras']
+  storage_code varchar(100) [unique, note: 'Código de almacén']
+  unit units [note: 'Unidad de medida']
+  status boolean [default: true, note: 'Estado; inactivo no se puede pedir']
+
+  cloud_updated_at timestamp [note: 'Última modificación en la nube; se copia al sincronizar']
+
+  deleted_at timestamp [null, note: 'Fecha en que la nube lo eliminó']
+  created_at timestamp [default: 'now()', note: 'Fecha de registro']
+  updated_at timestamp [note: 'Fecha de la última modificación']
+
+  indexes {
+    (name, barcode, storage_code)
+  }
+}
+
+TABLE area_products {
+  id uuid [pk, note: 'ID único de la liga área-producto']
+
+  work_area_id uuid [ref: > work_areas.id, note: 'Área']
+  product_id uuid [ref: > products.id, note: 'Producto que esa área puede pedir; se borra si se borra el producto']
+
+  deleted_at timestamp [null, note: 'Fecha en que se quitó la liga']
+  created_at timestamp [default: 'now()', note: 'Fecha de registro']
+  updated_at timestamp [note: 'Fecha de la última modificación']
+
+  indexes {
+    (work_area_id, product_id) [unique]
+  }
+}
+
+TABLE work_schedules {
+  id uuid [pk, note: 'ID único del horario']
+
+  name varchar(100) [note: 'Nombre, ej. Matutino']
+  start_time time [note: 'Hora de entrada en hora local, ej. 09:00']
+  end_time time [note: 'Hora de salida; si es menor que la entrada, termina al día siguiente']
+  break_minutes int [default: 0, note: 'Minutos de descanso (informativo; no se descuentan)']
+  late_tolerance_minutes int [default: 5, note: 'Minutos de gracia antes de marcar retardo']
+  status boolean [default: true, note: 'Estado; inactivo no se usa para turnos nuevos']
+
+  deleted_at timestamp [null, note: 'Fecha de eliminación; no se borra si tiene turnos pendientes']
+  created_at timestamp [default: 'now()', note: 'Fecha de registro']
+  updated_at timestamp [note: 'Fecha de la última modificación']
+}
+
+TABLE employee_shifts {
+  id uuid [pk, note: 'ID único del turno']
+
+  user_assignment_id uuid [ref: > user_assignments.id, note: 'Empleado (por su asignación)']
+  work_schedule_id uuid [ref: > work_schedules.id, note: 'Horario con el que se programó']
+
+  scheduled_start timestamp [note: 'Inicio programado, guardado en UTC']
+  scheduled_end timestamp [note: 'Fin programado, guardado en UTC']
+  status shift_status [default: 'scheduled', note: 'Estado del turno']
+  note varchar(500) [null, note: 'Nota del gerente']
+
+  created_at timestamp [default: 'now()', note: 'Fecha de registro']
+  updated_at timestamp [note: 'Fecha de la última modificación']
+
+  indexes {
+    (user_assignment_id, scheduled_start)
+  }
+}
+
+TABLE attendance_records {
+  id uuid [pk, note: 'ID único del registro de asistencia']
+
+  employee_shift_id uuid [unique, ref: - employee_shifts.id, note: 'Turno; cada turno tiene un solo registro']
+
+  status attendance_status [default: 'incomplete', note: 'Estado de la asistencia']
+  clock_in timestamp [null, note: 'Hora real de entrada']
+  clock_out timestamp [null, note: 'Hora real de salida']
+  note varchar(500) [null, note: 'Nota (reservada para la justificación de faltas)']
+
+  recorded_by_id uuid [null, ref: > users.id, note: 'Quién registró la entrada']
+
+  created_at timestamp [default: 'now()', note: 'Fecha de registro']
+  updated_at timestamp [note: 'Fecha de la última modificación']
+}
+
+TABLE attendance_incidents {
+  id uuid [pk, note: 'ID único de la incidencia']
+
+  attendance_record_id uuid [ref: > attendance_records.id, note: 'Registro de asistencia; se borra con él']
+
+  type incident_type [note: 'Tipo de incidencia']
+  minutes int [null, note: 'Minutos de retardo o de salida temprana']
+  description varchar(500) [null, note: 'Descripción']
+
+  created_at timestamp [default: 'now()', note: 'Fecha de registro']
+}
+
+TABLE transfer_drafts {
+  id uuid [pk, note: 'ID único del pedido diario']
+
+  business_date date [note: 'Día en que se abrió el pedido, en la zona horaria del restaurante']
+  status transfer_draft_status [default: 'open', note: 'Estado del pedido']
+  open_lock boolean [unique, null, default: true, note: 'Candado: true solo en el pedido abierto, así nunca hay dos abiertos']
+
+  sent_by varchar(255) [null, note: 'Correo del gerente que lo envió']
+  sent_at timestamp [null, note: 'Fecha de envío']
+
+  created_at timestamp [default: 'now()', note: 'Fecha de registro']
+  updated_at timestamp [note: 'Fecha de la última modificación']
+
+  indexes {
+    (business_date, status)
+  }
+}
+
+TABLE transfer_draft_requests {
+  id uuid [pk, note: 'ID único del pedido de un empleado']
+
+  transfer_draft_id uuid [ref: > transfer_drafts.id, note: 'Pedido diario; se borra con él']
+  created_by_id uuid [ref: > user_assignments.id, note: 'Empleado que pidió']
+  product_id uuid [ref: > products.id, note: 'Producto pedido; debe ser de su área']
+
+  requested_qty int [note: 'Cantidad que pidió el empleado']
+  note varchar(255) [null, note: 'Nota del empleado']
+
+  created_at timestamp [default: 'now()', note: 'Fecha de registro']
+  updated_at timestamp [note: 'Fecha de la última modificación']
+
+  indexes {
+    (transfer_draft_id, created_by_id, product_id) [unique, note: 'Un renglón por empleado y producto']
+    (transfer_draft_id, created_by_id)
+  }
+}
+
+TABLE transfer_draft_items {
+  id uuid [pk, note: 'ID único del renglón final del pedido']
+
+  transfer_draft_id uuid [ref: > transfer_drafts.id, note: 'Pedido diario; se borra con él']
+  product_id uuid [ref: > products.id, note: 'Producto']
+  transfer_draft_dispatch_id uuid [null, ref: > transfer_draft_dispatches.id, note: 'Envío al almacén en el que salió']
+
+  quantity int [note: 'Cantidad final que decide el gerente; 0 = no se envía']
+  to_location_id uuid [null, note: 'Almacén de la nube que lo surte']
+
+  created_at timestamp [default: 'now()', note: 'Fecha de registro']
+  updated_at timestamp [note: 'Fecha de la última modificación']
+
+  indexes {
+    (transfer_draft_id, product_id) [unique]
+  }
+}
+
+TABLE transfer_draft_dispatches {
+  id uuid [pk, note: 'ID único del envío a un almacén']
+
+  transfer_draft_id uuid [ref: > transfer_drafts.id, note: 'Pedido diario; se borra con él']
+  to_location_id uuid [note: 'Almacén de la nube']
+
+  status transfer_dispatch_status [default: 'pending', note: 'Estado del envío']
+  idempotency_key uuid [unique, note: 'Llave que evita duplicar la transferencia al reintentar']
+  transfer_id uuid [unique, null, note: 'ID de la transferencia creada en la nube']
+  last_error varchar(255) [null, note: 'Último error que devolvió la nube']
+  sent_at timestamp [null, note: 'Fecha en que la nube la aceptó']
+
+  created_at timestamp [default: 'now()', note: 'Fecha de registro']
+  updated_at timestamp [note: 'Fecha de la última modificación']
+
+  indexes {
+    (transfer_draft_id, to_location_id) [unique, note: 'Un envío por almacén en cada pedido']
+  }
+}
+
+TABLE tip_area_rules {
+  id uuid [pk, note: 'ID único de la regla de propinas']
+
+  work_area_id uuid [unique, ref: - work_areas.id, note: 'Área; una regla por área']
+
+  percentage numeric(5,2) [note: 'Porcentaje del total para el área; todas las reglas suman 100']
+  method tip_split_method [default: 'minutes', note: 'Cómo se reparte dentro del área']
+
+  created_at timestamp [default: 'now()', note: 'Fecha de registro']
+  updated_at timestamp [note: 'Fecha de la última modificación']
+}
+
+TABLE tip_pools {
+  id uuid [pk, note: 'ID único del reparto de propinas']
+
+  period tip_period [note: 'Modo con el que se creó']
+  start_day date [note: 'Primer día que cubre']
+  end_day date [note: 'Último día que cubre; no se enciman repartos']
+  work_schedule_id uuid [null, ref: > work_schedules.id, note: 'Horario, solo en modo por turno']
+
+  amount numeric(12,2) [note: 'Efectivo capturado por el gerente']
+  status tip_pool_status [default: 'open', note: 'Estado del reparto']
+  note varchar(500) [null, note: 'Nota del gerente']
+  closed_at timestamp [null, note: 'Fecha de cierre']
+
+  created_at timestamp [default: 'now()', note: 'Fecha de registro']
+  updated_at timestamp [note: 'Fecha de la última modificación']
+
+  indexes {
+    (start_day, end_day)
+  }
+}
+
+TABLE tip_pool_areas {
+  id uuid [pk, note: 'ID único del área dentro del reparto']
+
+  tip_pool_id uuid [ref: > tip_pools.id, note: 'Reparto; se borra con él']
+  work_area_id uuid [ref: > work_areas.id, note: 'Área']
+
+  percentage numeric(5,2) [note: 'Porcentaje que tenía la regla al calcular']
+  method tip_split_method [note: 'Método usado; manual si el gerente ajustó a mano']
+  amount numeric(12,2) [note: 'Monto que le tocó al área']
+
+  indexes {
+    (tip_pool_id, work_area_id) [unique]
+  }
+}
+
+TABLE tip_allocations {
+  id uuid [pk, note: 'ID único del monto de una persona']
+
+  tip_pool_area_id uuid [ref: > tip_pool_areas.id, note: 'Área dentro del reparto; se borra con ella']
+  user_assignment_id uuid [ref: > user_assignments.id, note: 'Empleado']
+
+  minutes int [note: 'Minutos trabajados en el periodo']
+  weight numeric(4,2) [note: 'Peso de su puesto al calcular']
+  amount numeric(12,2) [note: 'Monto que le tocó']
+
+  indexes {
+    (tip_pool_area_id, user_assignment_id) [unique]
+    user_assignment_id
+  }
+}
+
+TABLE tip_pool_shifts {
+  id uuid [pk, note: 'ID único de la liga reparto-turno']
+
+  tip_pool_id uuid [ref: > tip_pools.id, note: 'Reparto; se borra con él']
+  employee_shift_id uuid [unique, ref: - employee_shifts.id, note: 'Turno; un turno entra a un solo reparto, así nadie cobra dos veces']
+
+  indexes {
+    tip_pool_id
+  }
+}
+
+//<---------------------- GRUPOS ---------------------->
+TABLEGROUP configuración [color: #5D6663]
+{
+  server_settings
+}
+
+TABLEGROUP usuario [color: #9305F2]
+{
+  users
+  profiles
+  authentications
+  sessions
+}
+
+TABLEGROUP organización [color: #8C6D46]
+{
+  work_areas
+  job_positions
+  area_job_positions
+  user_assignments
+}
+
+TABLEGROUP productos [color: #F24405]
+{
+  products
+  area_products
+}
+
+TABLEGROUP turnos [color: #1F6B45]
+{
+  work_schedules
+  employee_shifts
+  attendance_records
+  attendance_incidents
+}
+
+TABLEGROUP pedido_diario [color: #263973]
+{
+  transfer_drafts
+  transfer_draft_requests
+  transfer_draft_items
+  transfer_draft_dispatches
+}
+
+TABLEGROUP propinas [color: #62D97F]
+{
+  tip_area_rules
+  tip_pools
+  tip_pool_areas
+  tip_allocations
+  tip_pool_shifts
+}

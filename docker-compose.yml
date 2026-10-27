@@ -1,0 +1,17 @@
+# Restaurant server: docker compose up -d --build
+# PostgreSQL is external; set DOCKER_DATABASE_URL in .env
+services:
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: miyabi-restaurant-server
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: ${DOCKER_DATABASE_URL:?Define DOCKER_DATABASE_URL en .env}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "${PORT:-3520}:${PORT:-3520}"
