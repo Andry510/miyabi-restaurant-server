@@ -1,4 +1,4 @@
-import { Prisma, type PrismaClient } from '@generated/prisma/client';
+import type { Prisma, PrismaClient } from '@generated/prisma/client';
 import type {
   employee_shiftsWhereInput,
   tip_poolsWhereInput,
@@ -22,8 +22,9 @@ import type {
 } from '../../../domain/types/repositories';
 
 //Infrastructure
+import { PRISMA_ERROR_CODE } from '@infrastructure/constants';
 // oxlint-disable-next-line typescript/consistent-type-imports
-import { DatabaseManager } from '@infrastructure/database';
+import { DatabaseManager, PrismaError } from '@infrastructure/database';
 import { Duration, Money } from '@infrastructure/utils';
 import { TipMapper } from '../../mappers';
 
@@ -63,9 +64,6 @@ const AREAS_SELECT = {
 } as const;
 
 class ShiftTakenError extends Error {}
-
-const isKnownError = (error: unknown, code: string): boolean =>
-  error instanceof Prisma.PrismaClientKnownRequestError && error.code === code;
 
 const windowWhere = (window: TTipWindow): employee_shiftsWhereInput => ({
   scheduled_start: { gte: window.start, lt: window.end },
@@ -325,7 +323,7 @@ export class TipRepository implements ITipRepository {
 
           return TipMapper.toHeader(response);
         } catch (error) {
-          if (isKnownError(error, 'P2025')) {
+          if (PrismaError.is(error, PRISMA_ERROR_CODE.NOT_FOUND)) {
             return null;
           }
 
@@ -356,11 +354,14 @@ export class TipRepository implements ITipRepository {
 
       return { kind: 'ok', header };
     } catch (error) {
-      if (isKnownError(error, 'P2025')) {
+      if (PrismaError.is(error, PRISMA_ERROR_CODE.NOT_FOUND)) {
         return { kind: 'not_open' };
       }
 
-      if (error instanceof ShiftTakenError || isKnownError(error, 'P2002')) {
+      if (
+        error instanceof ShiftTakenError ||
+        PrismaError.is(error, PRISMA_ERROR_CODE.UNIQUE)
+      ) {
         return { kind: 'shift_taken' };
       }
 

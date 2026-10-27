@@ -2,8 +2,7 @@ import type { Provider } from '@nestjs/common';
 
 //Infrastructure
 import { ORDER_PROVIDER_TOKENS } from '../constants';
-import { OrderRepository } from './local/order.repository';
-import { RequestRepository } from './local/request.repository';
+import { OrderRepository, RequestRepository } from './local';
 
 export const ORDER_REPOSITORIES_PROVIDERS: Provider[] = [
   {

@@ -1,4 +1,4 @@
-import { Prisma, type PrismaClient } from '@generated/prisma/client';
+import type { PrismaClient } from '@generated/prisma/client';
 import { Injectable } from '@nestjs/common';
 
 //Domain
@@ -12,8 +12,9 @@ import type {
 } from '../../../domain/types/repositories';
 
 //Infrastructure
+import { PRISMA_ERROR_CODE } from '@infrastructure/constants';
 // oxlint-disable-next-line typescript/consistent-type-imports
-import { DatabaseManager } from '@infrastructure/database';
+import { DatabaseManager, PrismaError } from '@infrastructure/database';
 import { ORDER_PRODUCT_SELECT, OrderMapper } from '../../mappers';
 
 const MY_REQUEST_SELECT = {
@@ -109,10 +110,7 @@ export class RequestRepository implements IRequestRepository {
 
           return { kind: 'ok', value: OrderMapper.toMyRequest(response, null) };
         } catch (error) {
-          if (
-            error instanceof Prisma.PrismaClientKnownRequestError &&
-            error.code === 'P2025'
-          ) {
+          if (PrismaError.is(error, PRISMA_ERROR_CODE.NOT_FOUND)) {
             return this.missing(id, assignmentId);
           }
 
@@ -185,14 +183,14 @@ export class RequestRepository implements IRequestRepository {
                 select: {
                   transfer_draft_id: true,
                   product_id: true,
-                  requested_qty: true,
+                  quantity: true,
                 },
               });
 
         const finalQuantity = new Map(
           sentItems.map((item) => [
             item.transfer_draft_id + ':' + item.product_id,
-            item.requested_qty,
+            item.quantity,
           ]),
         );
 

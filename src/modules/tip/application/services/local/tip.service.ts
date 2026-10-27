@@ -11,7 +11,7 @@ import {
   TIP_SPLIT_METHOD,
 } from '@domain/enums/shared';
 import { ResultPattern } from '@domain/patterns/results';
-import type { TPaginationService } from '@domain/types/shared';
+import type { TApiMessage, TPaginationService } from '@domain/types/shared';
 import { TipAggregate } from '../../../domain/aggregates';
 import type {
   IRuleRepository,
@@ -72,7 +72,7 @@ export class TipService implements ITipService {
 
   private async notFoundOr(
     id: string,
-    conflict: string,
+    conflict: TApiMessage,
   ): Promise<ResultPattern<never, ServiceError>> {
     const existsResult = await this.tip_repository.exists(id);
 

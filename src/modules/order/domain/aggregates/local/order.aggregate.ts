@@ -1,4 +1,5 @@
 //Domain
+import { ORDER_LINE_CHANGE } from '@domain/enums/shared';
 import type {
   TDispatchPlan,
   TOrderDraft,
@@ -43,12 +44,13 @@ export class OrderAggregate {
     return [...lines.values()]
       .map((line) => {
         const item = items.get(line.product.id);
+        const quantity = item ? item.quantity : line.requested_quantity;
 
         return {
           ...line,
-          quantity: item ? item.quantity : line.requested_quantity,
+          quantity,
           to_location_id: item?.to_location_id ?? line.suggested_location_id,
-          overridden: Boolean(item),
+          change: OrderAggregate.change(line.requested_quantity, quantity),
         };
       })
       .sort((a, b) => a.product.name.localeCompare(b.product.name));
@@ -77,6 +79,27 @@ export class OrderAggregate {
   };
 
   //Functions
+  private static change(
+    requested: number,
+    quantity: number,
+  ): ORDER_LINE_CHANGE {
+    if (quantity === requested) {
+      return ORDER_LINE_CHANGE.UNCHANGED;
+    }
+
+    if (requested === 0) {
+      return ORDER_LINE_CHANGE.ADDED;
+    }
+
+    if (quantity === 0) {
+      return ORDER_LINE_CHANGE.REMOVED;
+    }
+
+    return quantity > requested
+      ? ORDER_LINE_CHANGE.INCREASED
+      : ORDER_LINE_CHANGE.DECREASED;
+  }
+
   private emptyLine(product: TOrderLine['product']): TOrderLine {
     return {
       product,
@@ -84,7 +107,7 @@ export class OrderAggregate {
       quantity: 0,
       to_location_id: null,
       suggested_location_id: this.suggestions.get(product.id) ?? null,
-      overridden: false,
+      change: ORDER_LINE_CHANGE.UNCHANGED,
       requests: [],
     };
   }

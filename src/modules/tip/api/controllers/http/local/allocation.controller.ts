@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpStatus,
   Inject,
@@ -71,6 +72,29 @@ export class AllocationHttpController {
     const response = ControllerResponseMapper.toDataResult(
       API_TIP_MESSAGE.SUCCESS.MY_TIPS_RETRIEVED,
       mineResult.Value,
+    );
+
+    return res.status(HttpStatus.OK).json(response);
+  }
+
+  @Delete(HTTP_LOCAL_TIP_ROUTER.AREA)
+  @HttpManagerAccess()
+  async resetArea(
+    @Param() params: AreaParamDto,
+    @Res() res: Response,
+  ): Promise<Response> {
+    const { id, work_area_id: workAreaId } =
+      params as unknown as TAreaParamSchema;
+
+    const resetResult = await this.service.resetArea(id, workAreaId);
+
+    if (resetResult.IsFailure) {
+      return HttpErrorMapper.reply(res, resetResult.Error);
+    }
+
+    const response = ControllerResponseMapper.toDataResult(
+      API_TIP_MESSAGE.SUCCESS.AREA_RESET,
+      resetResult.Value,
     );
 
     return res.status(HttpStatus.OK).json(response);

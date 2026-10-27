@@ -38,6 +38,7 @@ export interface IOrderRepository {
     orderId: string,
     lines: TOrderLine[],
     plans: TDispatchPlan[],
+    sentBy: string | null,
   ): Promise<ResultPattern<TDispatchToSend[] | null>>;
 
   findPendingDispatches(

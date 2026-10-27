@@ -1,9 +1,7 @@
 import type { Provider } from '@nestjs/common';
 
 //Application
-import { AllocationService } from './local/allocation.service';
-import { RuleService } from './local/rule.service';
-import { TipService } from './local/tip.service';
+import { AllocationService, RuleService, TipService } from './local';
 
 //Infrastructure
 import { TIP_PROVIDER_TOKENS } from '../../infrastructure/constants';

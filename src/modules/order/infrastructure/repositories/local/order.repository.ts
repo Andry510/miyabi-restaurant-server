@@ -1,4 +1,4 @@
-import { Prisma, type PrismaClient } from '@generated/prisma/client';
+import type { PrismaClient } from '@generated/prisma/client';
 import type { transfer_draftsWhereInput } from '@generated/prisma/models';
 import { Injectable } from '@nestjs/common';
 
@@ -17,47 +17,24 @@ import type {
 } from '../../../domain/types/repositories';
 
 //Infrastructure
+import { PRISMA_ERROR_CODE } from '@infrastructure/constants';
 // oxlint-disable-next-line typescript/consistent-type-imports
-import { DatabaseManager } from '@infrastructure/database';
-import { ORDER_PRODUCT_SELECT, OrderMapper } from '../../mappers';
+import { DatabaseManager, PrismaError } from '@infrastructure/database';
+import {
+  DISPATCH_SELECT,
+  ORDER_PRODUCT_SELECT,
+  OrderMapper,
+} from '../../mappers';
 
 const ORDER_SELECT = {
   id: true,
   business_date: true,
   status: true,
-  note: true,
+  sent_by: true,
+  sent_at: true,
   created_at: true,
   updated_at: true,
 } as const;
-
-const DISPATCH_SELECT = {
-  id: true,
-  idempotency_key: true,
-  to_location_id: true,
-  items: {
-    select: {
-      requested_qty: true,
-      product: { select: { cloud_id: true } },
-    },
-  },
-} as const;
-
-type TDispatchSendRow = {
-  id: string;
-  idempotency_key: string;
-  to_location_id: string;
-  items: Array<{ requested_qty: number; product: { cloud_id: string } }>;
-};
-
-const toDispatchToSend = (row: TDispatchSendRow): TDispatchToSend => ({
-  id: row.id,
-  idempotency_key: row.idempotency_key,
-  to_location_id: row.to_location_id,
-  items: row.items.map((item) => ({
-    cloud_product_id: item.product.cloud_id,
-    quantity: item.requested_qty,
-  })),
-});
 
 @Injectable()
 export class OrderRepository implements IOrderRepository {
@@ -86,10 +63,7 @@ export class OrderRepository implements IOrderRepository {
 
           return response.id;
         } catch (error) {
-          if (
-            error instanceof Prisma.PrismaClientKnownRequestError &&
-            error.code === 'P2002'
-          ) {
+          if (PrismaError.is(error, PRISMA_ERROR_CODE.UNIQUE)) {
             const raced = await this.findOpen();
 
             if (raced) {
@@ -144,7 +118,7 @@ export class OrderRepository implements IOrderRepository {
             },
             items: {
               select: {
-                requested_qty: true,
+                quantity: true,
                 to_location_id: true,
                 product: { select: ORDER_PRODUCT_SELECT },
               },
@@ -181,7 +155,7 @@ export class OrderRepository implements IOrderRepository {
           })),
           items: items.map((item) => ({
             product: item.product,
-            quantity: item.requested_qty,
+            quantity: item.quantity,
             to_location_id: item.to_location_id,
           })),
           dispatches: dispatches.map((dispatch) =>
@@ -247,10 +221,10 @@ export class OrderRepository implements IOrderRepository {
           create: {
             transfer_draft_id: orderId,
             product_id: productId,
-            requested_qty: quantity,
+            quantity,
             to_location_id: toLocationId,
           },
-          update: { requested_qty: quantity, to_location_id: toLocationId },
+          update: { quantity, to_location_id: toLocationId },
         });
 
         return true;
@@ -282,12 +256,18 @@ export class OrderRepository implements IOrderRepository {
     orderId: string,
     lines: TOrderLine[],
     plans: TDispatchPlan[],
+    sentBy: string | null,
   ): Promise<ResultPattern<TDispatchToSend[] | null>> =>
     ResultPattern.tryCatchAsync('Infrastructure', OrderRepository.name, () =>
       this.primaryDatabase.$transaction(async (transaction) => {
         const { count } = await transaction.transfer_drafts.updateMany({
           where: { id: orderId, status: 'open' },
-          data: { status: 'sending', open_lock: null },
+          data: {
+            status: 'sending',
+            open_lock: null,
+            sent_by: sentBy,
+            sent_at: new Date(),
+          },
         });
 
         if (count === 0) {
@@ -302,7 +282,7 @@ export class OrderRepository implements IOrderRepository {
           data: lines.map((line) => ({
             transfer_draft_id: orderId,
             product_id: line.product.id,
-            requested_qty: line.quantity,
+            quantity: line.quantity,
             to_location_id: line.to_location_id,
           })),
         });
@@ -328,7 +308,7 @@ export class OrderRepository implements IOrderRepository {
           });
 
           dispatches.push(
-            toDispatchToSend(
+            OrderMapper.toDispatchToSend(
               await transaction.transfer_draft_dispatches.findUniqueOrThrow({
                 where: { id: dispatch.id },
                 select: DISPATCH_SELECT,
@@ -364,7 +344,7 @@ export class OrderRepository implements IOrderRepository {
         }
 
         return response.dispatches.map((dispatch) =>
-          toDispatchToSend(dispatch),
+          OrderMapper.toDispatchToSend(dispatch),
         );
       },
     );

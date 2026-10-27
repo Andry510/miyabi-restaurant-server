@@ -34,7 +34,7 @@ import type { ITransferService } from '../../../../transfer/domain/interfaces/se
 //Infrastructure
 import { Logger } from '@infrastructure/audits';
 import { ServiceResultMapper } from '@infrastructure/mappers/shared';
-import { TimeZone } from '@infrastructure/utils';
+import { TimeZone, TokenPayload } from '@infrastructure/utils';
 import {
   ORDER_LOGGER_NAME,
   ORDER_PROVIDER_TOKENS,
@@ -244,6 +244,7 @@ export class OrderService implements IOrderService {
       id,
       lines,
       OrderAggregate.plan(lines, () => randomUUID()),
+      TokenPayload.email(accessToken),
     );
 
     if (startResult.IsFailure) {

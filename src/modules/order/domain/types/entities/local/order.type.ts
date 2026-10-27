@@ -1,5 +1,9 @@
 //Domain
-import type { DISPATCH_STATUS, ORDER_STATUS } from '@domain/enums/shared';
+import type {
+  DISPATCH_STATUS,
+  ORDER_LINE_CHANGE,
+  ORDER_STATUS,
+} from '@domain/enums/shared';
 import type { TReference } from '@domain/types/shared';
 
 export type TOrderProductOutput = {
@@ -29,7 +33,7 @@ export type TOrderLineOutput = {
   quantity: number;
   to_location_id: string | null;
   suggested_location_id: string | null;
-  overridden: boolean;
+  change: ORDER_LINE_CHANGE;
   requests: TOrderRequestOutput[];
 };
 
@@ -46,7 +50,8 @@ export type TOrderOutput = {
   id: string;
   business_date: string;
   status: ORDER_STATUS;
-  note: string | null;
+  sent_by: string | null;
+  sent_at: Date | null;
   created_at: Date;
   updated_at: Date;
 };

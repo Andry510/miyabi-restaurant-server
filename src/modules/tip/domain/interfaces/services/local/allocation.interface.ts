@@ -15,6 +15,11 @@ export interface IAllocationService {
     input: TAreaBodySchema,
   ): Promise<ResultPattern<TTipPoolDetailOutput, ServiceError>>;
 
+  resetArea(
+    id: string,
+    workAreaId: string,
+  ): Promise<ResultPattern<TTipPoolDetailOutput, ServiceError>>;
+
   mine(
     user: TUserDetail,
     input: TMyTipsQuerySchema,

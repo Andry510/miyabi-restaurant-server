@@ -1,31 +1,110 @@
 export const API_TIP_MESSAGE = Object.freeze({
   ERROR: {
-    WORK_AREA_NOT_FOUND: 'ERROR_TIP_WORK_AREA_NOT_FOUND',
-    POSITION_NOT_LINKED: 'ERROR_TIP_POSITION_NOT_LINKED',
-    RULES_INCOMPLETE: 'ERROR_TIP_RULES_INCOMPLETE',
-    PERIOD_MISMATCH: 'ERROR_TIP_PERIOD_MISMATCH',
-    OVERLAP: 'ERROR_TIP_OVERLAP',
-    SHIFT_TAKEN: 'ERROR_TIP_SHIFT_TAKEN',
-    POOL_NOT_FOUND: 'ERROR_TIP_POOL_NOT_FOUND',
-    POOL_NOT_OPEN: 'ERROR_TIP_POOL_NOT_OPEN',
-    POOL_NOT_CLOSED: 'ERROR_TIP_POOL_NOT_CLOSED',
-    PENDING_SHIFTS: 'ERROR_TIP_PENDING_SHIFTS',
-    NO_PARTICIPANTS: 'ERROR_TIP_NO_PARTICIPANTS',
-    MANUAL_MISMATCH: 'ERROR_TIP_MANUAL_MISMATCH',
-    AREA_NOT_IN_POOL: 'ERROR_TIP_AREA_NOT_IN_POOL',
-    USER_NOT_IN_AREA: 'ERROR_TIP_USER_NOT_IN_AREA',
+    WORK_AREA_NOT_FOUND: {
+      code: 'ERROR_TIP_WORK_AREA_NOT_FOUND',
+      message: 'No se encontró el área de trabajo',
+    },
+    POSITION_NOT_LINKED: {
+      code: 'ERROR_TIP_POSITION_NOT_LINKED',
+      message: 'El puesto no está vinculado a esa área',
+    },
+    RULES_INCOMPLETE: {
+      code: 'ERROR_TIP_RULES_INCOMPLETE',
+      message: 'Las reglas de reparto de propinas están incompletas',
+    },
+    PERIOD_MISMATCH: {
+      code: 'ERROR_TIP_PERIOD_MISMATCH',
+      message: 'El periodo no coincide con el de la bolsa de propinas',
+    },
+    OVERLAP: {
+      code: 'ERROR_TIP_OVERLAP',
+      message: 'El periodo se cruza con otra bolsa de propinas',
+    },
+    SHIFT_TAKEN: {
+      code: 'ERROR_TIP_SHIFT_TAKEN',
+      message: 'Uno o más turnos ya pertenecen a otra bolsa de propinas',
+    },
+    POOL_NOT_FOUND: {
+      code: 'ERROR_TIP_POOL_NOT_FOUND',
+      message: 'No se encontró la bolsa de propinas',
+    },
+    POOL_NOT_OPEN: {
+      code: 'ERROR_TIP_POOL_NOT_OPEN',
+      message: 'La bolsa de propinas no está abierta',
+    },
+    POOL_NOT_CLOSED: {
+      code: 'ERROR_TIP_POOL_NOT_CLOSED',
+      message: 'La bolsa de propinas no está cerrada',
+    },
+    PENDING_SHIFTS: {
+      code: 'ERROR_TIP_PENDING_SHIFTS',
+      message: 'Hay turnos sin cerrar en el periodo',
+    },
+    NO_PARTICIPANTS: {
+      code: 'ERROR_TIP_NO_PARTICIPANTS',
+      message: 'No hay empleados para repartir la propina',
+    },
+    MANUAL_MISMATCH: {
+      code: 'ERROR_TIP_MANUAL_MISMATCH',
+      message: 'El reparto manual no suma el total de la propina',
+    },
+    AREA_NOT_IN_POOL: {
+      code: 'ERROR_TIP_AREA_NOT_IN_POOL',
+      message: 'El área no participa en esta bolsa de propinas',
+    },
+    USER_NOT_IN_AREA: {
+      code: 'ERROR_TIP_USER_NOT_IN_AREA',
+      message: 'El empleado no pertenece a esa área',
+    },
   },
   SUCCESS: {
-    RULES_RETRIEVED: 'SUCCESS_TIP_RULES_RETRIEVED',
-    RULES_UPDATED: 'SUCCESS_TIP_RULES_UPDATED',
-    POOLS_RETRIEVED: 'SUCCESS_TIP_POOLS_RETRIEVED',
-    POOL_RETRIEVED: 'SUCCESS_TIP_POOL_RETRIEVED',
-    POOL_CREATED: 'SUCCESS_TIP_POOL_CREATED',
-    POOL_UPDATED: 'SUCCESS_TIP_POOL_UPDATED',
-    AREA_UPDATED: 'SUCCESS_TIP_AREA_UPDATED',
-    POOL_CLOSED: 'SUCCESS_TIP_POOL_CLOSED',
-    POOL_REOPENED: 'SUCCESS_TIP_POOL_REOPENED',
-    POOL_DELETED: 'SUCCESS_TIP_POOL_DELETED',
-    MY_TIPS_RETRIEVED: 'SUCCESS_TIP_MY_TIPS_RETRIEVED',
+    RULES_RETRIEVED: {
+      code: 'SUCCESS_TIP_RULES_RETRIEVED',
+      message: 'Reglas de propinas obtenidas correctamente',
+    },
+    RULES_UPDATED: {
+      code: 'SUCCESS_TIP_RULES_UPDATED',
+      message: 'Reglas de propinas actualizadas correctamente',
+    },
+    POOLS_RETRIEVED: {
+      code: 'SUCCESS_TIP_POOLS_RETRIEVED',
+      message: 'Bolsas de propinas obtenidas correctamente',
+    },
+    POOL_RETRIEVED: {
+      code: 'SUCCESS_TIP_POOL_RETRIEVED',
+      message: 'Bolsa de propinas obtenida correctamente',
+    },
+    POOL_CREATED: {
+      code: 'SUCCESS_TIP_POOL_CREATED',
+      message: 'Bolsa de propinas creada correctamente',
+    },
+    POOL_UPDATED: {
+      code: 'SUCCESS_TIP_POOL_UPDATED',
+      message: 'Bolsa de propinas actualizada correctamente',
+    },
+    AREA_UPDATED: {
+      code: 'SUCCESS_TIP_AREA_UPDATED',
+      message: 'Propina del área actualizada correctamente',
+    },
+    AREA_RESET: {
+      code: 'SUCCESS_TIP_AREA_RESET',
+      message: 'Propina del área restablecida correctamente',
+    },
+    POOL_CLOSED: {
+      code: 'SUCCESS_TIP_POOL_CLOSED',
+      message: 'Bolsa de propinas cerrada correctamente',
+    },
+    POOL_REOPENED: {
+      code: 'SUCCESS_TIP_POOL_REOPENED',
+      message: 'Bolsa de propinas reabierta correctamente',
+    },
+    POOL_DELETED: {
+      code: 'SUCCESS_TIP_POOL_DELETED',
+      message: 'Bolsa de propinas eliminada correctamente',
+    },
+    MY_TIPS_RETRIEVED: {
+      code: 'SUCCESS_TIP_MY_TIPS_RETRIEVED',
+      message: 'Tus propinas obtenidas correctamente',
+    },
   },
 });

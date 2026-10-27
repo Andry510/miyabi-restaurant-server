@@ -9,6 +9,7 @@ import type {
   TOrderUserOutput,
 } from '../../../domain/types/entities';
 import type {
+  TDispatchToSend,
   TOrderLine,
   TOrderProductRow,
 } from '../../../domain/types/repositories';
@@ -22,7 +23,8 @@ type TOrderRow = {
   id: string;
   business_date: Date;
   status: string;
-  note: string | null;
+  sent_by: string | null;
+  sent_at: Date | null;
   created_at: Date;
   updated_at: Date;
 };
@@ -43,6 +45,25 @@ type TMyRequestRow = {
   product: TOrderProductRow;
   transfer_draft: { id: string; business_date: Date; status: string };
 };
+
+type TDispatchSendRow = {
+  id: string;
+  idempotency_key: string;
+  to_location_id: string;
+  items: Array<{ quantity: number; product: { cloud_id: string } }>;
+};
+
+export const DISPATCH_SELECT = {
+  id: true,
+  idempotency_key: true,
+  to_location_id: true,
+  items: {
+    select: {
+      quantity: true,
+      product: { select: { cloud_id: true } },
+    },
+  },
+} as const;
 
 export const ORDER_PRODUCT_SELECT = {
   id: true,
@@ -74,6 +95,16 @@ export class OrderMapper {
     ...row,
     business_date: OrderMapper.fromDay(row.business_date),
     status: row.status as ORDER_STATUS,
+  });
+
+  static toDispatchToSend = (row: TDispatchSendRow): TDispatchToSend => ({
+    id: row.id,
+    idempotency_key: row.idempotency_key,
+    to_location_id: row.to_location_id,
+    items: row.items.map((item) => ({
+      cloud_product_id: item.product.cloud_id,
+      quantity: item.quantity,
+    })),
   });
 
   static toDispatch = (row: TDispatchRow): TOrderDispatchOutput => ({

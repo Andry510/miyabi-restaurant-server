@@ -1,8 +1,7 @@
 import type { Provider } from '@nestjs/common';
 
 //Application
-import { OrderService } from './local/order.service';
-import { RequestService } from './local/request.service';
+import { OrderService, RequestService } from './local';
 
 //Infrastructure
 import { ORDER_PROVIDER_TOKENS } from '../../infrastructure/constants';

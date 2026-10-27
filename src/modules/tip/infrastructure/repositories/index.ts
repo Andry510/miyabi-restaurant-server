@@ -2,9 +2,7 @@ import type { Provider } from '@nestjs/common';
 
 //Infrastructure
 import { TIP_PROVIDER_TOKENS } from '../constants';
-import { AllocationRepository } from './local/allocation.repository';
-import { RuleRepository } from './local/rule.repository';
-import { TipRepository } from './local/tip.repository';
+import { AllocationRepository, RuleRepository, TipRepository } from './local';
 
 export const TIP_REPOSITORIES_PROVIDERS: Provider[] = [
   {

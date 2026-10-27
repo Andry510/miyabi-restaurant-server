@@ -22,6 +22,36 @@ export class AllocationRepository implements IAllocationRepository {
     this.primaryDatabase = databaseManager.PrimaryDBClient;
   }
 
+  resetManual = (
+    id: string,
+    workAreaId: string,
+  ): Promise<ResultPattern<boolean>> =>
+    ResultPattern.tryCatchAsync(
+      'Infrastructure',
+      AllocationRepository.name,
+      async () => {
+        const rule = await this.primaryDatabase.tip_area_rules.findUnique({
+          where: { work_area_id: workAreaId },
+          select: { method: true },
+        });
+
+        if (!rule) {
+          return false;
+        }
+
+        const { count } = await this.primaryDatabase.tip_pool_areas.updateMany({
+          where: {
+            tip_pool_id: id,
+            work_area_id: workAreaId,
+            tip_pool: { status: 'open' },
+          },
+          data: { method: rule.method },
+        });
+
+        return count > 0;
+      },
+    );
+
   setManual = (
     id: string,
     workAreaId: string,

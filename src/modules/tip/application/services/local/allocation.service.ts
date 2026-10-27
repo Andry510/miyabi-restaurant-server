@@ -123,6 +123,43 @@ export class AllocationService implements IAllocationService {
     return ServiceResultMapper.Ok(TipMapper.toDetailOutput(header, updated));
   }
 
+  async resetArea(
+    id: string,
+    workAreaId: string,
+  ): Promise<ResultPattern<TTipPoolDetailOutput, ServiceError>> {
+    const poolResult = await this.tip_service.openPool(id);
+
+    if (poolResult.IsFailure) {
+      return ResultPattern.Failure(poolResult.Error);
+    }
+
+    if (
+      !poolResult.Value.areas.some((area) => area.work_area.id === workAreaId)
+    ) {
+      return ServiceResultMapper.NotFound(
+        API_TIP_MESSAGE.ERROR.AREA_NOT_IN_POOL,
+      );
+    }
+
+    const resetResult = await this.allocation_repository.resetManual(
+      id,
+      workAreaId,
+    );
+
+    if (resetResult.IsFailure) {
+      this.logger.error(resetResult.Error);
+      return ServiceResultMapper.InternalServerError();
+    }
+
+    if (!resetResult.Value) {
+      return ServiceResultMapper.Conflict(
+        API_TIP_MESSAGE.ERROR.RULES_INCOMPLETE,
+      );
+    }
+
+    return this.tip_service.update(id, {});
+  }
+
   async mine(
     user: TUserDetail,
     input: TMyTipsQuerySchema,

@@ -1,4 +1,5 @@
 //Domain
+import type { ORDER_LINE_CHANGE } from '@domain/enums/shared';
 import type {
   TOrderDispatchOutput,
   TOrderOutput,
@@ -33,7 +34,7 @@ export type TOrderLine = {
   quantity: number;
   to_location_id: string | null;
   suggested_location_id: string | null;
-  overridden: boolean;
+  change: ORDER_LINE_CHANGE;
   requests: TOrderRequestOutput[];
 };
 
