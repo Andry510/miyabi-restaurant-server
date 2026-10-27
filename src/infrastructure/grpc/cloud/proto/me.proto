@@ -7,6 +7,9 @@ service me_service {
   rpc user(user_request) returns (user_response) {}
   rpc upload_picture(upload_picture_request) returns (upload_picture_response) {}
   rpc remove_picture(user_request) returns (remove_picture_response) {}
+  rpc change_password(change_password_request) returns (change_password_response) {}
+  rpc sessions(sessions_request) returns (sessions_response) {}
+  rpc remove_sessions(remove_sessions_request) returns (remove_sessions_response) {}
 }
 
 /*<----------- Request ----------->*/
@@ -21,12 +24,14 @@ message location_response {
   string message = 1;
   location_metadata data = 2;
   string timestamp = 3;
+  string code = 4;
 }
 
 message user_response {
   string message = 1;
   user_data data = 2;
   string timestamp = 3;
+  string code = 4;
 }
 
 /*<----------- Data ----------->*/
@@ -83,9 +88,68 @@ message upload_picture_response {
   string message = 1;
   string data = 2;
   string timestamp = 3;
+  string code = 4;
 }
 
 message remove_picture_response {
   string message = 1;
   string timestamp = 2;
+  string code = 3;
+}
+
+/*<----------- Password ----------->*/
+message change_password_request {
+  string current_password = 1;
+  string new_password = 2;
+  string confirm_password = 3;
+  bool close_sessions = 4;
+}
+
+message change_password_response {
+  string message = 1;
+  string timestamp = 2;
+  string code = 3;
+}
+
+/*<----------- Sessions ----------->*/
+message sessions_request {
+  optional int32 page = 1;
+  optional int32 limit = 2;
+}
+
+message sessions_response {
+  string message = 1;
+  repeated session_data data = 2;
+  pagination_metadata meta = 3;
+  string timestamp = 4;
+  string code = 5;
+}
+
+message session_data {
+  string id = 1;
+  string browser = 2;
+  string device = 3;
+  string requester_ip = 4;
+  string last_access_at = 5;
+  string created_at = 6;
+  bool current = 7;
+}
+
+message pagination_metadata {
+  int32 page = 1;
+  int32 limit = 2;
+  int32 total = 3;
+  int32 total_pages = 4;
+  bool next_page = 5;
+  bool prev_page = 6;
+}
+
+message remove_sessions_request {
+  repeated string session_ids = 1;
+}
+
+message remove_sessions_response {
+  string message = 1;
+  string timestamp = 2;
+  string code = 3;
 }

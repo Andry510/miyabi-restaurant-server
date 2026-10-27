@@ -24,6 +24,7 @@ message transfer_items_response {
   repeated transfer_items_data data = 2;
   pagination_metadata meta = 3;
   string timestamp = 4;
+  string code = 5;
 }
 
 /*<----------- Data ----------->*/

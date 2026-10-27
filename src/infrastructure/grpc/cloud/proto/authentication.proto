@@ -40,24 +40,28 @@ message login_response {
   string message = 1;
   login_data data = 3;
   string timestamp = 4;
+  string code = 5;
 }
 
 message mfa_qr_response {
   string message = 1;
   string data = 2;
   string timestamp = 3;
+  string code = 4;
 }
 
 message mfa_code_response {
   string message = 1;
   mfa_code_data data = 2;
   string timestamp = 3;
+  string code = 4;
 }
 
 message reset_password_response {
   string message = 1;
   password_data data = 2;
   string timestamp = 3;
+  string code = 4;
 }
 
 /*<----------- Data ----------->*/

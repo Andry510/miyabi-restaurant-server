@@ -24,6 +24,7 @@ export class HttpErrorMapper {
 
   static toBody = (error: ServiceError): THttpErrorBody => ({
     status_code: HttpErrorMapper.toStatus(error.code),
+    code: error.message_code,
     message: error.message,
     timestamp: error.timestamp,
   });

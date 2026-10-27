@@ -2,6 +2,7 @@ export * from './attendance-status.enum';
 export * from './dispatch-status.enum';
 export * from './incident-type.enum';
 export * from './location-type.enum';
+export * from './order-line-change.enum';
 export * from './order-status.enum';
 export * from './product-unit.enum';
 export * from './service-error-code.enum';

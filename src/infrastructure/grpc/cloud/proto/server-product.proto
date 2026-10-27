@@ -18,6 +18,7 @@ message server_products_response {
   string timestamp = 3;
   repeated string removed_ids = 4;
   string synced_at = 5;
+  string code = 6;
 }
 
 /*<----------- Data ----------->*/

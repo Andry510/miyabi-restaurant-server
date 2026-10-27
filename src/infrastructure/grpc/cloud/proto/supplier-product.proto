@@ -39,6 +39,7 @@ message supplier_product_response {
   string message = 1;
   supplier_product_data data = 2;
   string timestamp = 3;
+  string code = 4;
 }
 
 message supplier_products_response {
@@ -46,6 +47,7 @@ message supplier_products_response {
   repeated supplier_products_data data = 2;
   pagination_metadata meta = 3;
   string timestamp = 4;
+  string code = 5;
 }
 
 message product_suppliers_response {
@@ -53,6 +55,7 @@ message product_suppliers_response {
   repeated product_suppliers_data data = 2;
   pagination_metadata meta = 3;
   string timestamp = 4;
+  string code = 5;
 }
 
 /*<----------- Data ----------->*/

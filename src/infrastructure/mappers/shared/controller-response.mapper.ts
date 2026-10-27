@@ -1,4 +1,5 @@
 import type {
+  TApiMessage,
   TDataResponse,
   TMessageResponse,
   TPaginationFormant,
@@ -24,22 +25,31 @@ const toIso = <T>(value: T): T => {
 };
 
 export class ControllerResponseMapper {
-  static toMessageResult = (message: string): TMessageResponse => ({
+  static toMessageResult = ({
+    code,
+    message,
+  }: TApiMessage): TMessageResponse => ({
+    code,
     message,
     timestamp: new Date().toISOString(),
   });
 
-  static toDataResult = <T>(message: string, data: T): TDataResponse<T> => ({
+  static toDataResult = <T>(
+    { code, message }: TApiMessage,
+    data: T,
+  ): TDataResponse<T> => ({
+    code,
     message,
     data: toIso(data),
     timestamp: new Date().toISOString(),
   });
 
   static toPaginationResult = <T>(
-    message: string,
+    { code, message }: TApiMessage,
     data: T,
     meta: TPaginationFormant,
   ): TPaginationResponse<T> => ({
+    code,
     message,
     data: toIso(data),
     meta,

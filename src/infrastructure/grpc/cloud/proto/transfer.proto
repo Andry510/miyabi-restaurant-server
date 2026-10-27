@@ -67,6 +67,7 @@ message register_transfer_response {
   string message = 1;
   string timestamp = 2;
   transfer_data data = 3;
+  string code = 4;
 }
 
 message transfers_response {
@@ -74,12 +75,14 @@ message transfers_response {
   repeated transfers_data data = 2;
   pagination_metadata meta = 3;
   string timestamp = 4;
+  string code = 5;
 }
 
 message transfer_response {
   string message = 1;
   transfer_data data = 2;
   string timestamp = 3;
+  string code = 4;
 }
 
 /*<----------- Data ----------->*/

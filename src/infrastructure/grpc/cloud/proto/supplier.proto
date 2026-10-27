@@ -27,12 +27,14 @@ message suppliers_response {
   repeated suppliers_data data = 2;
   pagination_metadata meta = 3;
   string timestamp = 4;
+  string code = 5;
 }
 
 message supplier_response {
   string message = 1;
   supplier_data data = 2;
   string timestamp = 3;
+  string code = 4;
 }
 
 /*<----------- Data ----------->*/

@@ -4,6 +4,7 @@ import { API_MESSAGE_GLOBAL } from '@common/messages';
 //Domain
 import type { ServiceError } from '@domain/errors';
 import type {
+  TApiMessage,
   TPaginationFormant,
   TPaginationService,
 } from '@domain/types/shared';
@@ -38,37 +39,37 @@ export class ServiceResultMapper {
   }
 
   static BadRequest<T>(
-    message: string = API_MESSAGE_GLOBAL.ERROR.BAD_REQUEST,
+    message: TApiMessage = API_MESSAGE_GLOBAL.ERROR.BAD_REQUEST,
   ): ResultPattern<T, ServiceError> {
     return ResultPattern.Failure(ServiceErrorFactory.BadRequest(message));
   }
 
   static Forbidden<T>(
-    message: string = API_MESSAGE_GLOBAL.ERROR.FORBIDDEN,
+    message: TApiMessage = API_MESSAGE_GLOBAL.ERROR.FORBIDDEN,
   ): ResultPattern<T, ServiceError> {
     return ResultPattern.Failure(ServiceErrorFactory.Forbidden(message));
   }
 
   static NotFound<T>(
-    message: string = API_MESSAGE_GLOBAL.ERROR.NOT_FOUND,
+    message: TApiMessage = API_MESSAGE_GLOBAL.ERROR.NOT_FOUND,
   ): ResultPattern<T, ServiceError> {
     return ResultPattern.Failure(ServiceErrorFactory.NotFound(message));
   }
 
   static Conflict<T>(
-    message: string = API_MESSAGE_GLOBAL.ERROR.CONFLICT,
+    message: TApiMessage = API_MESSAGE_GLOBAL.ERROR.CONFLICT,
   ): ResultPattern<T, ServiceError> {
     return ResultPattern.Failure(ServiceErrorFactory.Conflict(message));
   }
 
   static InternalServerError<T>(
-    message: string = API_MESSAGE_GLOBAL.ERROR.INTERNAL_ERROR,
+    message: TApiMessage = API_MESSAGE_GLOBAL.ERROR.INTERNAL_ERROR,
   ): ResultPattern<T, ServiceError> {
     return ResultPattern.Failure(ServiceErrorFactory.InternalServer(message));
   }
 
   static Unauthorized<T>(
-    message: string = API_MESSAGE_GLOBAL.ERROR.UNAUTHORIZED,
+    message: TApiMessage = API_MESSAGE_GLOBAL.ERROR.UNAUTHORIZED,
   ): ResultPattern<T, ServiceError> {
     return ResultPattern.Failure(ServiceErrorFactory.Unauthorized(message));
   }

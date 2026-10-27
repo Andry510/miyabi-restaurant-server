@@ -1,3 +1,4 @@
+export * from './api-message.type';
 export * from './class.type';
 export * from './client.type';
 export * from './cloud-token.type';

@@ -1,6 +1,7 @@
 import type { TPaginationFormant } from './pagination.type';
 
 export type TMessageResponse = {
+  code: string;
   message: string;
   timestamp: string;
 };

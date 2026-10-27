@@ -26,16 +26,19 @@ message refresh_token_response {
   string message = 1;
   refresh_token_data data = 2;
   string timestamp = 3;
+  string code = 4;
 }
 
 message logout_response {
   string message = 1;
   string timestamp = 2;
+  string code = 3;
 }
 
 message validate_response {
   string message = 1;
   string timestamp = 2;
+  string code = 3;
 }
 
 /*<----------- Metadata ----------->*/
