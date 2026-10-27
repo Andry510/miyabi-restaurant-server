@@ -1,0 +1,22 @@
+<mxfile host="app.diagrams.net">
+    <diagram id="d" name="Page-1">
+        <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="700" pageHeight="640" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="2" value="Emparejar el servidor del restaurante" style="text;html=1;align=left;verticalAlign=middle;fontStyle=1;fontSize=14;" parent="1" vertex="1"><mxGeometry x="40" y="20" width="900" height="30" as="geometry"/></mxCell>
+                <mxCell id="3" value="Gerente" style="shape=umlLifeline;perspective=0;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;size=40;" parent="1" vertex="1"><mxGeometry x="30" y="60" width="140" height="520" as="geometry"/></mxCell>
+                <mxCell id="4" value="Servidor local" style="shape=umlLifeline;perspective=0;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;size=40;" parent="1" vertex="1"><mxGeometry x="230" y="60" width="140" height="520" as="geometry"/></mxCell>
+                <mxCell id="5" value="Nube (gRPC)" style="shape=umlLifeline;perspective=0;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;size=40;" parent="1" vertex="1"><mxGeometry x="430" y="60" width="140" height="520" as="geometry"/></mxCell>
+                <mxCell id="6" value="Pide el enrollment token (app de admin, REST de la nube)" style="html=1;verticalAlign=bottom;endArrow=block;fontSize=10;" parent="1" edge="1"><mxGeometry relative="1" as="geometry"><mxPoint x="100" y="140" as="sourcePoint"/><mxPoint x="500" y="140" as="targetPoint"/></mxGeometry></mxCell>
+                <mxCell id="7" value="POST /v1/pairing/register { name, enrollment_token }" style="html=1;verticalAlign=bottom;endArrow=block;fontSize=10;" parent="1" edge="1"><mxGeometry relative="1" as="geometry"><mxPoint x="100" y="190" as="sourcePoint"/><mxPoint x="300" y="190" as="targetPoint"/></mxGeometry></mxCell>
+                <mxCell id="8" value="¿Ya tiene SERVER_TOKEN? → 409 ALREADY_PAIRED" style="text;html=1;align=left;fontSize=10;whiteSpace=wrap;" parent="1" vertex="1"><mxGeometry x="306" y="222" width="190" height="36" as="geometry"/></mxCell>
+                <mxCell id="9" value="server.register (nombre, versión, instance_id, plataforma, MAC)" style="html=1;verticalAlign=bottom;endArrow=block;fontSize=10;" parent="1" edge="1"><mxGeometry relative="1" as="geometry"><mxPoint x="300" y="290" as="sourcePoint"/><mxPoint x="500" y="290" as="targetPoint"/></mxGeometry></mxCell>
+                <mxCell id="10" value="server_token" style="html=1;verticalAlign=bottom;endArrow=block;fontSize=10;dashed=1;endArrow=open;" parent="1" edge="1"><mxGeometry relative="1" as="geometry"><mxPoint x="500" y="340" as="sourcePoint"/><mxPoint x="300" y="340" as="targetPoint"/></mxGeometry></mxCell>
+                <mxCell id="11" value="201 { name, server_token }" style="html=1;verticalAlign=bottom;endArrow=block;fontSize=10;dashed=1;endArrow=open;" parent="1" edge="1"><mxGeometry relative="1" as="geometry"><mxPoint x="300" y="390" as="sourcePoint"/><mxPoint x="100" y="390" as="targetPoint"/></mxGeometry></mxCell>
+                <mxCell id="12" value="Pega SERVER_TOKEN en .env y reinicia" style="html=1;verticalAlign=bottom;endArrow=block;fontSize=10;" parent="1" edge="1"><mxGeometry relative="1" as="geometry"><mxPoint x="100" y="440" as="sourcePoint"/><mxPoint x="300" y="440" as="targetPoint"/></mxGeometry></mxCell>
+                <mxCell id="13" value="Al arrancar: socket con server_token" style="html=1;verticalAlign=bottom;endArrow=block;fontSize=10;" parent="1" edge="1"><mxGeometry relative="1" as="geometry"><mxPoint x="300" y="490" as="sourcePoint"/><mxPoint x="500" y="490" as="targetPoint"/></mxGeometry></mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
