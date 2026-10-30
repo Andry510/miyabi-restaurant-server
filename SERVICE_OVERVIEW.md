@@ -45,7 +45,7 @@ Cómo está construido por dentro el servidor local del restaurante. Para instal
 2. **Guards globales** (`APP_GUARD`, en este orden):
    1. `HttpPairingGuard`: sin `SERVER_TOKEN` responde 409 `ERROR_SERVER_NOT_PAIRED` (salvo `@HttpPairingAccess()`).
    2. `HttpLocalAccessGuard`: solo en `@HttpLocalAccess()`. Valida el JWT local, la sesión y que el empleado esté activo; deja el empleado en `request.user`.
-   3. `HttpManagerAccessGuard`: solo en `@HttpManagerAccess()`. Llama a `session.validate` de la nube con el Bearer y el `server_token`.
+   3. `HttpManagerAccessGuard`: solo en `@HttpManagerAccess()`. Busca el token en la caché de Redis; si no está, llama a `session.validate` de la nube con el Bearer y el `server_token` y guarda el resultado.
 3. **Pipe del controller** (`@UsePipes(HttpValibotPipe)`): valida `@Param`, `@Query` y `@Body` con el `static schema` de cada DTO; si falla lanza 400 `ERROR_BAD_REQUEST`.
 4. **Controller** llama a su `service` y responde con `@Res()`: `ControllerResponseMapper` si sale bien, `HttpErrorMapper.reply` si falla.
 5. **Service** orquesta y devuelve `ResultPattern`. Los repositorios `local/` usan Prisma; los `cloud/` usan `CloudRequest`.
@@ -125,8 +125,8 @@ Igual que en la nube (`miyabi-api/CLAUDE.md` §3), con `local/` y `cloud/` donde
 | `shift` | local | Turnos programados de cada empleado. |
 | `check` | local | Entrada y salida del empleado. |
 | `order` | local → cloud | Pedido del día: solicitudes de empleados, revisión del gerente y envío a la nube. |
-| `tip` | local | Reglas de reparto, bolsas de propinas, reparto por área y propinas del empleado. |
-| `setting` | local | Configuración del servidor: zona horaria, ventana de entrada y periodo de propinas. |
+| `tip` | local | Reglas de reparto, bolsas de propinas, sanciones, reparto por área, Excel con firma y propinas del empleado. |
+| `setting` | local | Configuración del servidor: zona horaria, ventana de entrada, periodo de propinas, reglas de sanción e inicio de semana. |
 | `product` | local + cloud | Productos del área del empleado (copia local) y catálogo de la nube. |
 | `server-product` | local + cloud | Sincronización de productos desde la nube (hidratación y eventos del socket). |
 | `supplier`, `supplier-product`, `location` | cloud | Proveedores, sus productos y locales, leídos de la nube. |
@@ -137,14 +137,14 @@ Igual que en la nube (`miyabi-api/CLAUDE.md` §3), con `local/` y `cloud/` donde
 
 ## 6. Rutas REST
 
-**101 rutas**: 76 locales (61 de gerente, 11 de empleado y 4 públicas de sesión) y 25 que pasan por la nube. Todas, excepto `POST /v1/pairing/register`, exigen que el servidor esté emparejado.
+**116 rutas**: 91 locales (74 de gerente, 13 de empleado y 4 públicas de sesión) y 25 que pasan por la nube. Todas, excepto `POST /v1/pairing/register`, exigen que el servidor esté emparejado.
 
 - **gerente:** `@HttpManagerAccess()`; el Bearer de la nube se valida con `session.validate`.
 - **gerente (nube):** sin guard de acceso local; el servidor reenvía el Bearer y la nube lo valida en su propio RPC.
 - **empleado:** `@HttpLocalAccess()`; JWT local.
 - **público:** login, cambio de contraseña obligatoria y sesión (usan su propio token del cuerpo o del header).
 
-La última columna es el diagrama en `documents/diagrams/workflows/`.
+La última columna es el diagrama en `documents/diagrams/workflows/`; `—` indica una ruta que todavía no tiene diagrama.
 
 | Método | Ruta | Acceso | Qué hace | Diagrama |
 |---|---|---|---|---|
@@ -164,6 +164,8 @@ La última columna es el diagrama en `documents/diagrams/workflows/`.
 | POST | `/v1/me/cloud/picture` | gerente (nube) | Subir mi foto | `me/cloud/upload_picture` |
 | GET | `/v1/me/local` | empleado | Mi perfil | `me/local/user` |
 | GET | `/v1/me/local/attendance` | empleado | Mi asistencia | `user/local/my_attendance` |
+| PATCH | `/v1/me/local` | empleado | Cambiar mi teléfono | — |
+| PATCH | `/v1/me/local/password` | empleado | Cambiar mi contraseña (cierra la sesión) | — |
 | GET | `/v1/users/local` | gerente | Listar empleados | `user/local/users` |
 | POST | `/v1/users/local` | gerente | Crear empleado | `user/local/register` |
 | DELETE | `/v1/users/local/:id` | gerente | Eliminar empleado | `user/local/remove` |
@@ -171,6 +173,8 @@ La última columna es el diagrama en `documents/diagrams/workflows/`.
 | PATCH | `/v1/users/local/:id` | gerente | Editar empleado | `user/local/update` |
 | GET | `/v1/users/local/:id/attendance` | gerente | Asistencia de un empleado | `user/local/attendance` |
 | GET | `/v1/users/local/:id/sessions` | gerente | Sesiones de un empleado | `user/local/sessions` |
+| DELETE | `/v1/users/local/:id/sessions` | gerente | Cerrar la sesión activa de un empleado | — |
+| POST | `/v1/users/local/:id/password/reset` | gerente | Contraseña temporal con Excel | — |
 | GET | `/v1/work-areas/local` | gerente | Listar áreas | `work-area/local/work_areas` |
 | POST | `/v1/work-areas/local` | gerente | Crear área | `work-area/local/register` |
 | DELETE | `/v1/work-areas/local/:id` | gerente | Eliminar área | `work-area/local/remove` |
@@ -205,6 +209,9 @@ La última columna es el diagrama en `documents/diagrams/workflows/`.
 | GET | `/v1/shifts/local/:id` | gerente | Ver turno | `shift/local/shift` |
 | PATCH | `/v1/shifts/local/:id` | gerente | Editar turno | `shift/local/update` |
 | PATCH | `/v1/shifts/local/:id/cancel` | gerente | Cancelar turno | `shift/local/cancel` |
+| POST | `/v1/shifts/local/copy` | gerente | Copiar los turnos de una semana a otra | — |
+| PATCH | `/v1/shifts/local/:id/attendance` | gerente | Corregir hora de entrada o salida | — |
+| POST | `/v1/shifts/local/:id/justifications` | gerente | Justificar falta, retardo o salida temprana | — |
 | GET | `/v1/checks/local/current` | empleado | Asistencia actual | `check/local/current` |
 | POST | `/v1/checks/local/in` | empleado | Registrar entrada | `check/local/check_in` |
 | POST | `/v1/checks/local/out` | empleado | Registrar salida | `check/local/check_out` |
@@ -231,6 +238,14 @@ La última columna es el diagrama en `documents/diagrams/workflows/`.
 | PUT | `/v1/tips/local/:id/areas/:work_area_id` | gerente | Repartir la propina de un área | `tip/local/area` |
 | PATCH | `/v1/tips/local/:id/close` | gerente | Cerrar bolsa de propinas | `tip/local/close` |
 | PATCH | `/v1/tips/local/:id/reopen` | gerente | Reabrir bolsa de propinas | `tip/local/reopen` |
+| PATCH | `/v1/tips/local/:id/areas/:work_area_id/status` | gerente | Apagar o prender un área en la bolsa | — |
+| GET | `/v1/tips/local/:id/export` | gerente | Excel del reparto con columna de firma | — |
+| POST | `/v1/tips/local/:id/sanctions` | gerente | Sancionar a un empleado en la bolsa | — |
+| DELETE | `/v1/tips/local/:id/sanctions/:sanction_id` | gerente | Quitar una sanción | — |
+| GET | `/v1/tip-sanctions/local` | gerente | Listar tipos de sanción | — |
+| POST | `/v1/tip-sanctions/local` | gerente | Crear tipo de sanción | — |
+| PATCH | `/v1/tip-sanctions/local/:id` | gerente | Editar tipo de sanción | — |
+| DELETE | `/v1/tip-sanctions/local/:id` | gerente | Eliminar tipo de sanción (si no se ha usado) | — |
 | GET | `/v1/settings/local` | gerente | Ver configuración | `setting/local/settings` |
 | PATCH | `/v1/settings/local` | gerente | Editar configuración | `setting/local/update` |
 | GET | `/v1/products/cloud` | gerente (nube) | Listar productos | `product/cloud/products` |
@@ -259,8 +274,14 @@ La última columna es el diagrama en `documents/diagrams/workflows/`.
 | `access_token` de empleado | El servidor | `JWT_SECRET_TOKEN` | Rutas `@HttpLocalAccess`. Lleva `email` y `session_key`. |
 | `refresh_token` de empleado | El servidor | `JWT_SECRET_REFRESH_TOKEN` | `POST /v1/sessions/local/refresh` y `logout`. |
 | `password_token` | El servidor | `JWT_SECRET_PASSWORD_TOKEN` | Cambio de contraseña obligatoria del empleado. |
-| `access_token` y `refresh_token` del gerente | La nube | Secretos de la nube | Rutas de gerente y `*/cloud`. El servidor no los valida solo: pregunta a la nube. |
+| `access_token` y `refresh_token` del gerente | La nube | Secretos de la nube | Rutas de gerente y `*/cloud`. El servidor no los valida solo: pregunta a la nube y guarda el resultado en Redis hasta que vence el token. |
 | `server_token` | La nube, al emparejar | — | Identifica al servidor ante la nube en cada llamada gRPC (metadata `server_token`) y en el socket (`auth.server_token`). |
+
+### Caché de la sesión del gerente
+
+- Cuando la nube valida un `access_token` de gerente, el servidor lo guarda en Redis (con su huella SHA-256, no el token) hasta que el token vence. Así responde más rápido y el gerente sigue trabajando si se cae el internet.
+- La caché de esa sesión se borra al instante cuando la nube manda `session.revoked` por el socket o cuando el gerente cierra sesión por `POST /v1/sessions/cloud/logout`.
+- Riesgo aceptado: si la nube cierra la sesión mientras el servidor no tiene internet, el aviso no llega y el token sirve en el local hasta que vence.
 
 ### Guards
 
@@ -268,7 +289,7 @@ La última columna es el diagrama en `documents/diagrams/workflows/`.
 |---|---|---|---|
 | `HttpPairingGuard` | `@HttpPairingAccess()` lo salta | Que exista `SERVER_TOKEN` | 409 `ERROR_SERVER_NOT_PAIRED` |
 | `HttpLocalAccessGuard` | `@HttpLocalAccess()` | JWT local válido y vigente, sesión `active` con ese `session_key`, empleado activo | 401 `ERROR_MISSING_TOKEN`, `ERROR_INVALID_ACCESS_TOKEN`, `ERROR_EXPIRED_TOKEN`, `ERROR_UNAUTHORIZED` |
-| `HttpManagerAccessGuard` | `@HttpManagerAccess()` | `session.validate` en la nube | 401 `ERROR_MISSING_TOKEN`; 503 `ERROR_CLOUD_UNAVAILABLE`; el `code` de la nube (401/403) |
+| `HttpManagerAccessGuard` | `@HttpManagerAccess()` | Caché de Redis o `session.validate` en la nube | 401 `ERROR_MISSING_TOKEN`; 503 `ERROR_CLOUD_UNAVAILABLE`; el `code` de la nube (401/403) |
 
 Los guards son globales y se activan con su decorador; no se usa `@UseGuards`. Responden con `HttpErrorMapper.reply` y devuelven `false`.
 
@@ -309,7 +330,10 @@ Los cambios se aplican en una cola, de uno en uno, y una hidratación pedida mie
 ### Empleados, áreas y puestos
 
 - Un empleado tiene un área y un puesto (`user_assignments`); el puesto debe existir en esa área (`area_job_positions`).
-- Correo y teléfono son únicos.
+- Correo y teléfono son únicos. El empleado puede cambiar su propio teléfono.
+- Al dar de alta, la contraseña es opcional: si no se envía se genera una de 15 caracteres. La respuesta es un Excel con correo y contraseña (igual que la nube) y el empleado debe cambiarla al entrar.
+- Si el empleado olvida su contraseña, el gerente genera una temporal (`password/reset`): devuelve otro Excel, cierra su sesión y lo obliga a cambiarla.
+- El empleado tiene una sola sesión activa. Puede cambiar su contraseña con la actual; al hacerlo se cierra su sesión. El gerente también puede cerrarla.
 - No se elimina un área, un puesto ni el vínculo área-puesto mientras tenga empleados.
 - Borrar a un empleado cancela sus turnos programados.
 
@@ -318,6 +342,12 @@ Los cambios se aplican en una cola, de uno en uno, y una hidratación pedida mie
 - Un turno usa un horario activo y no puede cruzarse con otro turno del mismo empleado.
 - Solo se edita o cancela un turno `scheduled`. Un horario con turnos programados no se elimina.
 - La entrada se acepta desde `clock_in_window_minutes` antes del turno (`server_settings`, 30 por defecto); antes responde 409 `ERROR_CHECK_TOO_EARLY`. La salida exige una entrada abierta.
+- Cada horario tiene dos tolerancias: `late_tolerance_minutes` (retardo) y `early_leave_tolerance_minutes` (salida temprana). Solo pasando la tolerancia se registra la incidencia (`AttendanceRule`).
+- La lista de turnos trae la asistencia de cada uno y filtra por `attendance` (`present`, `absent`, `excused`, `incomplete`); un turno terminado sin entrada cuenta como `absent`.
+- El gerente corrige horas de cualquier fecha pasada (`attendance`), con motivo obligatorio; se recalculan retardo y salida temprana y se guarda su correo en `corrected_by`.
+- El gerente justifica una falta, un retardo o una salida temprana (`justifications`), con motivo obligatorio; se guarda su correo en `justified_by`. Una falta justificada queda `excused`.
+- Copiar semana (`shifts/local/copy`): las dos fechas deben caer en `server_settings.week_start_day`. Copia cada turno al mismo día y horario; omite y reporta los que ya pasaron, se cruzan con otro turno, son de un empleado inactivo o usan un horario inactivo.
+- Un turno de una bolsa de propinas cerrada no se corrige ni se justifica: responde 409 `ERROR_SHIFT_TIP_POOL_CLOSED` hasta reabrir la bolsa.
 - Las fechas se calculan con la zona horaria de `server_settings.timezone`.
 
 ### Pedido del día
@@ -332,8 +362,12 @@ Ver `states/order.drawio`, `states/order-dispatch.drawio` y `sequences/order-sen
 
 ### Propinas
 
-- **Reglas por área** (`tip_area_rules`): porcentaje y método `equal`, `minutes`, `position_weight` o `manual`.
+- **Reglas por área** (`tip_area_rules`): porcentaje del total y método `position_weight` (factor del puesto en `area_job_positions.tip_weight`) o `manual`.
 - **Bolsas** (`tip_pools`): una por periodo (`day`, `week` o `shift`, según `server_settings.tip_period`), sin cruzarse con otra; cada turno pertenece a una sola bolsa.
+- **Qué cuenta:** turnos completos (entrada y salida). Salir antes de la tolerancia sin justificar no cuenta; olvidar la salida no cuenta hasta que el gerente la corrige.
+- **Sanciones en turnos:** cada retardo sin justificar quita `late_arrival_shifts` y cada falta sin justificar `absence_shifts` (en `server_settings`). El gerente crea tipos de sanción (`tip_sanction_types`: turnos que quitan o "quita todo") y los aplica a un empleado en una bolsa abierta (`tip_sanctions`).
+- **Reparto:** el total se divide entre las áreas activas con gente; el área apagada o sin turnos completos pasa su parte a las demás. Dentro del área, cada persona recibe según *turnos × factor*, en pesos enteros.
+- **Dinero sancionado** (`server_settings.tip_sanction_destination`): `fund` lo deja en un fondo aparte (`tip_pools.sanction_amount`), `area` lo reparte entre los demás de la misma área y `all` entre todos los que cobraron, según lo que ganó cada uno. Un área manual no lleva sanciones.
 - Se edita mientras está `open`. Para cerrarla, todos los turnos del periodo deben estar cerrados, debe haber participantes y el reparto manual debe sumar el total. `reopen` la vuelve a abrir. Solo se elimina abierta.
 - No se puede cambiar el periodo de propinas mientras haya bolsas abiertas.
 
@@ -366,8 +400,12 @@ Ver `states/tip-pool.drawio`.
 | `CloudRequest`, `CloudErrorMapper` | `infrastructure/grpc/cloud` | Llamadas a la nube. |
 | `TimeZone` | `infrastructure/utils` | Inicio de día y día de una fecha en la zona del local. |
 | `Duration`, `Money` | `infrastructure/utils` | Minutos entre fechas y cálculos de dinero. |
+| `AttendanceRule` | `infrastructure/utils` | Minutos de retardo y de salida temprana con su tolerancia (checador y correcciones). |
+| `AttendanceRecordMapper` | `infrastructure/mappers/shared` | Registro de asistencia con incidencias, igual en la agenda y en la lista de turnos. |
+| `RedisManager` | `infrastructure/cache` | Caché en Redis (`get`, `set`, `forget`, `forgetGroup`); si Redis no responde, el servidor sigue sin caché. |
+| `Xlsx` | `infrastructure/exporters` | Excel de credenciales y de reparto de propinas. |
 | `Machine` | `infrastructure/utils` | Plataforma y MAC para emparejar. |
-| `TokenPayload` | `infrastructure/utils` | Leer el correo del token del gerente sin validarlo (quién envió el pedido). |
+| `TokenPayload` | `infrastructure/utils` | Leer el correo del token del gerente ya validado (quién envió el pedido, corrigió, justificó o sancionó). |
 | `JwtManager`, `Argon2` | `infrastructure/securities` | Tokens y contraseñas. |
 | `CatalogService` | módulo `repository` | Existencia de áreas, puestos y productos, compartida por los módulos. |
 
@@ -383,8 +421,8 @@ Igual que la nube (`miyabi-api/CLAUDE.md` §4), con estas diferencias:
 ## 13. Notas técnicas y pendientes
 
 - **Estado gRPC 8 de la nube:** `CloudErrorMapper` lo traduce siempre a 413 `PAYLOAD_TOO_LARGE`. La nube también usa 8 para "demasiados intentos" (login, MFA, contraseña), así que un bloqueo por intentos llega a la app como **413** con el `code` de la nube (`ERROR_AUTHENTICATION_TOO_MANY_ATTEMPTS`) en vez de 429.
-- **Turno `completed`:** existe en `shift_status`, pero ningún repositorio lo asigna; la asistencia vive en `attendance_records`.
-- **`.env.example`:** se eliminó del repositorio; las variables están documentadas en el README.
+- **Turno `completed`:** lo asignan la salida del checador y la corrección del gerente cuando hay hora de salida.
+- **`.env.example`:** lista todas las variables, incluida `DOCKER_DATABASE_URL` para `docker-compose.yml`.
 - **Sin suite de pruebas** automáticas.
 
 ## 14. Cómo agregar una ruta
