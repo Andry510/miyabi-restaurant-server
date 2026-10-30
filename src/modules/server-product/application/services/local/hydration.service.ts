@@ -10,7 +10,7 @@ import type {
   IProductRepository,
 } from '../../../domain/interfaces/repositories';
 import type { IHydrationService } from '../../../domain/interfaces/services';
-import type { ISocketService } from '../../../../socket/domain/interfaces/services';
+import type { IChannelService } from '../../../../channel/domain/interfaces/services';
 
 //Infrastructure
 import { Logger } from '@infrastructure/audits';
@@ -23,9 +23,9 @@ import {
   SERVER_PRODUCT_PROVIDER_TOKENS,
 } from '../../../infrastructure/constants';
 import {
-  SOCKET_EVENT,
-  SOCKET_PROVIDER_TOKENS,
-} from '../../../../socket/infrastructure/constants';
+  CHANNEL_EVENT,
+  CHANNEL_PROVIDER_TOKENS,
+} from '../../../../channel/infrastructure/constants';
 
 @Injectable()
 export class HydrationService implements IHydrationService, OnModuleInit {
@@ -37,8 +37,8 @@ export class HydrationService implements IHydrationService, OnModuleInit {
   private hydrationQueued = false;
 
   constructor(
-    @Inject(SOCKET_PROVIDER_TOKENS.SERVICES.SOCKET)
-    private readonly socket_service: ISocketService,
+    @Inject(CHANNEL_PROVIDER_TOKENS.SERVICES.CHANNEL)
+    private readonly channel_service: IChannelService,
     @Inject(SERVER_PRODUCT_PROVIDER_TOKENS.REPOSITORIES.PRODUCT)
     private readonly product_repository: IProductRepository,
     @Inject(SERVER_PRODUCT_PROVIDER_TOKENS.REPOSITORIES.CLOUD_SERVER_PRODUCT)
@@ -47,16 +47,11 @@ export class HydrationService implements IHydrationService, OnModuleInit {
   ) {}
 
   onModuleInit(): void {
-    this.socket_service.on(SOCKET_EVENT.SERVER_SYNC_REQUIRED, () =>
-      this.hydrate(),
+    this.channel_service.on(CHANNEL_EVENT.SYNC_REQUIRED, () => this.hydrate());
+    this.channel_service.on(CHANNEL_EVENT.PRODUCT, (payload) =>
+      this.save((payload as { product?: unknown } | null)?.product),
     );
-    this.socket_service.on(SOCKET_EVENT.PRODUCT_CREATED, (payload) =>
-      this.save(payload),
-    );
-    this.socket_service.on(SOCKET_EVENT.PRODUCT_UPDATED, (payload) =>
-      this.save(payload),
-    );
-    this.socket_service.on(SOCKET_EVENT.PRODUCT_REMOVED, (payload) =>
+    this.channel_service.on(CHANNEL_EVENT.PRODUCT_REMOVED, (payload) =>
       this.remove(payload),
     );
   }
@@ -186,5 +181,7 @@ export class HydrationService implements IHydrationService, OnModuleInit {
         data.length - products.length,
       ),
     );
+
+    this.channel_service.reportStatus();
   }
 }

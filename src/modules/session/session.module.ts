@@ -11,10 +11,10 @@ import { SESSION_REPOSITORIES_PROVIDERS } from './infrastructure/repositories';
 
 //Modules
 import { RepositoryModule } from '../repository';
-import { SocketModule } from '../socket';
+import { ChannelModule } from '../channel';
 
 @Module({
-  imports: [RepositoryModule, SocketModule],
+  imports: [RepositoryModule, ChannelModule],
   controllers: Object.values(SESSION_CONTROLLERS_PROVIDERS),
   providers: [...SESSION_SERVICES_PROVIDERS, ...SESSION_REPOSITORIES_PROVIDERS],
 })

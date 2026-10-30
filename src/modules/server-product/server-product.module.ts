@@ -6,10 +6,10 @@ import { SERVER_PRODUCT_SERVICES_PROVIDERS } from './application/services';
 //Infrastructure
 import { SERVER_PRODUCT_REPOSITORIES_PROVIDERS } from './infrastructure/repositories';
 
-import { SocketModule } from '../socket';
+import { ChannelModule } from '../channel';
 
 @Module({
-  imports: [SocketModule],
+  imports: [ChannelModule],
   providers: [
     ...SERVER_PRODUCT_SERVICES_PROVIDERS,
     ...SERVER_PRODUCT_REPOSITORIES_PROVIDERS,

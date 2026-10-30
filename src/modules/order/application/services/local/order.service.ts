@@ -27,6 +27,7 @@ import type {
   TOrderDraft,
   TOrderLine,
 } from '../../../domain/types/repositories';
+import type { IChannelService } from '../../../../channel/domain/interfaces/services';
 import type { ICatalogService } from '../../../../repository/domain/interfaces/services';
 import type { ISettingService } from '../../../../setting/domain/interfaces/services';
 import type { ITransferService } from '../../../../transfer/domain/interfaces/services';
@@ -40,6 +41,7 @@ import {
   ORDER_PROVIDER_TOKENS,
 } from '../../../infrastructure/constants';
 import { OrderMapper } from '../../../infrastructure/mappers';
+import { CHANNEL_PROVIDER_TOKENS } from '../../../../channel/infrastructure/constants';
 import { REPOSITORY_PROVIDER_TOKENS } from '../../../../repository/infrastructure/constants';
 import { SETTING_PROVIDER_TOKENS } from '../../../../setting/infrastructure/constants';
 import { TRANSFER_PROVIDER_TOKENS } from '../../../../transfer/infrastructure/constants';
@@ -59,6 +61,8 @@ export class OrderService implements IOrderService {
     private readonly transfer_service: ITransferService,
     @Inject(ORDER_PROVIDER_TOKENS.REPOSITORIES.ORDER)
     private readonly order_repository: IOrderRepository,
+    @Inject(CHANNEL_PROVIDER_TOKENS.SERVICES.CHANNEL)
+    private readonly channel_service: IChannelService,
   ) {}
 
   //<--------- Validations --------->
@@ -372,5 +376,7 @@ export class OrderService implements IOrderService {
     if (finishResult.IsFailure) {
       this.logger.error(finishResult.Error);
     }
+
+    this.channel_service.reportStatus();
   }
 }
