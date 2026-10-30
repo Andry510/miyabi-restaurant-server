@@ -4,11 +4,16 @@ import { ParamIdSchema } from '@domain/schemas/shared';
 import {
   AreaBodySchema,
   AreaParamSchema,
+  AreaStatusBodySchema,
   MyTipsQuerySchema,
+  PoolSanctionBodySchema,
+  PoolSanctionParamSchema,
   PoolsQuerySchema,
   RegisterSchema,
   RulesBodySchema,
+  SanctionTypeBodySchema,
   UpdateBodySchema,
+  UpdateSanctionTypeBodySchema,
 } from '../../../domain/schemas';
 
 export class TipParamDto {
@@ -41,4 +46,24 @@ export class UpdateBodyDto {
 
 export class AreaBodyDto {
   static schema = AreaBodySchema;
+}
+
+export class AreaStatusBodyDto {
+  static schema = AreaStatusBodySchema;
+}
+
+export class SanctionTypeBodyDto {
+  static schema = SanctionTypeBodySchema;
+}
+
+export class UpdateSanctionTypeBodyDto {
+  static schema = UpdateSanctionTypeBodySchema;
+}
+
+export class PoolSanctionBodyDto {
+  static schema = PoolSanctionBodySchema;
+}
+
+export class PoolSanctionParamDto {
+  static schema = PoolSanctionParamSchema;
 }

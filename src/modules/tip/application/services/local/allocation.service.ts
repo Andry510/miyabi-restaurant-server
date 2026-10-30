@@ -15,6 +15,7 @@ import type {
 } from '../../../domain/interfaces/services';
 import type {
   TAreaBodySchema,
+  TAreaStatusBodySchema,
   TMyTipsQuerySchema,
 } from '../../../domain/schemas';
 import type {
@@ -24,8 +25,9 @@ import type {
 
 //Infrastructure
 import { Logger } from '@infrastructure/audits';
+import { Xlsx } from '@infrastructure/exporters';
 import { ServiceResultMapper } from '@infrastructure/mappers/shared';
-import { Money } from '@infrastructure/utils';
+import { Money, TokenPayload } from '@infrastructure/utils';
 import {
   TIP_LOGGER_NAME,
   TIP_PROVIDER_TOKENS,
@@ -54,7 +56,7 @@ export class AllocationService implements IAllocationService {
       return ResultPattern.Failure(poolResult.Error);
     }
 
-    const { header, areas } = poolResult.Value;
+    const { header, areas, sanctions } = poolResult.Value;
     const area = areas.find((item) => item.work_area.id === workAreaId);
 
     if (!area) {
@@ -120,7 +122,9 @@ export class AllocationService implements IAllocationService {
         : item,
     );
 
-    return ServiceResultMapper.Ok(TipMapper.toDetailOutput(header, updated));
+    return ServiceResultMapper.Ok(
+      TipMapper.toDetailOutput(header, updated, sanctions),
+    );
   }
 
   async resetArea(
@@ -158,6 +162,98 @@ export class AllocationService implements IAllocationService {
     }
 
     return this.tip_service.update(id, {});
+  }
+
+  async areaStatus(
+    id: string,
+    workAreaId: string,
+    input: TAreaStatusBodySchema,
+  ): Promise<ResultPattern<TTipPoolDetailOutput, ServiceError>> {
+    const poolResult = await this.tip_service.openPool(id);
+
+    if (poolResult.IsFailure) {
+      return ResultPattern.Failure(poolResult.Error);
+    }
+
+    if (
+      !poolResult.Value.areas.some((area) => area.work_area.id === workAreaId)
+    ) {
+      return ServiceResultMapper.NotFound(
+        API_TIP_MESSAGE.ERROR.AREA_NOT_IN_POOL,
+      );
+    }
+
+    const statusResult = await this.allocation_repository.setEnabled(
+      id,
+      workAreaId,
+      input.enabled,
+    );
+
+    if (statusResult.IsFailure) {
+      this.logger.error(statusResult.Error);
+      return ServiceResultMapper.InternalServerError();
+    }
+
+    if (!statusResult.Value) {
+      return ServiceResultMapper.Conflict(API_TIP_MESSAGE.ERROR.POOL_NOT_OPEN);
+    }
+
+    return this.tip_service.update(id, {});
+  }
+
+  async export(
+    id: string,
+    accessToken: string | null,
+  ): Promise<ResultPattern<ArrayBuffer, ServiceError>> {
+    const poolResult = await this.tip_service.pool(id);
+
+    if (poolResult.IsFailure) {
+      return ResultPattern.Failure(poolResult.Error);
+    }
+
+    const pool = poolResult.Value;
+    const rows: Array<Array<string | number | null>> = [
+      ['Reparto de propinas'],
+      ['Del', pool.start_day, 'Al', pool.end_day],
+      ['Total', pool.amount, 'Estado', pool.status],
+      ['Fondo de sanciones', pool.sanction_amount],
+      [],
+      [
+        'Área',
+        'Empleado',
+        'Turnos',
+        'Turnos sancionados',
+        'Factor',
+        'Propina',
+        'Sanción',
+        'Firma',
+      ],
+      ...pool.areas.flatMap((area) =>
+        area.allocations.map((allocation) => [
+          area.work_area.name,
+          `${allocation.user.first_name} ${allocation.user.last_name}`,
+          allocation.shifts,
+          allocation.sanction_shifts,
+          allocation.weight,
+          allocation.amount,
+          allocation.sanction_amount,
+          null,
+        ]),
+      ),
+    ];
+
+    const bufferResult = Xlsx.sheetExcel(
+      TokenPayload.email(accessToken),
+      'propinas',
+      rows,
+    );
+
+    if (bufferResult.IsFailure) {
+      this.logger.error(bufferResult.Error);
+      return ServiceResultMapper.InternalServerError();
+    }
+
+    return ServiceResultMapper.Ok(bufferResult.Value);
   }
 
   async mine(

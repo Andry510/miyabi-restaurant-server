@@ -57,4 +57,29 @@ export const ERROR_MESSAGE_SCHEMA = Object.freeze({
   status: {
     enum: 'El estado debe ser open o closed',
   },
+  enabled: {
+    type: 'La participación del área debe ser un valor booleano',
+  },
+  name: {
+    type: 'El nombre debe ser un texto válido',
+    minLength: 'El nombre debe tener al menos 2 caracteres',
+    maxLength: 'El nombre no puede tener más de 100 caracteres',
+  },
+  shifts: {
+    type: 'Los turnos que quita deben ser un número',
+    range: 'Los turnos que quita deben estar entre 0 y 10',
+    step: 'Los turnos que quita deben ir en cuartos de turno (0.25)',
+  },
+  removes_all: {
+    type: 'Quitar toda la propina debe ser un valor booleano',
+  },
+  sanction_type_id: {
+    type: 'El tipo de sanción debe ser un texto válido',
+    uuid: 'El tipo de sanción debe ser un UUID válido',
+  },
+  sanction_id: {
+    type: 'La sanción debe ser un texto válido',
+    uuid: 'La sanción debe ser un UUID válido',
+  },
+  empty: 'Envía al menos un campo para actualizar',
 });

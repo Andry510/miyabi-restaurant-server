@@ -28,8 +28,8 @@ import type {
   TTipPoolOutput,
 } from '../../../domain/types/entities';
 import type {
-  TTipAreaCalculation,
   TTipCalculation,
+  TTipContext,
   TTipPool,
   TTipRule,
   TTipWindow,
@@ -90,7 +90,7 @@ export class TipService implements ITipService {
     window: (timezone: string) => TTipWindow,
     poolId: string | null,
     amountCents: number,
-    manual: Map<string, Map<string, number>>,
+    context: TTipContext,
   ): Promise<
     ResultPattern<
       { window: TTipWindow; calculation: TTipCalculation },
@@ -131,15 +131,17 @@ export class TipService implements ITipService {
       );
     }
 
-    const resolved = window(settingsResult.Value.timezone);
+    const settings = settingsResult.Value;
+    const resolved = window(settings.timezone);
 
-    const participantsResult = await this.tip_repository.findParticipants(
+    const shiftsResult = await this.tip_repository.findShifts(
       resolved,
       poolId,
+      new Date(),
     );
 
-    if (participantsResult.IsFailure) {
-      this.logger.error(participantsResult.Error);
+    if (shiftsResult.IsFailure) {
+      this.logger.error(shiftsResult.Error);
       return ServiceResultMapper.InternalServerError();
     }
 
@@ -148,15 +150,21 @@ export class TipService implements ITipService {
       calculation: TipAggregate.register(
         amountCents,
         rules,
-        participantsResult.Value,
-        manual,
+        shiftsResult.Value,
+        {
+          late_arrival_shifts_bp: Money.toCents(settings.late_arrival_shifts),
+          absence_shifts_bp: Money.toCents(settings.absence_shifts),
+          destination: settings.tip_sanction_destination,
+        },
+        context,
       ).Calculation,
     });
   }
 
   private written(
     writeResult: ResultPattern<TTipWriteResult>,
-    areas: TTipAreaCalculation[],
+    calculation: TTipCalculation,
+    sanctions: TTipPool['sanctions'],
   ): ResultPattern<TTipPoolDetailOutput, ServiceError> {
     if (writeResult.IsFailure) {
       this.logger.error(writeResult.Error);
@@ -174,7 +182,7 @@ export class TipService implements ITipService {
     }
 
     return ServiceResultMapper.Ok(
-      TipMapper.toDetailOutput(result.header, areas),
+      TipMapper.toDetailOutput(result.header, calculation.areas, sanctions),
     );
   }
 
@@ -233,9 +241,11 @@ export class TipService implements ITipService {
       return ServiceResultMapper.NotFound(API_TIP_MESSAGE.ERROR.POOL_NOT_FOUND);
     }
 
-    const { header, areas } = findResult.Value;
+    const { header, areas, sanctions } = findResult.Value;
 
-    return ServiceResultMapper.Ok(TipMapper.toDetailOutput(header, areas));
+    return ServiceResultMapper.Ok(
+      TipMapper.toDetailOutput(header, areas, sanctions),
+    );
   }
 
   async register(
@@ -289,7 +299,7 @@ export class TipService implements ITipService {
       (timezone) => this.windowOf(startDay, endDay, workScheduleId, timezone),
       null,
       amountCents,
-      new Map(),
+      { manual: new Map(), disabled: new Set(), sanctions: [] },
     );
 
     if (calculateResult.IsFailure) {
@@ -310,7 +320,7 @@ export class TipService implements ITipService {
       calculation,
     );
 
-    return this.written(createResult, calculation.areas);
+    return this.written(createResult, calculation, []);
   }
 
   async update(
@@ -374,21 +384,7 @@ export class TipService implements ITipService {
       return ResultPattern.Failure(poolResult.Error);
     }
 
-    const { header, areas } = poolResult.Value;
-
-    const manual = new Map(
-      areas
-        .filter((area) => area.method === TIP_SPLIT_METHOD.MANUAL)
-        .map((area) => [
-          area.work_area.id,
-          new Map(
-            area.allocations.map((allocation) => [
-              allocation.assignment_id,
-              allocation.amount_cents,
-            ]),
-          ),
-        ]),
-    );
+    const { header, sanctions } = poolResult.Value;
 
     const calculateResult = await this.calculate(
       (timezone) =>
@@ -400,7 +396,7 @@ export class TipService implements ITipService {
         ),
       id,
       input.amount_cents ?? header.amount_cents,
-      manual,
+      TipAggregate.contextOf(poolResult.Value),
     );
 
     if (calculateResult.IsFailure) {
@@ -419,7 +415,7 @@ export class TipService implements ITipService {
 
     const saveResult = await this.tip_repository.save(id, input, calculation);
 
-    return this.written(saveResult, calculation.areas);
+    return this.written(saveResult, calculation, sanctions);
   }
 
   private async validateClose(

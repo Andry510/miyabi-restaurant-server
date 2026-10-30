@@ -99,6 +99,28 @@ export class AllocationRepository implements IAllocationRepository {
         }),
     );
 
+  setEnabled = (
+    id: string,
+    workAreaId: string,
+    enabled: boolean,
+  ): Promise<ResultPattern<boolean>> =>
+    ResultPattern.tryCatchAsync(
+      'Infrastructure',
+      AllocationRepository.name,
+      async () => {
+        const { count } = await this.primaryDatabase.tip_pool_areas.updateMany({
+          where: {
+            tip_pool_id: id,
+            work_area_id: workAreaId,
+            tip_pool: { status: 'open' },
+          },
+          data: { enabled },
+        });
+
+        return count > 0;
+      },
+    );
+
   findMine = (
     assignmentId: string,
     from: string,
@@ -122,8 +144,10 @@ export class AllocationRepository implements IAllocationRepository {
             },
           },
           select: {
-            minutes: true,
+            shifts: true,
+            sanction_shifts: true,
             amount: true,
+            sanction_amount: true,
             tip_pool_area: {
               select: {
                 work_area: { select: { id: true, name: true } },
@@ -154,8 +178,14 @@ export class AllocationRepository implements IAllocationRepository {
               work_schedule: pool.work_schedule,
             },
             work_area: row.tip_pool_area.work_area,
-            minutes: row.minutes,
+            shifts: Money.fromCents(Money.toCents(row.shifts)),
+            sanction_shifts: Money.fromCents(
+              Money.toCents(row.sanction_shifts),
+            ),
             amount: Money.fromCents(Money.toCents(row.amount)),
+            sanction_amount: Money.fromCents(
+              Money.toCents(row.sanction_amount),
+            ),
           };
         });
       },

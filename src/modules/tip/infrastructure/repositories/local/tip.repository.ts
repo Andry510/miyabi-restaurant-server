@@ -14,9 +14,9 @@ import type {
   TCreateTipPoolInput,
   TSaveTipPoolInput,
   TTipCalculation,
-  TTipParticipant,
   TTipPool,
   TTipPoolHeader,
+  TTipShift,
   TTipWindow,
   TTipWriteResult,
 } from '../../../domain/types/repositories';
@@ -25,8 +25,9 @@ import type {
 import { PRISMA_ERROR_CODE } from '@infrastructure/constants';
 // oxlint-disable-next-line typescript/consistent-type-imports
 import { DatabaseManager, PrismaError } from '@infrastructure/database';
-import { Duration, Money } from '@infrastructure/utils';
+import { Money } from '@infrastructure/utils';
 import { TipMapper } from '../../mappers';
+import { SANCTION_SELECT } from './sanction.repository';
 
 const USER_SELECT = {
   id: true,
@@ -41,6 +42,8 @@ const HEADER_SELECT = {
   work_schedule: { select: { id: true, name: true } },
   amount: true,
   status: true,
+  sanction_destination: true,
+  sanction_amount: true,
   note: true,
   closed_at: true,
   created_at: true,
@@ -51,13 +54,16 @@ const AREAS_SELECT = {
   work_area: { select: { id: true, name: true } },
   percentage: true,
   method: true,
+  enabled: true,
   amount: true,
   allocations: {
     select: {
       user_assignment_id: true,
-      minutes: true,
+      shifts: true,
+      sanction_shifts: true,
       weight: true,
       amount: true,
+      sanction_amount: true,
       user_assignment: { select: { user: { select: USER_SELECT } } },
     },
   },
@@ -109,10 +115,11 @@ export class TipRepository implements ITipRepository {
       },
     );
 
-  findParticipants = (
+  findShifts = (
     window: TTipWindow,
     poolId: string | null,
-  ): Promise<ResultPattern<TTipParticipant[]>> =>
+    now: Date,
+  ): Promise<ResultPattern<TTipShift[]>> =>
     ResultPattern.tryCatchAsync(
       'Infrastructure',
       TipRepository.name,
@@ -121,7 +128,6 @@ export class TipRepository implements ITipRepository {
           where: {
             ...windowWhere(window),
             status: { not: 'cancelled' },
-            attendance_record: { is: { clock_in: { not: null } } },
             OR: [
               { tip_pool_shift: { is: null } },
               ...(poolId
@@ -132,7 +138,14 @@ export class TipRepository implements ITipRepository {
           select: {
             id: true,
             scheduled_end: true,
-            attendance_record: { select: { clock_in: true, clock_out: true } },
+            attendance_record: {
+              select: {
+                status: true,
+                clock_in: true,
+                clock_out: true,
+                incidents: { select: { type: true, justified_at: true } },
+              },
+            },
             user_assignment: {
               select: {
                 id: true,
@@ -145,19 +158,7 @@ export class TipRepository implements ITipRepository {
           },
         });
 
-        return response.map((shift) => ({
-          shift_id: shift.id,
-          assignment_id: shift.user_assignment.id,
-          work_area_id: shift.user_assignment.area_job_position.work_area_id,
-          weight_bp: Money.toCents(
-            shift.user_assignment.area_job_position.tip_weight,
-          ),
-          minutes: Duration.minutesBetween(
-            shift.attendance_record?.clock_in ?? shift.scheduled_end,
-            shift.attendance_record?.clock_out ?? shift.scheduled_end,
-          ),
-          user: TipMapper.toUser(shift.user_assignment.user),
-        }));
+        return response.map((shift) => TipMapper.toShift(shift, now));
       },
     );
 
@@ -204,6 +205,8 @@ export class TipRepository implements ITipRepository {
             end_day: TipMapper.toDay(input.end_day),
             work_schedule_id: input.work_schedule_id,
             amount: Money.toDecimal(input.amount_cents),
+            sanction_destination: calculation.destination,
+            sanction_amount: Money.toDecimal(calculation.sanction_cents),
             note: input.note,
           },
           select: HEADER_SELECT,
@@ -258,6 +261,10 @@ export class TipRepository implements ITipRepository {
               select: AREAS_SELECT,
               orderBy: { work_area: { name: 'asc' } },
             },
+            sanctions: {
+              select: SANCTION_SELECT,
+              orderBy: { created_at: 'asc' },
+            },
           },
         });
 
@@ -265,11 +272,14 @@ export class TipRepository implements ITipRepository {
           return null;
         }
 
-        const { areas, ...header } = response;
+        const { areas, sanctions, ...header } = response;
 
         return {
           header: TipMapper.toHeader(header),
           areas: areas.map((area) => TipMapper.toAreaCalculation(area)),
+          sanctions: sanctions.map((sanction) =>
+            TipMapper.toSanction(sanction),
+          ),
         };
       },
     );
@@ -296,6 +306,8 @@ export class TipRepository implements ITipRepository {
               input.amount_cents === undefined
                 ? undefined
                 : Money.toDecimal(input.amount_cents),
+            sanction_destination: calculation.destination,
+            sanction_amount: Money.toDecimal(calculation.sanction_cents),
             note: input.note,
             status: input.close ? 'closed' : undefined,
             closed_at: input.close ? new Date() : undefined,
@@ -388,14 +400,17 @@ export class TipRepository implements ITipRepository {
           work_area_id: area.work_area.id,
           percentage: Money.toDecimal(area.percentage_bp),
           method: area.method,
+          enabled: area.enabled,
           amount: Money.toDecimal(area.amount_cents),
           allocations: {
             createMany: {
               data: area.allocations.map((allocation) => ({
                 user_assignment_id: allocation.assignment_id,
-                minutes: allocation.minutes,
+                shifts: Money.toDecimal(allocation.shifts_bp),
+                sanction_shifts: Money.toDecimal(allocation.sanction_shifts_bp),
                 weight: Money.toDecimal(allocation.weight_bp),
                 amount: Money.toDecimal(allocation.amount_cents),
+                sanction_amount: Money.toDecimal(allocation.sanction_cents),
               })),
             },
           },

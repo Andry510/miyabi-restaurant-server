@@ -1,12 +1,15 @@
 import {
   array,
+  boolean,
   check,
   enum_,
   type InferOutput,
   isoDate,
   maxLength,
   maxValue,
+  minLength,
   minValue,
+  multipleOf,
   number,
   optional,
   pipe,
@@ -200,3 +203,77 @@ export const MyTipsQuerySchema = pipe(
 );
 
 export type TMyTipsQuerySchema = InferOutput<typeof MyTipsQuerySchema>;
+
+export const AreaStatusBodySchema = strictObject({
+  enabled: boolean(ERROR_MESSAGE_SCHEMA.enabled.type),
+});
+
+export type TAreaStatusBodySchema = InferOutput<typeof AreaStatusBodySchema>;
+
+const sanctionNameField = pipe(
+  string(ERROR_MESSAGE_SCHEMA.name.type),
+  trim(),
+  minLength(2, ERROR_MESSAGE_SCHEMA.name.minLength),
+  maxLength(100, ERROR_MESSAGE_SCHEMA.name.maxLength),
+);
+
+const sanctionShiftsField = pipe(
+  number(ERROR_MESSAGE_SCHEMA.shifts.type),
+  minValue(0, ERROR_MESSAGE_SCHEMA.shifts.range),
+  maxValue(10, ERROR_MESSAGE_SCHEMA.shifts.range),
+  multipleOf(0.25, ERROR_MESSAGE_SCHEMA.shifts.step),
+);
+
+export const SanctionTypeBodySchema = strictObject({
+  name: sanctionNameField,
+  shifts: optional(sanctionShiftsField, 0),
+  removes_all: optional(boolean(ERROR_MESSAGE_SCHEMA.removes_all.type), false),
+});
+
+export type TSanctionTypeBodySchema = InferOutput<
+  typeof SanctionTypeBodySchema
+>;
+
+export const UpdateSanctionTypeBodySchema = pipe(
+  strictObject({
+    name: optional(sanctionNameField),
+    shifts: optional(sanctionShiftsField),
+    removes_all: optional(boolean(ERROR_MESSAGE_SCHEMA.removes_all.type)),
+  }),
+  check(
+    (input) => Object.values(input).some((value) => value !== undefined),
+    ERROR_MESSAGE_SCHEMA.empty,
+  ),
+);
+
+export type TUpdateSanctionTypeBodySchema = InferOutput<
+  typeof UpdateSanctionTypeBodySchema
+>;
+
+export const PoolSanctionBodySchema = strictObject({
+  user_id: pipe(
+    string(ERROR_MESSAGE_SCHEMA.user_id.type),
+    uuid(ERROR_MESSAGE_SCHEMA.user_id.uuid),
+  ),
+  sanction_type_id: pipe(
+    string(ERROR_MESSAGE_SCHEMA.sanction_type_id.type),
+    uuid(ERROR_MESSAGE_SCHEMA.sanction_type_id.uuid),
+  ),
+  note: optional(noteField),
+});
+
+export type TPoolSanctionBodySchema = InferOutput<
+  typeof PoolSanctionBodySchema
+>;
+
+export const PoolSanctionParamSchema = strictObject({
+  ...ParamIdSchema.entries,
+  sanction_id: pipe(
+    string(ERROR_MESSAGE_SCHEMA.sanction_id.type),
+    uuid(ERROR_MESSAGE_SCHEMA.sanction_id.uuid),
+  ),
+});
+
+export type TPoolSanctionParamSchema = InferOutput<
+  typeof PoolSanctionParamSchema
+>;

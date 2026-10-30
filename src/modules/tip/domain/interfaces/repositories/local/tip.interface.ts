@@ -6,9 +6,9 @@ import type {
   TCreateTipPoolInput,
   TSaveTipPoolInput,
   TTipCalculation,
-  TTipParticipant,
   TTipPool,
   TTipPoolHeader,
+  TTipShift,
   TTipWindow,
   TTipWriteResult,
 } from '../../../types/repositories';
@@ -20,10 +20,11 @@ export interface ITipRepository {
     workScheduleId: string | null,
   ): Promise<ResultPattern<boolean>>;
 
-  findParticipants(
+  findShifts(
     window: TTipWindow,
     poolId: string | null,
-  ): Promise<ResultPattern<TTipParticipant[]>>;
+    now: Date,
+  ): Promise<ResultPattern<TTipShift[]>>;
 
   hasPendingShifts(
     window: TTipWindow,

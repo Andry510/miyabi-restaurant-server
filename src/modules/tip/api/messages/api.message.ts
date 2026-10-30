@@ -56,6 +56,27 @@ export const API_TIP_MESSAGE = Object.freeze({
       code: 'ERROR_TIP_USER_NOT_IN_AREA',
       message: 'El empleado no pertenece a esa área',
     },
+    USER_NOT_IN_POOL: {
+      code: 'ERROR_TIP_USER_NOT_IN_POOL',
+      message: 'El empleado no participa en esta bolsa de propinas',
+    },
+    SANCTION_TYPE_NOT_FOUND: {
+      code: 'ERROR_TIP_SANCTION_TYPE_NOT_FOUND',
+      message: 'No se encontró el tipo de sanción',
+    },
+    SANCTION_TYPE_DUPLICATED: {
+      code: 'ERROR_TIP_SANCTION_TYPE_DUPLICATED',
+      message: 'Ya existe un tipo de sanción con ese nombre',
+    },
+    SANCTION_TYPE_IN_USE: {
+      code: 'ERROR_TIP_SANCTION_TYPE_IN_USE',
+      message:
+        'El tipo de sanción ya se usó en un reparto y no se puede borrar',
+    },
+    SANCTION_NOT_FOUND: {
+      code: 'ERROR_TIP_SANCTION_NOT_FOUND',
+      message: 'No se encontró la sanción en esta bolsa de propinas',
+    },
   },
   SUCCESS: {
     RULES_RETRIEVED: {
@@ -101,6 +122,38 @@ export const API_TIP_MESSAGE = Object.freeze({
     POOL_DELETED: {
       code: 'SUCCESS_TIP_POOL_DELETED',
       message: 'Bolsa de propinas eliminada correctamente',
+    },
+    AREA_STATUS_UPDATED: {
+      code: 'SUCCESS_TIP_AREA_STATUS_UPDATED',
+      message: 'Participación del área actualizada correctamente',
+    },
+    POOL_EXPORTED: {
+      code: 'SUCCESS_TIP_POOL_EXPORTED',
+      message: 'Reparto exportado correctamente',
+    },
+    SANCTION_TYPES_RETRIEVED: {
+      code: 'SUCCESS_TIP_SANCTION_TYPES_RETRIEVED',
+      message: 'Tipos de sanción obtenidos correctamente',
+    },
+    SANCTION_TYPE_CREATED: {
+      code: 'SUCCESS_TIP_SANCTION_TYPE_CREATED',
+      message: 'Tipo de sanción creado correctamente',
+    },
+    SANCTION_TYPE_UPDATED: {
+      code: 'SUCCESS_TIP_SANCTION_TYPE_UPDATED',
+      message: 'Tipo de sanción actualizado correctamente',
+    },
+    SANCTION_TYPE_DELETED: {
+      code: 'SUCCESS_TIP_SANCTION_TYPE_DELETED',
+      message: 'Tipo de sanción eliminado correctamente',
+    },
+    SANCTION_ADDED: {
+      code: 'SUCCESS_TIP_SANCTION_ADDED',
+      message: 'Sanción aplicada correctamente',
+    },
+    SANCTION_REMOVED: {
+      code: 'SUCCESS_TIP_SANCTION_REMOVED',
+      message: 'Sanción quitada correctamente',
     },
     MY_TIPS_RETRIEVED: {
       code: 'SUCCESS_TIP_MY_TIPS_RETRIEVED',

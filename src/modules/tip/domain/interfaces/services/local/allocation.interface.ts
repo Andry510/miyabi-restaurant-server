@@ -2,7 +2,11 @@
 import type { ServiceError } from '@domain/errors';
 import type { ResultPattern } from '@domain/patterns/results';
 import type { TUserDetail } from '@domain/types/entities';
-import type { TAreaBodySchema, TMyTipsQuerySchema } from '../../../schemas';
+import type {
+  TAreaBodySchema,
+  TAreaStatusBodySchema,
+  TMyTipsQuerySchema,
+} from '../../../schemas';
 import type {
   TMyTipsOutput,
   TTipPoolDetailOutput,
@@ -19,6 +23,17 @@ export interface IAllocationService {
     id: string,
     workAreaId: string,
   ): Promise<ResultPattern<TTipPoolDetailOutput, ServiceError>>;
+
+  areaStatus(
+    id: string,
+    workAreaId: string,
+    input: TAreaStatusBodySchema,
+  ): Promise<ResultPattern<TTipPoolDetailOutput, ServiceError>>;
+
+  export(
+    id: string,
+    accessToken: string | null,
+  ): Promise<ResultPattern<ArrayBuffer, ServiceError>>;
 
   mine(
     user: TUserDetail,

@@ -12,6 +12,12 @@ export interface IAllocationRepository {
     allocations: TManualAllocation[],
   ): Promise<ResultPattern<boolean>>;
 
+  setEnabled(
+    id: string,
+    workAreaId: string,
+    enabled: boolean,
+  ): Promise<ResultPattern<boolean>>;
+
   findMine(
     assignmentId: string,
     from: string,
