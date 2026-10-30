@@ -10,11 +10,12 @@ import { SHIFT_SERVICES_PROVIDERS } from './application/services';
 import { SHIFT_REPOSITORIES_PROVIDERS } from './infrastructure/repositories';
 
 //Modules
+import { ChannelModule } from '../channel';
 import { SettingModule } from '../setting';
 import { WorkScheduleModule } from '../work-schedule';
 
 @Module({
-  imports: [SettingModule, WorkScheduleModule],
+  imports: [ChannelModule, SettingModule, WorkScheduleModule],
   controllers: Object.values(SHIFT_CONTROLLERS_PROVIDERS),
   providers: [...SHIFT_SERVICES_PROVIDERS, ...SHIFT_REPOSITORIES_PROVIDERS],
 })

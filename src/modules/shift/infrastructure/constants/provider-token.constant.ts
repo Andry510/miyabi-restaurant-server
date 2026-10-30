@@ -3,6 +3,7 @@ export const SHIFT_PROVIDER_TOKENS = Object.freeze({
     SHIFT: Symbol('SHIFT_SERVICE'),
     ATTENDANCE: Symbol('SHIFT_ATTENDANCE_SERVICE'),
     WEEK: Symbol('SHIFT_WEEK_SERVICE'),
+    REPORT: Symbol('SHIFT_REPORT_SERVICE'),
   },
   REPOSITORIES: {
     SHIFT: Symbol('SHIFT_REPOSITORY'),
