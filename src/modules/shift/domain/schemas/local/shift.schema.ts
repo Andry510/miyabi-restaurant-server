@@ -18,7 +18,7 @@ import {
 import { ERROR_MESSAGE_SCHEMA } from '../../../api/messages';
 
 //Domain
-import { SHIFT_STATUS } from '@domain/enums/shared';
+import { ATTENDANCE_STATUS, SHIFT_STATUS } from '@domain/enums/shared';
 import {
   DateRangeQuerySchema,
   dateRange,
@@ -48,6 +48,9 @@ export const ShiftsQuerySchema = pipe(
     ),
     work_schedule_id: optional(workScheduleId),
     status: optional(enum_(SHIFT_STATUS, ERROR_MESSAGE_SCHEMA.status.enum)),
+    attendance: optional(
+      enum_(ATTENDANCE_STATUS, ERROR_MESSAGE_SCHEMA.attendance.enum),
+    ),
   }),
   dateRange(),
   transform(({ limit, page, ...rest }) => ({

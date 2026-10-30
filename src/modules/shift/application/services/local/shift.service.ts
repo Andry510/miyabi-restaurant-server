@@ -312,12 +312,11 @@ export class ShiftService implements IShiftService {
     schedule: TWorkScheduleOutput,
     timezone: string,
   ): TShiftRange {
-    const endDay =
-      schedule.end_time <= schedule.start_time ? TimeZone.nextDay(day) : day;
-
-    return {
-      start: TimeZone.at(day, schedule.start_time, timezone),
-      end: TimeZone.at(endDay, schedule.end_time, timezone),
-    };
+    return TimeZone.range(
+      day,
+      schedule.start_time,
+      schedule.end_time,
+      timezone,
+    );
   }
 }

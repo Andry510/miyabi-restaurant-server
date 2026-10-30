@@ -1,5 +1,6 @@
 //Domain
-import type { SHIFT_STATUS } from '@domain/enums/shared';
+import type { ATTENDANCE_STATUS, SHIFT_STATUS } from '@domain/enums/shared';
+import type { TAttendanceRecordOutput } from '@domain/types/entities';
 import type { TReference } from '@domain/types/shared';
 
 export type TShiftUserOutput = {
@@ -16,7 +17,21 @@ export type TShiftOutput = {
   scheduled_end: Date;
   status: SHIFT_STATUS;
   note: string | null;
-  has_attendance: boolean;
+  attendance_status: ATTENDANCE_STATUS | null;
+  attendance: TAttendanceRecordOutput | null;
   created_at: Date;
   updated_at: Date;
+};
+
+export type TCopySkipReason =
+  'past' | 'overlap' | 'employee_inactive' | 'schedule_inactive';
+
+export type TCopyWeekOutput = {
+  created: TShiftOutput[];
+  skipped: Array<{
+    shift_id: string;
+    user: TShiftUserOutput;
+    date: string;
+    reason: TCopySkipReason;
+  }>;
 };

@@ -3,7 +3,7 @@ import type { employee_shiftsWhereInput } from '@generated/prisma/models';
 import { Injectable } from '@nestjs/common';
 
 //Domain
-import type { SHIFT_STATUS } from '@domain/enums/shared';
+import { ATTENDANCE_STATUS, type SHIFT_STATUS } from '@domain/enums/shared';
 import { ResultPattern } from '@domain/patterns/results';
 import type { TPaginationRepository } from '@domain/types/shared';
 import type { IShiftRepository } from '../../../domain/interfaces/repositories';
@@ -19,6 +19,7 @@ import type {
 //Infrastructure
 // oxlint-disable-next-line typescript/consistent-type-imports
 import { DatabaseManager } from '@infrastructure/database';
+import { ATTENDANCE_RECORD_SELECT } from '@infrastructure/mappers/shared';
 import { ShiftMapper } from '../../mappers';
 
 const SHIFT_SELECT = {
@@ -30,7 +31,7 @@ const SHIFT_SELECT = {
   created_at: true,
   updated_at: true,
   work_schedule: { select: { id: true, name: true } },
-  attendance_record: { select: { id: true } },
+  attendance_record: { select: ATTENDANCE_RECORD_SELECT },
   user_assignment: {
     select: {
       user: {
@@ -42,6 +43,30 @@ const SHIFT_SELECT = {
     },
   },
 } as const;
+
+const attendanceWhere = (
+  status: ATTENDANCE_STATUS | undefined,
+  now: Date,
+): employee_shiftsWhereInput => {
+  if (!status) {
+    return {};
+  }
+
+  if (status !== ATTENDANCE_STATUS.ABSENT) {
+    return { attendance_record: { is: { status } } };
+  }
+
+  return {
+    OR: [
+      { attendance_record: { is: { status } } },
+      {
+        attendance_record: { is: null },
+        status: { not: 'cancelled' },
+        scheduled_end: { lte: now },
+      },
+    ],
+  };
+};
 
 const EDITABLE: employee_shiftsWhereInput = {
   status: 'scheduled',
@@ -64,6 +89,7 @@ export class ShiftRepository implements IShiftRepository {
       'Infrastructure',
       ShiftRepository.name,
       async () => {
+        const now = new Date();
         const where: employee_shiftsWhereInput = {
           scheduled_start: { gte: range.start, lt: range.end },
           status: input.status,
@@ -71,6 +97,7 @@ export class ShiftRepository implements IShiftRepository {
           user_assignment: input.user_id
             ? { user_id: input.user_id }
             : undefined,
+          ...attendanceWhere(input.attendance, now),
         };
 
         const [count, response] = await Promise.all([
@@ -86,7 +113,7 @@ export class ShiftRepository implements IShiftRepository {
 
         return {
           count,
-          data: response.map((row) => ShiftMapper.toOutput(row)),
+          data: response.map((row) => ShiftMapper.toOutput(row, now)),
         };
       },
     );
@@ -101,7 +128,7 @@ export class ShiftRepository implements IShiftRepository {
           select: SHIFT_SELECT,
         });
 
-        return response ? ShiftMapper.toOutput(response) : null;
+        return response ? ShiftMapper.toOutput(response, new Date()) : null;
       },
     );
 
@@ -233,7 +260,8 @@ export class ShiftRepository implements IShiftRepository {
           status: row.status as SHIFT_STATUS,
           user: input.user,
           work_schedule: input.work_schedule,
-          has_attendance: false,
+          attendance_status: null,
+          attendance: null,
         }));
       },
     );

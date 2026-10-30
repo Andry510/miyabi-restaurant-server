@@ -6,11 +6,17 @@ import type {
 } from '@generated/prisma/client';
 
 //Domain
-import type { SHIFT_STATUS } from '@domain/enums/shared';
+import { ATTENDANCE_STATUS, SHIFT_STATUS } from '@domain/enums/shared';
 import type {
   TShiftOutput,
   TShiftUserOutput,
 } from '../../../domain/types/entities';
+
+//Infrastructure
+import {
+  AttendanceRecordMapper,
+  type TAttendanceRecordRow,
+} from '@infrastructure/mappers/shared';
 
 type TShiftUserRow = Pick<users, 'id'> & {
   profile: Pick<profiles, 'first_name' | 'last_name'> | null;
@@ -27,7 +33,7 @@ type TShiftRow = Pick<
   | 'updated_at'
 > & {
   work_schedule: Pick<work_schedules, 'id' | 'name'>;
-  attendance_record: { id: string } | null;
+  attendance_record: TAttendanceRecordRow | null;
   user_assignment: {
     user: TShiftUserRow;
   };
@@ -40,16 +46,26 @@ export class ShiftMapper {
     last_name: user.profile?.last_name ?? '',
   });
 
-  static toOutput = (row: TShiftRow): TShiftOutput => ({
-    id: row.id,
-    user: ShiftMapper.toUser(row.user_assignment.user),
-    work_schedule: { ...row.work_schedule },
-    scheduled_start: row.scheduled_start,
-    scheduled_end: row.scheduled_end,
-    status: row.status as SHIFT_STATUS,
-    note: row.note,
-    has_attendance: row.attendance_record !== null,
-    created_at: row.created_at,
-    updated_at: row.updated_at,
-  });
+  static toOutput = (row: TShiftRow, now: Date): TShiftOutput => {
+    const status = row.status as SHIFT_STATUS;
+    const attendance = AttendanceRecordMapper.toOutput(row.attendance_record);
+
+    return {
+      id: row.id,
+      user: ShiftMapper.toUser(row.user_assignment.user),
+      work_schedule: { ...row.work_schedule },
+      scheduled_start: row.scheduled_start,
+      scheduled_end: row.scheduled_end,
+      status,
+      note: row.note,
+      attendance_status:
+        attendance?.status ??
+        (status !== SHIFT_STATUS.CANCELLED && row.scheduled_end <= now
+          ? ATTENDANCE_STATUS.ABSENT
+          : null),
+      attendance,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+    };
+  };
 }
