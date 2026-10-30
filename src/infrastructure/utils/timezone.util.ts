@@ -55,4 +55,24 @@ export class TimeZone {
 
   static startOfNextDay = (day: string, timeZone: string): Date =>
     TimeZone.startOfDay(TimeZone.nextDay(day), timeZone);
+
+  static range = (
+    day: string,
+    startTime: string,
+    endTime: string,
+    timeZone: string,
+  ): { start: Date; end: Date } => ({
+    start: TimeZone.at(day, startTime, timeZone),
+    end: TimeZone.at(
+      endTime <= startTime ? TimeZone.nextDay(day) : day,
+      endTime,
+      timeZone,
+    ),
+  });
+
+  static weekDayOf = (day: string): number =>
+    new Date(`${day}T00:00:00Z`).getUTCDay();
+
+  static daysBetween = (from: string, to: string): number =>
+    Math.round((Date.parse(to) - Date.parse(from)) / Duration.DAY_MS);
 }

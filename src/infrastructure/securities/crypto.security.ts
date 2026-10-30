@@ -1,9 +1,12 @@
-import { randomBytes } from 'crypto';
+import { createHash, randomBytes } from 'crypto';
 
 //Domain
 import { ResultPattern } from '@domain/patterns/results';
 
 export class Crypto {
+  static sha256 = (value: string): string =>
+    createHash('sha256').update(value).digest('hex');
+
   static generateRandomString = (length: number = 10): ResultPattern<string> =>
     ResultPattern.tryCatch('Infrastructure', Crypto.name, (): string => {
       const chars =

@@ -4,6 +4,8 @@ export const SYSTEM_MESSAGE = Object.freeze({
       'Las variables de entorno no son válidas o están incompletas.',
     DATABASE_CONNECTION_FAILED:
       'No se pudo establecer la conexión con la base de datos.',
+    CACHE_CONNECTION_FAILED:
+      'No se pudo conectar a Redis; el servidor sigue sin caché.',
     DATABASE_DISCONNECTION_FAILED:
       'No se pudo cerrar la conexión con la base de datos.',
     INVALID_RESULT_ENTITIES:
@@ -28,6 +30,7 @@ export const SYSTEM_MESSAGE = Object.freeze({
       'La nube envió un producto que no cumple el formato esperado.',
   },
   SUCCESS: {
+    CACHE_CONNECTED: 'Conexión a Redis establecida exitosamente.',
     DATABASE_CONNECTED: 'Conexión a la base de datos establecida exitosamente.',
     DATABASE_DISCONNECTED: 'Conexión a la base de datos cerrada correctamente.',
     SOCKET_CONNECTED: 'Conectado al socket de la nube.',

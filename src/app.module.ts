@@ -12,12 +12,14 @@ import {
 import * as Modules from './modules';
 
 //Infrastructure
+import { CacheModule } from '@infrastructure/cache';
 import { DatabaseModule } from '@infrastructure/database';
 import { CloudModule } from '@infrastructure/grpc/cloud';
 import { SecurityModule } from '@infrastructure/securities';
 
 @Module({
   imports: [
+    CacheModule,
     DatabaseModule,
     CloudModule,
     SecurityModule,

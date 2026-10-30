@@ -11,6 +11,8 @@ export * from './shift-status.enum';
 export * from './timezone.enum';
 export * from './tip-period.enum';
 export * from './tip-pool-status.enum';
+export * from './tip-sanction-destination.enum';
 export * from './tip-split-method.enum';
 export * from './transfer-item-status.enum';
 export * from './transfer-status.enum';
+export * from './week-day.enum';

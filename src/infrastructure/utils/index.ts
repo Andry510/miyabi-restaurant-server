@@ -1,3 +1,4 @@
+export * from './attendance.util';
 export * from './duration.util';
 export * from './machine.util';
 export * from './money.util';

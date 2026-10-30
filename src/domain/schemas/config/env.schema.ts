@@ -26,6 +26,9 @@ export const EnvSchema = pipe(
       //DATABASE
       DATABASE_URL: requiredStringSchema,
 
+      //CACHE
+      REDIS_URL: requiredStringSchema,
+
       //CLOUD
       CLOUD_GRPC_URL: requiredStringSchema,
       CLOUD_SOCKET_URL: requiredStringSchema,

@@ -1,4 +1,5 @@
 export * from './attendance.constant';
+export * from './cache.constant';
 export * from './database.constant';
 export * from './grpc';
 export * from './http';
