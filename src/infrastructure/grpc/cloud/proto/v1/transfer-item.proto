@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package transfer_item;
+package transfer_item.v1;
 
 service transfer_item_service {
   rpc transfer_items (transfer_items_request) returns (transfer_items_response) {}

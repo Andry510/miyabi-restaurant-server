@@ -1,0 +1,115 @@
+syntax = "proto3";
+
+package server.v1;
+
+import "server-product.proto";
+import "transfer.proto";
+
+service server_service {
+  rpc register(register_request) returns (register_response) {}
+  rpc channel(stream server_message) returns (stream cloud_message) {}
+}
+
+/*<----------- Request ----------->*/
+message register_request {
+  string name = 1;
+  string version = 2;
+  string instance_id = 3;
+  optional string platform = 4;
+  optional string mac_address = 5;
+}
+
+message server_message {
+  string request_id = 1;
+  oneof body {
+    server_status status = 2;
+    attendance_response attendance = 3;
+    request_error error = 4;
+  }
+}
+
+message server_status {
+  string version = 1;
+  int32 uptime_seconds = 2;
+  bool database_ok = 3;
+  optional string products_synced_at = 4;
+  int32 pending_dispatches = 5;
+  int32 failed_dispatches = 6;
+}
+
+message attendance_response {
+  repeated attendance_record records = 1;
+}
+
+message attendance_record {
+  string user_id = 1;
+  string first_name = 2;
+  string last_name = 3;
+  string date = 4;
+  string scheduled_start = 5;
+  string scheduled_end = 6;
+  optional string clock_in = 7;
+  optional string clock_out = 8;
+  string status = 9;
+  optional int32 late_minutes = 10;
+  optional int32 early_departure_minutes = 11;
+  repeated string incidents = 12;
+}
+
+message request_error {
+  string code = 1;
+  string message = 2;
+}
+
+/*<----------- Response ----------->*/
+message register_response {
+  string message = 1;
+  string data = 2;
+  string timestamp = 3;
+  string code = 4;
+}
+
+message cloud_message {
+  string message_id = 1;
+  string sent_at = 2;
+  string request_id = 3;
+  oneof body {
+    sync_required sync_required = 4;
+    product_event product = 5;
+    product_removed product_removed = 6;
+    transfer_event transfer = 7;
+    session_revoked session_revoked = 8;
+    session_expired session_expired = 9;
+    attendance_request attendance_request = 10;
+  }
+}
+
+message sync_required {}
+
+message product_event {
+  string kind = 1;
+  server_product.v1.product_data product = 2;
+}
+
+message product_removed {
+  string id = 1;
+}
+
+message transfer_event {
+  string kind = 1;
+  transfer.v1.transfer_data transfer = 2;
+}
+
+message session_revoked {
+  string user_id = 1;
+  string session_key = 2;
+}
+
+message session_expired {
+  string reason = 1;
+}
+
+message attendance_request {
+  string from = 1;
+  string to = 2;
+}

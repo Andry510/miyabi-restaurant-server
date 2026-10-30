@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package me;
+package me.v1;
 
 service me_service {
   rpc location(location_request) returns (location_response) {}

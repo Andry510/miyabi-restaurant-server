@@ -13,7 +13,10 @@ export const CLOUD_GRPC_CONFIG: ClientProviderOptions = {
     url: Env.CLOUD_GRPC_URL,
     maxSendMessageLength: 6 * 1024 * 1024,
     protoPath: CLOUD_GRPC_PACKAGES.map((name) =>
-      join(__dirname, `proto/${name.replace(/_/g, '-')}.proto`),
+      join(
+        __dirname,
+        `proto/v1/${name.replace(/\.v1$/, '').replace(/_/g, '-')}.proto`,
+      ),
     ),
     loader: {
       keepCase: true,

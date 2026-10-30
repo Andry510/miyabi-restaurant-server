@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package transfer;
+package transfer.v1;
 
 service transfer_service {
   rpc register(register_transfer_request) returns (register_transfer_response) {}

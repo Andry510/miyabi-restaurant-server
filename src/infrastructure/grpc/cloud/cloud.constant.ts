@@ -1,17 +1,17 @@
 export const CLOUD_GRPC_CLIENT = Symbol('CLOUD_GRPC_CLIENT');
 
 export const CLOUD_GRPC_PACKAGES = Object.freeze([
-  'authentication',
-  'location',
-  'me',
-  'product',
-  'server_product',
-  'server',
-  'session',
-  'supplier_product',
-  'supplier',
-  'transfer_item',
-  'transfer',
+  'authentication.v1',
+  'location.v1',
+  'me.v1',
+  'product.v1',
+  'server_product.v1',
+  'server.v1',
+  'session.v1',
+  'supplier_product.v1',
+  'supplier.v1',
+  'transfer_item.v1',
+  'transfer.v1',
 ]);
 
 export const CLOUD_GRPC_SERVICE = Object.freeze({

@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package authentication;
+package authentication.v1;
 
 service authentication_service {
   rpc login(login_request) returns (login_response) {}

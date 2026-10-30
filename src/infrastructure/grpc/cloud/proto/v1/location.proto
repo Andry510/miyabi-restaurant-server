@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package location;
+package location.v1;
 
 service location_service {
   rpc locations(locations_request) returns (locations_response) {}
