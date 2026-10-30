@@ -52,7 +52,12 @@ export class CheckRepository implements ICheckRepository {
           scheduled_start: true,
           scheduled_end: true,
           work_schedule: {
-            select: { id: true, name: true, late_tolerance_minutes: true },
+            select: {
+              id: true,
+              name: true,
+              late_tolerance_minutes: true,
+              early_leave_tolerance_minutes: true,
+            },
           },
           attendance_record: {
             select: { id: true, clock_in: true, clock_out: true },

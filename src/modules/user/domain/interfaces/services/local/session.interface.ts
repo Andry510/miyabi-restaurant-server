@@ -10,4 +10,6 @@ export interface ISessionService {
     userId: string,
     input: TSessionsQuerySchema,
   ): Promise<ResultPattern<TPaginationService<TSessionOutput>, ServiceError>>;
+
+  revoke(userId: string): Promise<ResultPattern<null, ServiceError>>;
 }

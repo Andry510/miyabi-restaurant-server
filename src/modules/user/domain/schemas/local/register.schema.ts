@@ -67,9 +67,11 @@ export const RegisterSchema = pipe(
     first_name: firstName,
     last_name: lastName,
     email: emailField,
-    password: pipe(
-      string(ERROR_MESSAGE_SCHEMA.password.type),
-      minLength(8, ERROR_MESSAGE_SCHEMA.password.minLength),
+    password: optional(
+      pipe(
+        string(ERROR_MESSAGE_SCHEMA.password.type),
+        minLength(8, ERROR_MESSAGE_SCHEMA.password.minLength),
+      ),
     ),
     phone_number: optional(phoneNumber),
     work_area_id: optional(workAreaId),
@@ -87,7 +89,6 @@ export const UpdateBodySchema = pipe(
     email: optional(emailField),
     phone_number: optional(phoneNumber),
     status: optional(boolean(ERROR_MESSAGE_SCHEMA.status.type)),
-    reset_password: optional(boolean(ERROR_MESSAGE_SCHEMA.reset_password.type)),
     work_area_id: optional(workAreaId),
     job_position_id: optional(jobPositionId),
   }),

@@ -16,7 +16,7 @@ import type { ISettingService } from '../../../../setting/domain/interfaces/serv
 //Infrastructure
 import { Logger } from '@infrastructure/audits';
 import { ServiceResultMapper } from '@infrastructure/mappers/shared';
-import { Duration } from '@infrastructure/utils';
+import { AttendanceRule, Duration } from '@infrastructure/utils';
 import { CHECK_OUT_GRACE_MINUTES } from '@infrastructure/constants';
 import {
   CHECK_LOGGER_NAME,
@@ -180,8 +180,11 @@ export class CheckService implements ICheckService {
       );
     }
 
-    const remainingMinutes = Duration.minutesBetween(now, open.scheduled_end);
-    const earlyMinutes = remainingMinutes > 0 ? remainingMinutes : null;
+    const earlyMinutes = AttendanceRule.earlyMinutes(
+      now,
+      open.scheduled_end,
+      open.work_schedule.early_leave_tolerance_minutes,
+    );
 
     const checkOutResult = await this.check_repository.checkOut({
       record_id: record.id,
@@ -213,14 +216,11 @@ export class CheckService implements ICheckService {
 
   //Functions
   private lateMinutes(shift: TCheckCandidate, clockIn: Date): number | null {
-    const elapsedMinutes = Duration.minutesBetween(
+    return AttendanceRule.lateMinutes(
       shift.scheduled_start,
       clockIn,
+      shift.work_schedule.late_tolerance_minutes,
     );
-
-    return elapsedMinutes > shift.work_schedule.late_tolerance_minutes
-      ? elapsedMinutes
-      : null;
   }
 
   private toOutput(

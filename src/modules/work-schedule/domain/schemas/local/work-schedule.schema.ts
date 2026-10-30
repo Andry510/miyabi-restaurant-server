@@ -56,6 +56,13 @@ const lateTolerance = pipe(
   maxValue(120, ERROR_MESSAGE_SCHEMA.late_tolerance_minutes.range),
 );
 
+const earlyLeaveTolerance = pipe(
+  number(ERROR_MESSAGE_SCHEMA.early_leave_tolerance_minutes.type),
+  integer(ERROR_MESSAGE_SCHEMA.early_leave_tolerance_minutes.integer),
+  minValue(0, ERROR_MESSAGE_SCHEMA.early_leave_tolerance_minutes.range),
+  maxValue(120, ERROR_MESSAGE_SCHEMA.early_leave_tolerance_minutes.range),
+);
+
 const differentTimes = <T extends { start_time?: string; end_time?: string }>(
   input: T,
 ): boolean =>
@@ -86,6 +93,7 @@ export const RegisterSchema = pipe(
     end_time: endTime,
     break_minutes: optional(breakMinutes),
     late_tolerance_minutes: optional(lateTolerance),
+    early_leave_tolerance_minutes: optional(earlyLeaveTolerance),
   }),
   check(differentTimes, ERROR_MESSAGE_SCHEMA.times.equal),
 );
@@ -99,6 +107,7 @@ export const UpdateBodySchema = pipe(
     end_time: optional(endTime),
     break_minutes: optional(breakMinutes),
     late_tolerance_minutes: optional(lateTolerance),
+    early_leave_tolerance_minutes: optional(earlyLeaveTolerance),
     status: optional(boolean(ERROR_MESSAGE_SCHEMA.status.type)),
   }),
   check(differentTimes, ERROR_MESSAGE_SCHEMA.times.equal),

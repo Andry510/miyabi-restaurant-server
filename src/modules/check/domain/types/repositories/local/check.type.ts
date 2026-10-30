@@ -5,7 +5,10 @@ export type TCheckCandidate = {
   id: string;
   scheduled_start: Date;
   scheduled_end: Date;
-  work_schedule: TReference & { late_tolerance_minutes: number };
+  work_schedule: TReference & {
+    late_tolerance_minutes: number;
+    early_leave_tolerance_minutes: number;
+  };
   attendance_record: {
     id: string;
     clock_in: Date | null;

@@ -19,8 +19,10 @@ import type { TUserOutput, TUsersOutput } from '../../../domain/types/entities';
 //Infrastructure
 import { Logger } from '@infrastructure/audits';
 import { SESSION_REVOCATION_ACTOR } from '@infrastructure/constants';
+import { Xlsx } from '@infrastructure/exporters';
 import { ServiceResultMapper } from '@infrastructure/mappers/shared';
-import { Argon2 } from '@infrastructure/securities';
+import { Argon2, Crypto } from '@infrastructure/securities';
+import { TokenPayload } from '@infrastructure/utils';
 import {
   USER_LOGGER_NAME,
   USER_PROVIDER_TOKENS,
@@ -95,6 +97,35 @@ export class UserService implements IUserService {
     return ServiceResultMapper.Ok(areaResult.Value);
   }
 
+  private credentials(
+    accessToken: string | null,
+    email: string,
+    password: string,
+  ): ResultPattern<ArrayBuffer, ServiceError> {
+    const bufferResult = Xlsx.generatedCredentialsExcel(
+      TokenPayload.email(accessToken),
+      { email, password },
+    );
+
+    if (bufferResult.IsFailure) {
+      this.logger.error(bufferResult.Error);
+      return ServiceResultMapper.InternalServerError();
+    }
+
+    return ServiceResultMapper.Ok(bufferResult.Value);
+  }
+
+  private generatePassword(): ResultPattern<string, ServiceError> {
+    const passwordResult = Crypto.generateRandomString(15);
+
+    if (passwordResult.IsFailure) {
+      this.logger.error(passwordResult.Error);
+      return ServiceResultMapper.InternalServerError();
+    }
+
+    return ServiceResultMapper.Ok(passwordResult.Value);
+  }
+
   //<--------- Service --------->
 
   async users(
@@ -131,11 +162,24 @@ export class UserService implements IUserService {
 
   async register(
     input: TRegisterSchema,
-  ): Promise<ResultPattern<TUserOutput, ServiceError>> {
+    accessToken: string | null,
+  ): Promise<ResultPattern<ArrayBuffer, ServiceError>> {
+    let password = input.password;
+
+    if (!password) {
+      const passwordResult = this.generatePassword();
+
+      if (passwordResult.IsFailure) {
+        return ResultPattern.Failure(passwordResult.Error);
+      }
+
+      password = passwordResult.Value;
+    }
+
     const [conflictsResult, areaResult, hashResult] = await Promise.all([
       this.validateConflicts(input.email, input.phone_number ?? null, null),
       this.resolveAreaJobPosition(input.work_area_id, input.job_position_id),
-      Argon2.hash(input.password),
+      Argon2.hash(password),
     ]);
 
     if (conflictsResult.IsFailure) {
@@ -165,7 +209,7 @@ export class UserService implements IUserService {
       return ServiceResultMapper.InternalServerError();
     }
 
-    return ServiceResultMapper.Ok(createResult.Value);
+    return this.credentials(accessToken, input.email, password);
   }
 
   async update(
@@ -196,12 +240,9 @@ export class UserService implements IUserService {
       email: input.email,
       phone_number: input.phone_number,
       status: input.status,
-      reset_password: input.reset_password,
       area_job_position_id: areaResult.Value,
       revoke_sessions_by:
-        input.status === false || input.reset_password === true
-          ? SESSION_REVOCATION_ACTOR.MANAGER
-          : null,
+        input.status === false ? SESSION_REVOCATION_ACTOR.MANAGER : null,
     });
 
     if (updateResult.IsFailure) {
@@ -216,6 +257,47 @@ export class UserService implements IUserService {
     }
 
     return ServiceResultMapper.Ok(updateResult.Value);
+  }
+
+  async resetPassword(
+    id: string,
+    accessToken: string | null,
+  ): Promise<ResultPattern<ArrayBuffer, ServiceError>> {
+    const passwordResult = this.generatePassword();
+
+    if (passwordResult.IsFailure) {
+      return ResultPattern.Failure(passwordResult.Error);
+    }
+
+    const hashResult = await Argon2.hash(passwordResult.Value);
+
+    if (hashResult.IsFailure) {
+      this.logger.error(hashResult.Error);
+      return ServiceResultMapper.InternalServerError();
+    }
+
+    const resetResult = await this.user_repository.resetPassword(
+      id,
+      hashResult.Value,
+      SESSION_REVOCATION_ACTOR.MANAGER,
+    );
+
+    if (resetResult.IsFailure) {
+      this.logger.error(resetResult.Error);
+      return ServiceResultMapper.InternalServerError();
+    }
+
+    if (!resetResult.Value) {
+      return ServiceResultMapper.NotFound(
+        API_USER_MESSAGE.ERROR.USER_NOT_EXIST,
+      );
+    }
+
+    return this.credentials(
+      accessToken,
+      resetResult.Value,
+      passwordResult.Value,
+    );
   }
 
   async remove(id: string): Promise<ResultPattern<null, ServiceError>> {

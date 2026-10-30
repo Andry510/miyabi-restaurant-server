@@ -1,6 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
 
-//Domain
 //Api
 import { API_SETTING_MESSAGE } from '../../../api/messages';
 
@@ -14,6 +13,9 @@ import type { TSettingsOutput } from '../../../domain/types/entities';
 
 //Infrastructure
 import { Logger } from '@infrastructure/audits';
+// oxlint-disable-next-line typescript/consistent-type-imports
+import { RedisManager } from '@infrastructure/cache';
+import { CACHE_KEY, CACHE_TTL_SECONDS } from '@infrastructure/constants';
 import { ServiceResultMapper } from '@infrastructure/mappers/shared';
 import {
   SETTING_LOGGER_NAME,
@@ -27,15 +29,34 @@ export class SettingService implements ISettingService {
   constructor(
     @Inject(SETTING_PROVIDER_TOKENS.REPOSITORIES.SETTING)
     private readonly setting_repository: ISettingRepository,
+    private readonly cache: RedisManager,
   ) {}
 
   async settings(): Promise<ResultPattern<TSettingsOutput, ServiceError>> {
+    const cached = await this.cache.get<TSettingsOutput>(CACHE_KEY.SETTINGS);
+
+    if (cached) {
+      return ServiceResultMapper.Ok({
+        ...cached,
+        products_synced_at: cached.products_synced_at
+          ? new Date(cached.products_synced_at)
+          : null,
+        updated_at: new Date(cached.updated_at),
+      });
+    }
+
     const findResult = await this.setting_repository.find();
 
     if (findResult.IsFailure) {
       this.logger.error(findResult.Error);
       return ServiceResultMapper.InternalServerError();
     }
+
+    await this.cache.set(
+      CACHE_KEY.SETTINGS,
+      findResult.Value,
+      CACHE_TTL_SECONDS.SETTINGS,
+    );
 
     return ServiceResultMapper.Ok(findResult.Value);
   }
@@ -64,6 +85,8 @@ export class SettingService implements ISettingService {
       this.logger.error(updateResult.Error);
       return ServiceResultMapper.InternalServerError();
     }
+
+    await this.cache.forget(CACHE_KEY.SETTINGS);
 
     return ServiceResultMapper.Ok(updateResult.Value);
   }

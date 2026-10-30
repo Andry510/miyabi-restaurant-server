@@ -25,6 +25,11 @@ export const ERROR_MESSAGE_SCHEMA = Object.freeze({
     integer: 'La tolerancia debe ser un número entero de minutos',
     range: 'La tolerancia debe estar entre 0 y 120 minutos',
   },
+  early_leave_tolerance_minutes: {
+    type: 'La tolerancia de salida debe ser un número',
+    integer: 'La tolerancia de salida debe ser un número entero de minutos',
+    range: 'La tolerancia de salida debe estar entre 0 y 120 minutos',
+  },
   status: {
     type: 'El estado debe ser un valor booleano',
   },

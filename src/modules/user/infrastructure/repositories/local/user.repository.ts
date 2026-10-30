@@ -242,9 +242,7 @@ export class UserRepository implements IUserRepository {
         const hasProfile =
           input.first_name !== undefined || input.last_name !== undefined;
         const hasAuthentication =
-          input.email !== undefined ||
-          input.phone_number !== undefined ||
-          input.reset_password === true;
+          input.email !== undefined || input.phone_number !== undefined;
 
         try {
           const response = await this.primaryDatabase.users.update({
@@ -264,7 +262,6 @@ export class UserRepository implements IUserRepository {
                     update: {
                       email: input.email,
                       phone_number: input.phone_number,
-                      password_need_reset: input.reset_password || undefined,
                     },
                   }
                 : undefined,
@@ -300,6 +297,47 @@ export class UserRepository implements IUserRepository {
           });
 
           return UserMapper.toOutput(response);
+        } catch (error) {
+          if (PrismaError.is(error, PRISMA_ERROR_CODE.NOT_FOUND)) {
+            return null;
+          }
+
+          throw error;
+        }
+      },
+    );
+
+  resetPassword = (
+    id: string,
+    passwordHash: string,
+    revokedBy: string,
+  ): Promise<ResultPattern<string | null>> =>
+    ResultPattern.tryCatchAsync(
+      'Infrastructure',
+      UserRepository.name,
+      async () => {
+        try {
+          const response = await this.primaryDatabase.users.update({
+            where: { id, deleted_at: null },
+            data: {
+              authentication: {
+                update: { password: passwordHash, password_need_reset: true },
+              },
+              sessions: {
+                updateMany: {
+                  where: { status: 'active' },
+                  data: {
+                    status: 'revoked',
+                    revoked_by: revokedBy,
+                    revoked_at: new Date(),
+                  },
+                },
+              },
+            },
+            select: { authentication: { select: { email: true } } },
+          });
+
+          return response.authentication?.email ?? null;
         } catch (error) {
           if (PrismaError.is(error, PRISMA_ERROR_CODE.NOT_FOUND)) {
             return null;

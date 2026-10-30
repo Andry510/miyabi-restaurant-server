@@ -359,7 +359,7 @@ export class OrderService implements IOrderService {
           : {
               id: dispatch.id,
               sent: false,
-              error: registerResult.Error.message,
+              error: registerResult.Error.message_code,
             },
       );
     }

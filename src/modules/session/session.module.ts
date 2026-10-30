@@ -9,7 +9,12 @@ import { SESSION_SERVICES_PROVIDERS } from './application/services';
 //Infrastructure
 import { SESSION_REPOSITORIES_PROVIDERS } from './infrastructure/repositories';
 
+//Modules
+import { RepositoryModule } from '../repository';
+import { SocketModule } from '../socket';
+
 @Module({
+  imports: [RepositoryModule, SocketModule],
   controllers: Object.values(SESSION_CONTROLLERS_PROVIDERS),
   providers: [...SESSION_SERVICES_PROVIDERS, ...SESSION_REPOSITORIES_PROVIDERS],
 })

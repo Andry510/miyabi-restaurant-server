@@ -29,6 +29,7 @@ const WORK_SCHEDULE_SELECT = {
   end_time: true,
   break_minutes: true,
   late_tolerance_minutes: true,
+  early_leave_tolerance_minutes: true,
   status: true,
   created_at: true,
   updated_at: true,
@@ -104,6 +105,7 @@ export class WorkScheduleRepository implements IWorkScheduleRepository {
             end_time: WorkScheduleMapper.toTime(input.end_time),
             break_minutes: input.break_minutes,
             late_tolerance_minutes: input.late_tolerance_minutes,
+            early_leave_tolerance_minutes: input.early_leave_tolerance_minutes,
           },
           select: WORK_SCHEDULE_SELECT,
         });
@@ -128,6 +130,8 @@ export class WorkScheduleRepository implements IWorkScheduleRepository {
               end_time: toTime(input.end_time),
               break_minutes: input.break_minutes,
               late_tolerance_minutes: input.late_tolerance_minutes,
+              early_leave_tolerance_minutes:
+                input.early_leave_tolerance_minutes,
               status: input.status,
             },
             select: WORK_SCHEDULE_SELECT,

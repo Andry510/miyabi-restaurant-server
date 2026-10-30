@@ -9,4 +9,9 @@ export interface ISessionRepository {
     userId: string,
     input: TSessionsQuerySchema,
   ): Promise<ResultPattern<TPaginationRepository<TSessionOutput>>>;
+
+  revokeActive(
+    userId: string,
+    revokedBy: string,
+  ): Promise<ResultPattern<number>>;
 }

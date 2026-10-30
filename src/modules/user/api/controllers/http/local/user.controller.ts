@@ -29,6 +29,7 @@ import {
 
 //Common
 import { HttpManagerAccess } from '@common/decorators/access';
+import { HttpAuthorization } from '@common/decorators/request';
 import { HttpValibotPipe } from '@common/pipes';
 
 //Domain
@@ -82,11 +83,12 @@ export class UserHttpController {
   @HttpManagerAccess()
   async register(
     @Body() body: RegisterDto,
+    @HttpAuthorization() access_token: string | null,
     @Res() res: Response,
   ): Promise<Response> {
     const input = body as unknown as TRegisterSchema;
 
-    const registerResult = await this.service.register(input);
+    const registerResult = await this.service.register(input, access_token);
 
     if (registerResult.IsFailure) {
       return HttpErrorMapper.reply(res, registerResult.Error);
@@ -94,7 +96,7 @@ export class UserHttpController {
 
     const response = ControllerResponseMapper.toDataResult(
       API_USER_MESSAGE.SUCCESS.USER_CREATED,
-      registerResult.Value,
+      Buffer.from(registerResult.Value),
     );
 
     return res.status(HttpStatus.CREATED).json(response);
@@ -141,6 +143,29 @@ export class UserHttpController {
     const response = ControllerResponseMapper.toDataResult(
       API_USER_MESSAGE.SUCCESS.USER_UPDATED,
       updateResult.Value,
+    );
+
+    return res.status(HttpStatus.OK).json(response);
+  }
+
+  @Post(HTTP_LOCAL_USER_ROUTER.PASSWORD_RESET)
+  @HttpManagerAccess()
+  async resetPassword(
+    @Param() params: UserParamDto,
+    @HttpAuthorization() access_token: string | null,
+    @Res() res: Response,
+  ): Promise<Response> {
+    const { id } = params as unknown as TParamIdSchema;
+
+    const resetResult = await this.service.resetPassword(id, access_token);
+
+    if (resetResult.IsFailure) {
+      return HttpErrorMapper.reply(res, resetResult.Error);
+    }
+
+    const response = ControllerResponseMapper.toDataResult(
+      API_USER_MESSAGE.SUCCESS.PASSWORD_RESET,
+      Buffer.from(resetResult.Value),
     );
 
     return res.status(HttpStatus.OK).json(response);

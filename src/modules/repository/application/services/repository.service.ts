@@ -15,10 +15,14 @@ import type { TValidateAccessOutput } from '../../domain/types';
 
 //Infrastructure
 import { Logger } from '@infrastructure/audits';
+// oxlint-disable-next-line typescript/consistent-type-imports
+import { RedisManager } from '@infrastructure/cache';
+import { CACHE_KEY } from '@infrastructure/constants';
 import { Env } from '@infrastructure/config';
 import { ServiceResultMapper } from '@infrastructure/mappers/shared';
 // oxlint-disable-next-line typescript/consistent-type-imports
-import { JwtManager } from '@infrastructure/securities';
+import { Crypto, JwtManager } from '@infrastructure/securities';
+import { TokenPayload } from '@infrastructure/utils';
 import {
   REPOSITORY_LOGGER_NAME,
   REPOSITORY_PROVIDER_TOKENS,
@@ -32,6 +36,7 @@ export class RepositoryService implements IRepositoryService {
 
   constructor(
     private readonly jwt_service: JwtManager,
+    private readonly cache: RedisManager,
     @Inject(REPOSITORY_PROVIDER_TOKENS.REPOSITORIES.USER_SESSION)
     private readonly user_session_repository: IUserSessionRepository,
     @Inject(REPOSITORY_PROVIDER_TOKENS.REPOSITORIES.CLOUD_SESSION)
@@ -95,11 +100,37 @@ export class RepositoryService implements IRepositoryService {
     return ResultPattern.Success({ user: userAggregate.UserDetail });
   }
 
-  validateManagerAccess(
+  async validateManagerAccess(
     accessToken: string,
   ): Promise<ResultPattern<null, ServiceError>> {
-    return this.cloud_session_repository.validate({
+    const key = CACHE_KEY.MANAGER_SESSION(Crypto.sha256(accessToken));
+
+    if (await this.cache.get<true>(key)) {
+      return ServiceResultMapper.Ok(null);
+    }
+
+    const validateResult = await this.cloud_session_repository.validate({
       authorization: accessToken,
     });
+
+    const sessionKey = TokenPayload.sessionKey(accessToken);
+    const ttlSeconds =
+      (TokenPayload.expiresAt(accessToken) ?? 0) -
+      Math.floor(Date.now() / 1000);
+
+    if (validateResult.IsSuccess && sessionKey && ttlSeconds > 0) {
+      await this.cache.set(
+        key,
+        true,
+        ttlSeconds,
+        CACHE_KEY.MANAGER_SESSION_GROUP(sessionKey),
+      );
+    }
+
+    return validateResult;
+  }
+
+  forgetManagerSession(sessionKey: string): Promise<void> {
+    return this.cache.forgetGroup(CACHE_KEY.MANAGER_SESSION_GROUP(sessionKey));
   }
 }

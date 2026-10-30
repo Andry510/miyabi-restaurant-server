@@ -1,24 +1,7 @@
 //Domain
-import type {
-  ATTENDANCE_STATUS,
-  INCIDENT_TYPE,
-  SHIFT_STATUS,
-} from '@domain/enums/shared';
+import type { SHIFT_STATUS } from '@domain/enums/shared';
+import type { TAttendanceRecordOutput } from '@domain/types/entities';
 import type { TReference } from '@domain/types/shared';
-
-export type TIncidentOutput = {
-  type: INCIDENT_TYPE;
-  minutes: number | null;
-  description: string | null;
-};
-
-export type TAttendanceRecordOutput = {
-  status: ATTENDANCE_STATUS;
-  clock_in: Date | null;
-  clock_out: Date | null;
-  note: string | null;
-  incidents: TIncidentOutput[];
-};
 
 export type TShiftOutput = {
   id: string;

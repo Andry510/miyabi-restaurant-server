@@ -18,12 +18,18 @@ export interface IUserService {
 
   register(
     input: TRegisterSchema,
-  ): Promise<ResultPattern<TUserOutput, ServiceError>>;
+    accessToken: string | null,
+  ): Promise<ResultPattern<ArrayBuffer, ServiceError>>;
 
   update(
     id: string,
     input: TUpdateBodySchema,
   ): Promise<ResultPattern<TUserOutput, ServiceError>>;
+
+  resetPassword(
+    id: string,
+    accessToken: string | null,
+  ): Promise<ResultPattern<ArrayBuffer, ServiceError>>;
 
   remove(id: string): Promise<ResultPattern<null, ServiceError>>;
 }

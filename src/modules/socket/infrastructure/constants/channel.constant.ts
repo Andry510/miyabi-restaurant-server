@@ -1,5 +1,6 @@
 export const SOCKET_EVENT = Object.freeze({
   SESSION_EXPIRED: 'session.expired',
+  SESSION_REVOKED: 'session.revoked',
   SERVER_SYNC_REQUIRED: 'server.sync_required',
   PRODUCT_CREATED: 'product.created',
   PRODUCT_UPDATED: 'product.updated',

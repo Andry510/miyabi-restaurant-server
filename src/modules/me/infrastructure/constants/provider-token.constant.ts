@@ -6,5 +6,6 @@ export const ME_PROVIDER_TOKENS = Object.freeze({
   },
   REPOSITORIES: {
     CLOUD_ME: Symbol('ME_CLOUD_ME_REPOSITORY'),
+    LOCAL_USER: Symbol('ME_LOCAL_USER_REPOSITORY'),
   },
 });

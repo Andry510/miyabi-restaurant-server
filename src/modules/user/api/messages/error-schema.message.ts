@@ -25,9 +25,6 @@ export const ERROR_MESSAGE_SCHEMA = Object.freeze({
   status: {
     type: 'El estado debe ser un valor booleano',
   },
-  reset_password: {
-    type: 'La opción de restablecer contraseña debe ser un valor booleano',
-  },
   work_area_id: {
     type: 'El área de trabajo debe ser un texto válido',
     uuid: 'El área de trabajo debe ser un UUID válido',

@@ -1,5 +1,6 @@
 import {
   Controller,
+  Delete,
   Get,
   HttpStatus,
   Inject,
@@ -62,6 +63,27 @@ export class SessionHttpController {
       API_USER_MESSAGE.SUCCESS.SESSIONS_RETRIEVED,
       sessionsResult.Value.data,
       sessionsResult.Value.metadata,
+    );
+
+    return res.status(HttpStatus.OK).json(response);
+  }
+
+  @Delete(HTTP_LOCAL_USER_ROUTER.REVOKE_SESSION)
+  @HttpManagerAccess()
+  async revoke(
+    @Param() params: UserParamDto,
+    @Res() res: Response,
+  ): Promise<Response> {
+    const { id } = params as unknown as TParamIdSchema;
+
+    const revokeResult = await this.service.revoke(id);
+
+    if (revokeResult.IsFailure) {
+      return HttpErrorMapper.reply(res, revokeResult.Error);
+    }
+
+    const response = ControllerResponseMapper.toMessageResult(
+      API_USER_MESSAGE.SUCCESS.SESSION_REVOKED,
     );
 
     return res.status(HttpStatus.OK).json(response);

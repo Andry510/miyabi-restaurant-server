@@ -33,5 +33,11 @@ export interface IUserRepository {
 
   update(input: TUpdateUserInput): Promise<ResultPattern<TUserOutput | null>>;
 
+  resetPassword(
+    id: string,
+    passwordHash: string,
+    revokedBy: string,
+  ): Promise<ResultPattern<string | null>>;
+
   softDelete(id: string, revokedBy: string): Promise<ResultPattern<boolean>>;
 }

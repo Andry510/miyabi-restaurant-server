@@ -14,6 +14,9 @@ import type { ISocketService } from '../../../../socket/domain/interfaces/servic
 
 //Infrastructure
 import { Logger } from '@infrastructure/audits';
+// oxlint-disable-next-line typescript/consistent-type-imports
+import { RedisManager } from '@infrastructure/cache';
+import { CACHE_KEY } from '@infrastructure/constants';
 import { ProductMapper } from '../../../infrastructure/mappers';
 import {
   SERVER_PRODUCT_LOGGER_NAME,
@@ -40,6 +43,7 @@ export class HydrationService implements IHydrationService, OnModuleInit {
     private readonly product_repository: IProductRepository,
     @Inject(SERVER_PRODUCT_PROVIDER_TOKENS.REPOSITORIES.CLOUD_SERVER_PRODUCT)
     private readonly cloud_server_product_repository: ICloudServerProductRepository,
+    private readonly cache: RedisManager,
   ) {}
 
   onModuleInit(): void {
@@ -172,6 +176,8 @@ export class HydrationService implements IHydrationService, OnModuleInit {
       this.logger.error(applyResult.Error);
       return;
     }
+
+    await this.cache.forget(CACHE_KEY.SETTINGS);
 
     this.logger.info(
       SYSTEM_MESSAGE.SUCCESS.HYDRATION_APPLIED(

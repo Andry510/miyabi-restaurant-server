@@ -17,6 +17,7 @@ import type { TSessionOutput } from '../../../domain/types/entities';
 
 //Infrastructure
 import { Logger } from '@infrastructure/audits';
+import { SESSION_REVOCATION_ACTOR } from '@infrastructure/constants';
 import { ServiceResultMapper } from '@infrastructure/mappers/shared';
 import {
   USER_LOGGER_NAME,
@@ -57,5 +58,38 @@ export class SessionService implements ISessionService {
     const { count, data } = sessionsResult.Value;
 
     return ServiceResultMapper.Pagination(data, input.page, input.limit, count);
+  }
+
+  async revoke(userId: string): Promise<ResultPattern<null, ServiceError>> {
+    const existResult = await this.user_repository.doesExistById(userId);
+
+    if (existResult.IsFailure) {
+      this.logger.error(existResult.Error);
+      return ServiceResultMapper.InternalServerError();
+    }
+
+    if (!existResult.Value) {
+      return ServiceResultMapper.NotFound(
+        API_USER_MESSAGE.ERROR.USER_NOT_EXIST,
+      );
+    }
+
+    const revokeResult = await this.session_repository.revokeActive(
+      userId,
+      SESSION_REVOCATION_ACTOR.MANAGER,
+    );
+
+    if (revokeResult.IsFailure) {
+      this.logger.error(revokeResult.Error);
+      return ServiceResultMapper.InternalServerError();
+    }
+
+    if (revokeResult.Value === 0) {
+      return ServiceResultMapper.NotFound(
+        API_USER_MESSAGE.ERROR.NO_ACTIVE_SESSION,
+      );
+    }
+
+    return ServiceResultMapper.Ok(null);
   }
 }

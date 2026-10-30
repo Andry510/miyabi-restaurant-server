@@ -13,4 +13,6 @@ export interface IRepositoryService {
   validateManagerAccess(
     accessToken: string,
   ): Promise<ResultPattern<null, ServiceError>>;
+
+  forgetManagerSession(sessionKey: string): Promise<void>;
 }

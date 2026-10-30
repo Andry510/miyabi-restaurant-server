@@ -11,6 +11,7 @@ type TWorkScheduleRow = Pick<
   | 'end_time'
   | 'break_minutes'
   | 'late_tolerance_minutes'
+  | 'early_leave_tolerance_minutes'
   | 'status'
   | 'created_at'
   | 'updated_at'

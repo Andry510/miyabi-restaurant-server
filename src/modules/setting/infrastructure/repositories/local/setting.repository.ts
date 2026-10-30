@@ -17,6 +17,10 @@ const SETTINGS_SELECT = {
   timezone: true,
   clock_in_window_minutes: true,
   tip_period: true,
+  late_arrival_shifts: true,
+  absence_shifts: true,
+  tip_sanction_destination: true,
+  week_start_day: true,
   products_synced_at: true,
   updated_at: true,
 };

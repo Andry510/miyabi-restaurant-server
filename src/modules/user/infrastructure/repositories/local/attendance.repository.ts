@@ -9,6 +9,7 @@ import type { TShiftOutput } from '../../../domain/types/entities';
 //Infrastructure
 // oxlint-disable-next-line typescript/consistent-type-imports
 import { DatabaseManager } from '@infrastructure/database';
+import { ATTENDANCE_RECORD_SELECT } from '@infrastructure/mappers/shared';
 import { AttendanceMapper } from '../../mappers';
 
 @Injectable()
@@ -39,18 +40,7 @@ export class AttendanceRepository implements IAttendanceRepository {
             scheduled_start: true,
             scheduled_end: true,
             work_schedule: { select: { id: true, name: true } },
-            attendance_record: {
-              select: {
-                status: true,
-                clock_in: true,
-                clock_out: true,
-                note: true,
-                incidents: {
-                  select: { type: true, minutes: true, description: true },
-                  orderBy: { created_at: 'asc' },
-                },
-              },
-            },
+            attendance_record: { select: ATTENDANCE_RECORD_SELECT },
           },
           orderBy: [{ scheduled_start: 'asc' }, { id: 'asc' }],
         });

@@ -59,4 +59,25 @@ export class SessionRepository implements ISessionRepository {
         };
       },
     );
+
+  revokeActive = (
+    userId: string,
+    revokedBy: string,
+  ): Promise<ResultPattern<number>> =>
+    ResultPattern.tryCatchAsync(
+      'Infrastructure',
+      SessionRepository.name,
+      async () => {
+        const { count } = await this.primaryDatabase.sessions.updateMany({
+          where: { user_id: userId, status: 'active' },
+          data: {
+            status: 'revoked',
+            revoked_by: revokedBy,
+            revoked_at: new Date(),
+          },
+        });
+
+        return count;
+      },
+    );
 }
