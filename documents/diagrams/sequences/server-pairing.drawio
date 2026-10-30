@@ -15,7 +15,7 @@
                 <mxCell id="10" value="server_token" style="html=1;verticalAlign=bottom;endArrow=block;fontSize=10;dashed=1;endArrow=open;" parent="1" edge="1"><mxGeometry relative="1" as="geometry"><mxPoint x="500" y="340" as="sourcePoint"/><mxPoint x="300" y="340" as="targetPoint"/></mxGeometry></mxCell>
                 <mxCell id="11" value="201 { name, server_token }" style="html=1;verticalAlign=bottom;endArrow=block;fontSize=10;dashed=1;endArrow=open;" parent="1" edge="1"><mxGeometry relative="1" as="geometry"><mxPoint x="300" y="390" as="sourcePoint"/><mxPoint x="100" y="390" as="targetPoint"/></mxGeometry></mxCell>
                 <mxCell id="12" value="Pega SERVER_TOKEN en .env y reinicia" style="html=1;verticalAlign=bottom;endArrow=block;fontSize=10;" parent="1" edge="1"><mxGeometry relative="1" as="geometry"><mxPoint x="100" y="440" as="sourcePoint"/><mxPoint x="300" y="440" as="targetPoint"/></mxGeometry></mxCell>
-                <mxCell id="13" value="Al arrancar: socket con server_token" style="html=1;verticalAlign=bottom;endArrow=block;fontSize=10;" parent="1" edge="1"><mxGeometry relative="1" as="geometry"><mxPoint x="300" y="490" as="sourcePoint"/><mxPoint x="500" y="490" as="targetPoint"/></mxGeometry></mxCell>
+                <mxCell id="13" value="Al arrancar: abre server.channel con server_token" style="html=1;verticalAlign=bottom;endArrow=block;fontSize=10;" parent="1" edge="1"><mxGeometry relative="1" as="geometry"><mxPoint x="300" y="490" as="sourcePoint"/><mxPoint x="500" y="490" as="targetPoint"/></mxGeometry></mxCell>
             </root>
         </mxGraphModel>
     </diagram>

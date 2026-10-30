@@ -26,12 +26,12 @@ Cómo está construido por dentro el servidor local del restaurante. Para instal
 ```
  App del empleado ──┐                       ┌── gRPC  (CLOUD_GRPC_URL)   ── miyabi-api
                     ├── REST /v1 ── Servidor del restaurante
- App del gerente ───┘        │              └── socket.io (CLOUD_SOCKET_URL) ── miyabi-api
+ App del gerente ───┘        │              └── gRPC server.channel (stream) ─ miyabi-api
                              │
                        PostgreSQL local
 ```
 
-- **Stack:** NestJS 11, Prisma 7 (`@prisma/adapter-pg`), valibot, `@grpc/grpc-js` como cliente, `socket.io-client`, Argon2 y JWT.
+- **Stack:** NestJS 11, Prisma 7 (`@prisma/adapter-pg`), valibot, `@grpc/grpc-js` como cliente (RPCs y el canal `server.channel`), Argon2 y JWT.
 - **Una sola entrada:** REST con versión en la URL (`enableVersioning`). No hay microservicio gRPC propio: el servidor es **cliente** del gRPC de la nube.
 - **Dos tipos de usuario:**
   - **Empleado:** existe en la base local, inicia sesión contra el servidor y usa tokens firmados con los secretos del `.env`.
@@ -128,11 +128,11 @@ Igual que en la nube (`miyabi-api/CLAUDE.md` §3), con `local/` y `cloud/` donde
 | `tip` | local | Reglas de reparto, bolsas de propinas, sanciones, reparto por área, Excel con firma y propinas del empleado. |
 | `setting` | local | Configuración del servidor: zona horaria, ventana de entrada, periodo de propinas, reglas de sanción e inicio de semana. |
 | `product` | local + cloud | Productos del área del empleado (copia local) y catálogo de la nube. |
-| `server-product` | local + cloud | Sincronización de productos desde la nube (hidratación y eventos del socket). |
+| `server-product` | local + cloud | Sincronización de productos desde la nube (hidratación y mensajes del canal). |
 | `supplier`, `supplier-product`, `location` | cloud | Proveedores, sus productos y locales, leídos de la nube. |
 | `transfer`, `transfer-item` | cloud | Pedidos del restaurante en la nube: listar, ver, crear, recibir, cancelar y sus productos. |
 | `pairing` | cloud | Emparejar el servidor con la nube. |
-| `socket` | cloud | Conexión socket.io con la nube y reparto de sus eventos. |
+| `channel` | cloud | Canal gRPC con la nube (`server.channel`): reparte sus mensajes, responde sus solicitudes y reporta el estado del servidor. |
 | `repository` | local + cloud | Validación de acceso para los guards (`validateAccess`, `validateManagerAccess`, `serverToken`) y `CatalogService` (`workAreasExist`, `jobPositionsExist`, `productsExist`). |
 
 ## 6. Rutas REST
@@ -275,12 +275,12 @@ La última columna es el diagrama en `documents/diagrams/workflows/`; `—` indi
 | `refresh_token` de empleado | El servidor | `JWT_SECRET_REFRESH_TOKEN` | `POST /v1/sessions/local/refresh` y `logout`. |
 | `password_token` | El servidor | `JWT_SECRET_PASSWORD_TOKEN` | Cambio de contraseña obligatoria del empleado. |
 | `access_token` y `refresh_token` del gerente | La nube | Secretos de la nube | Rutas de gerente y `*/cloud`. El servidor no los valida solo: pregunta a la nube y guarda el resultado en Redis hasta que vence el token. |
-| `server_token` | La nube, al emparejar | — | Identifica al servidor ante la nube en cada llamada gRPC (metadata `server_token`) y en el socket (`auth.server_token`). |
+| `server_token` | La nube, al emparejar | — | Identifica al servidor ante la nube en cada llamada gRPC y al abrir el canal (metadata `server_token`). |
 
 ### Caché de la sesión del gerente
 
 - Cuando la nube valida un `access_token` de gerente, el servidor lo guarda en Redis (con su huella SHA-256, no el token) hasta que el token vence. Así responde más rápido y el gerente sigue trabajando si se cae el internet.
-- La caché de esa sesión se borra al instante cuando la nube manda `session.revoked` por el socket o cuando el gerente cierra sesión por `POST /v1/sessions/cloud/logout`.
+- La caché de esa sesión se borra al instante cuando la nube manda `session_revoked` por el canal o cuando el gerente cierra sesión por `POST /v1/sessions/cloud/logout`.
 - Riesgo aceptado: si la nube cierra la sesión mientras el servidor no tiene internet, el aviso no llega y el token sirve en el local hasta que vence.
 
 ### Guards
@@ -310,20 +310,25 @@ Los guards son globales y se activan con su decorador; no se usa `@UseGuards`. R
   - toma el `code` de los **trailers** (metadata `code`) que manda la nube, y el texto de `details`;
   - si la nube no manda `code`, usa el mensaje global del tipo de error.
 
-### Socket.io
+### Canal con la nube (`server.channel`)
 
-- `SocketService` se conecta al arrancar (`OnApplicationBootstrap`) con `auth.server_token`, solo `websocket`.
-- Si la nube rechaza la conexión (16 o 7), cierra y no reintenta. Si no la alcanza, reintenta cada **30 s**.
-- Los módulos se suscriben con `socket_service.on(evento, handler)`; hoy lo hace `server-product`:
+- `ChannelService` (módulo `channel`) abre al arrancar el stream bidireccional `server_service.channel` de `proto/v1/server.proto`, con el `server_token` en la metadata.
+- Si se corta o la nube no responde, reintenta con espera creciente (de 1 a 30 s). Si la nube lo rechaza (16 o 7) o le cierra el canal por `ERROR_SERVER_DISABLED`, `ERROR_SERVER_REVOKED`, `ERROR_SERVER_TOKEN_REGENERATED` o `ERROR_SERVER_CHANNEL_REPLACED`, se detiene hasta reiniciar o volver a emparejar.
+- Los módulos se suscriben con `channel_service.on(mensaje, handler)` y responden solicitudes con `channel_service.onRequest(solicitud, handler)`:
 
-| Evento (`SOCKET_EVENT`) | Qué hace el servidor |
-|---|---|
-| `server.sync_required` | Hidratación: pide `server_product.server_products(synced_at)`, guarda los productos, borra `removed_ids` y guarda `products_synced_at`. |
-| `product.created`, `product.updated` | Upsert del producto. |
-| `product.removed` | Borra el producto por su id de la nube. |
-| `session.expired` | Cierra el socket. |
+| Mensaje de la nube (`CHANNEL_EVENT`) | Quién lo atiende | Qué hace |
+|---|---|---|
+| `sync_required` | `server-product` | Hidratación: pide `server_product.server_products(synced_at)`, guarda los productos, borra `removed_ids` y guarda `products_synced_at`. |
+| `product` (`created` / `updated`) | `server-product` | Upsert del producto. |
+| `product_removed` | `server-product` | Borra el producto por su id de la nube. |
+| `session_revoked` | `session` | Borra de la caché la sesión de ese gerente. |
+| `transfer` | — | Llega por el canal; el aviso a las pantallas de los gerentes es otra implementación. |
+| `session_expired` | `channel` | Cierra el canal y, según el motivo, reintenta o se detiene. |
+| `attendance_request` (solicitud) | `shift` (`ReportService`) | Responde con los turnos del rango y su asistencia (empleado, fecha, horario, entrada, salida, estado, retardo, salida anticipada e incidencias). |
 
-Los cambios se aplican en una cola, de uno en uno, y una hidratación pedida mientras otra espera no se duplica. Ver `sequences/product-sync.drawio`.
+- **Estado:** el canal le manda a la nube versión, segundos encendido, si la base responde, `products_synced_at` y envíos pendientes y fallidos. Lo hace al abrir el canal, cada 5 minutos y cuando termina una hidratación o un envío de pedido, con al menos 35 s entre reportes (la nube descarta los que lleguen con menos de 30 s).
+
+Los cambios de productos se aplican en una cola, de uno en uno, y una hidratación pedida mientras otra espera no se duplica. Ver `sequences/product-sync.drawio`.
 
 ## 9. Reglas de negocio del local
 

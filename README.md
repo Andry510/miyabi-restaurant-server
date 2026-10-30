@@ -1,6 +1,6 @@
 # Miyabi Restaurant Server (miyabi-restaurant-server)
 
-Servidor local de cada restaurante de Miyabi. Corre dentro de la sucursal, guarda en su propia base lo que es del local (empleados, áreas, puestos, horarios, turnos, asistencia, pedido del día y propinas) y se conecta con la nube ([`miyabi-api`](../miyabi-api)) por gRPC y socket.io para todo lo que es compartido (catálogo, proveedores, pedidos a almacenes y la sesión del gerente).
+Servidor local de cada restaurante de Miyabi. Corre dentro de la sucursal, guarda en su propia base lo que es del local (empleados, áreas, puestos, horarios, turnos, asistencia, pedido del día y propinas) y se conecta con la nube ([`miyabi-api`](../miyabi-api)) por gRPC para todo lo que es compartido (catálogo, proveedores, pedidos a almacenes y la sesión del gerente).
 
 Este documento explica **qué es el servicio y cómo ponerlo a correr**. Para saber **cómo está construido por dentro** lee [`SERVICE_OVERVIEW.md`](./SERVICE_OVERVIEW.md).
 
@@ -30,7 +30,7 @@ Este documento explica **qué es el servicio y cómo ponerlo a correr**. Para sa
 | Asistencia | Entrada y salida del empleado contra su turno, retardos e incidencias. | Base local |
 | Pedido del día | Los empleados piden productos de su área; el gerente ajusta, elige el almacén y lo envía a la nube como uno o varios pedidos. | Base local → nube |
 | Propinas | Reglas por área (porcentaje y método), bolsas por periodo, reparto y cierre. | Base local |
-| Catálogo | Productos, proveedores y locales. Los productos se copian a la base local y se mantienen al día por socket. | Nube (con copia local de productos) |
+| Catálogo | Productos, proveedores y locales. Los productos se copian a la base local y se mantienen al día por el canal gRPC con la nube. | Nube (con copia local de productos) |
 | Pedidos a almacenes | Ver, recibir y cancelar los pedidos que ya están en la nube. | Nube |
 
 **Quién lo consume:**
@@ -57,7 +57,7 @@ Todo entra por **REST** con la versión en la URL (`/v1/...`). El servidor no ex
 |---|---|---|
 | **PostgreSQL** | Sí | Toda la información del local. |
 | **gRPC de la nube** (`CLOUD_GRPC_URL`) | Sí, para gerentes | Login del gerente, validación de su sesión en cada ruta de gerente, catálogo, proveedores y pedidos. Cada llamada tiene 10 s de plazo; si no responde, la ruta contesta **503** `ERROR_CLOUD_UNAVAILABLE`. |
-| **socket.io de la nube** (`CLOUD_SOCKET_URL`) | Recomendado | Avisos de productos creados, editados o quitados, y la orden de resincronizar. Sin socket el servidor funciona, pero su copia de productos no se actualiza sola. Reintenta la conexión cada 30 s. |
+| **Canal gRPC de la nube** (`server.channel`, en `CLOUD_GRPC_URL`) | Recomendado | Canal que abre el servidor y deja abierto: la nube le avisa de productos, pedidos y sesiones, le pide la asistencia y recibe su estado. Sin canal el servidor funciona, pero su copia de productos no se actualiza sola. Si se corta, reintenta solo con espera creciente (de 1 a 30 s). |
 
 Lo que es del local (empleados, turnos, asistencia, solicitudes del pedido del día, propinas) **sigue funcionando sin internet** para los empleados. Lo que pasa por la nube (todas las rutas de gerente, el catálogo y el envío del pedido) no.
 
@@ -81,7 +81,7 @@ Crea un archivo `.env` en la raíz (puedes copiar `.env.example`). El servidor v
 | `DATABASE_URL` | Sí | `postgresql://user:pass@localhost:5432/miyabi_restaurant` | Base del local. |
 | `REDIS_URL` | Sí | `redis://127.0.0.1:6379` | Caché de sesiones de gerente y de la configuración. En Docker se usa el Redis del `docker-compose.yml`. |
 | `CLOUD_GRPC_URL` | Sí | `localhost:5510` | gRPC de la nube. |
-| `CLOUD_SOCKET_URL` | Sí | `http://localhost:4510` | socket.io de la nube. |
+| `CLOUD_SOCKET_URL` | Sí (sin uso) | `http://localhost:4510` | Ya no se usa desde que el servidor habla con la nube solo por gRPC; el schema de entorno todavía la exige. |
 | `JWT_SECRET_TOKEN` | Sí | (texto largo y aleatorio) | Firma del `access_token` de empleados. |
 | `JWT_SECRET_REFRESH_TOKEN` | Sí | (texto largo y aleatorio) | Firma del `refresh_token` de empleados. |
 | `JWT_SECRET_PASSWORD_TOKEN` | Sí | (texto largo y aleatorio) | Firma del token para cambiar la contraseña obligatoria. |
@@ -115,7 +115,7 @@ Para cambiar el modelo, edita `prisma/schema.prisma` y crea la migración con `p
    ```
 
 3. La respuesta trae `server_token`. Pégalo en `.env` como `SERVER_TOKEN` y **reinicia** el servidor.
-4. Al arrancar, el servidor se conecta al socket de la nube, que le pide sincronizar los productos de su local.
+4. Al arrancar, el servidor abre su canal gRPC con la nube (`server.channel`), que le pide sincronizar los productos de su local.
 
 Si el servidor ya tiene `SERVER_TOKEN`, la ruta responde **409** `ERROR_SERVER_ALREADY_PAIRED`.
 
@@ -157,7 +157,7 @@ La imagen compila en una etapa y, al arrancar, aplica las migraciones (`prisma m
 | El servidor no arranca y el log dice `INVALID_ENV_VARIABLE` | Falta una variable obligatoria o un número no es número. | Revisa la tabla de la sección 4.2. |
 | Todo responde 409 `ERROR_SERVER_NOT_PAIRED` | No hay `SERVER_TOKEN`. | Empareja el servidor (sección 4.4) y reinicia. |
 | Las rutas de gerente responden 503 `ERROR_CLOUD_UNAVAILABLE` | La nube no responde en 10 s. | Revisa `CLOUD_GRPC_URL` y que la nube esté arriba. Las rutas de empleado siguen funcionando. |
-| Los productos no se actualizan | El socket no conecta o la nube lo rechazó. | Revisa `CLOUD_SOCKET_URL` y el log del socket. Si la nube revocó el servidor, hay que volver a emparejarlo. |
+| Los productos no se actualizan | El canal no abre o la nube lo cerró. | Revisa `CLOUD_GRPC_URL` y el log `CHANNEL-SERVICE`. Si la nube revocó el servidor, hay que volver a emparejarlo. |
 | Error de Prisma al arrancar | No se generó el cliente o faltan migraciones. | `pnpm prisma generate` y `pnpm prisma migrate deploy`. |
 | Una foto responde 413 | Pasa de 6 MB o del límite de la nube. | Usa una imagen más chica (JPG, PNG o WEBP). |
 
