@@ -58,10 +58,24 @@ ENUM tip_period {
 }
 
 ENUM tip_split_method {
-  equal [note: 'Partes iguales entre quienes trabajaron']
-  minutes [note: 'Proporcional a los minutos trabajados']
-  position_weight [note: 'Minutos trabajados por el peso del puesto']
+  position_weight [note: 'Turnos completos por el factor del puesto']
   manual [note: 'El gerente escribe el monto de cada persona']
+}
+
+ENUM week_day {
+  monday [note: 'Lunes']
+  tuesday [note: 'Martes']
+  wednesday [note: 'Miércoles']
+  thursday [note: 'Jueves']
+  friday [note: 'Viernes']
+  saturday [note: 'Sábado']
+  sunday [note: 'Domingo']
+}
+
+ENUM tip_sanction_destination {
+  fund [note: 'El dinero sancionado va a un fondo aparte y no se reparte']
+  area [note: 'El dinero sancionado se reparte entre los demás de la misma área']
+  all [note: 'El dinero sancionado se reparte entre todos los que cobraron, según lo que ganó cada uno']
 }
 
 ENUM tip_pool_status {
@@ -77,6 +91,10 @@ TABLE server_settings {
   timezone varchar(50) [default: 'UTC', note: 'Zona horaria del restaurante; define dónde empieza y termina un día']
   clock_in_window_minutes smallint [default: 30, note: 'Minutos antes del turno en que se puede checar entrada (0 a 240)']
   tip_period tip_period [default: 'day', note: 'Modo de reparto de propinas; no cambia si hay un reparto abierto']
+  late_arrival_shifts numeric(4,2) [default: 0.5, note: 'Turnos que quita cada retardo sin justificar (0 a 10, en cuartos)']
+  absence_shifts numeric(4,2) [default: 2, note: 'Turnos que quita cada falta sin justificar (0 a 10, en cuartos)']
+  tip_sanction_destination tip_sanction_destination [default: 'fund', note: 'A dónde va el dinero que se quita por sanciones']
+  week_start_day week_day [default: 'monday', note: 'Día en que empieza la semana del restaurante; se usa al copiar turnos']
   products_synced_at timestamp [null, note: 'Última sincronización de productos con la nube']
 
   updated_at timestamp [note: 'Fecha de la última modificación']
@@ -251,6 +269,7 @@ TABLE work_schedules {
   end_time time [note: 'Hora de salida; si es menor que la entrada, termina al día siguiente']
   break_minutes int [default: 0, note: 'Minutos de descanso (informativo; no se descuentan)']
   late_tolerance_minutes int [default: 5, note: 'Minutos de gracia antes de marcar retardo']
+  early_leave_tolerance_minutes smallint [default: 0, note: 'Minutos antes de la salida en que todavía no cuenta como salida temprana (0 a 120)']
   status boolean [default: true, note: 'Estado; inactivo no se usa para turnos nuevos']
 
   deleted_at timestamp [null, note: 'Fecha de eliminación; no se borra si tiene turnos pendientes']
@@ -285,9 +304,11 @@ TABLE attendance_records {
   status attendance_status [default: 'incomplete', note: 'Estado de la asistencia']
   clock_in timestamp [null, note: 'Hora real de entrada']
   clock_out timestamp [null, note: 'Hora real de salida']
-  note varchar(500) [null, note: 'Nota (reservada para la justificación de faltas)']
+  note varchar(500) [null, note: 'Motivo de la última corrección del gerente']
 
-  recorded_by_id uuid [null, ref: > users.id, note: 'Quién registró la entrada']
+  recorded_by_id uuid [null, ref: > users.id, note: 'Empleado que checó la entrada; vacío si el gerente creó el registro']
+  corrected_by varchar(255) [null, note: 'Correo del gerente que corrigió las horas']
+  corrected_at timestamp [null, note: 'Fecha de la última corrección']
 
   created_at timestamp [default: 'now()', note: 'Fecha de registro']
   updated_at timestamp [note: 'Fecha de la última modificación']
@@ -301,6 +322,10 @@ TABLE attendance_incidents {
   type incident_type [note: 'Tipo de incidencia']
   minutes int [null, note: 'Minutos de retardo o de salida temprana']
   description varchar(500) [null, note: 'Descripción']
+
+  justification varchar(500) [null, note: 'Motivo con el que el gerente la justificó']
+  justified_by varchar(255) [null, note: 'Correo del gerente que la justificó']
+  justified_at timestamp [null, note: 'Fecha de la justificación; si tiene valor, no cuenta para propinas']
 
   created_at timestamp [default: 'now()', note: 'Fecha de registro']
 }
@@ -386,7 +411,7 @@ TABLE tip_area_rules {
   work_area_id uuid [unique, ref: - work_areas.id, note: 'Área; una regla por área']
 
   percentage numeric(5,2) [note: 'Porcentaje del total para el área; todas las reglas suman 100']
-  method tip_split_method [default: 'minutes', note: 'Cómo se reparte dentro del área']
+  method tip_split_method [default: 'position_weight', note: 'Cómo se reparte dentro del área']
 
   created_at timestamp [default: 'now()', note: 'Fecha de registro']
   updated_at timestamp [note: 'Fecha de la última modificación']
@@ -402,6 +427,8 @@ TABLE tip_pools {
 
   amount numeric(12,2) [note: 'Efectivo capturado por el gerente']
   status tip_pool_status [default: 'open', note: 'Estado del reparto']
+  sanction_destination tip_sanction_destination [default: 'fund', note: 'Destino de las sanciones con el que se calculó']
+  sanction_amount numeric(12,2) [default: 0, note: 'Dinero que quedó en el fondo de sanciones']
   note varchar(500) [null, note: 'Nota del gerente']
   closed_at timestamp [null, note: 'Fecha de cierre']
 
@@ -422,6 +449,7 @@ TABLE tip_pool_areas {
   percentage numeric(5,2) [note: 'Porcentaje que tenía la regla al calcular']
   method tip_split_method [note: 'Método usado; manual si el gerente ajustó a mano']
   amount numeric(12,2) [note: 'Monto que le tocó al área']
+  enabled boolean [default: true, note: 'Si el gerente la apagó, no cobra y su parte pasa a las demás áreas']
 
   indexes {
     (tip_pool_id, work_area_id) [unique]
@@ -434,12 +462,45 @@ TABLE tip_allocations {
   tip_pool_area_id uuid [ref: > tip_pool_areas.id, note: 'Área dentro del reparto; se borra con ella']
   user_assignment_id uuid [ref: > user_assignments.id, note: 'Empleado']
 
-  minutes int [note: 'Minutos trabajados en el periodo']
-  weight numeric(4,2) [note: 'Peso de su puesto al calcular']
+  shifts numeric(6,2) [note: 'Turnos completos en el periodo (salir antes sin justificar no cuenta)']
+  sanction_shifts numeric(6,2) [default: 0, note: 'Turnos que le quitaron retardos, faltas y sanciones']
+  weight numeric(4,2) [note: 'Factor de su puesto al calcular']
   amount numeric(12,2) [note: 'Monto que le tocó']
+  sanction_amount numeric(12,2) [default: 0, note: 'Dinero que se le quitó por sanciones']
 
   indexes {
     (tip_pool_area_id, user_assignment_id) [unique]
+    user_assignment_id
+  }
+}
+
+TABLE tip_sanction_types {
+  id uuid [pk, note: 'ID único del tipo de sanción']
+
+  name varchar(100) [unique, note: 'Nombre, ej. Castigo o Acta administrativa']
+  shifts numeric(4,2) [default: 0, note: 'Turnos que quita (0 a 10, en cuartos)']
+  removes_all boolean [default: false, note: 'Si quita toda la propina del periodo']
+
+  created_at timestamp [default: 'now()', note: 'Fecha de registro']
+  updated_at timestamp [note: 'Fecha de la última modificación']
+}
+
+TABLE tip_sanctions {
+  id uuid [pk, note: 'ID único de la sanción aplicada']
+
+  tip_pool_id uuid [ref: > tip_pools.id, note: 'Reparto; se borra con él']
+  user_assignment_id uuid [ref: > user_assignments.id, note: 'Empleado sancionado']
+  tip_sanction_type_id uuid [ref: > tip_sanction_types.id, note: 'Tipo de sanción; no se puede borrar si ya se usó']
+
+  shifts numeric(4,2) [note: 'Turnos que quitaba el tipo al aplicarla']
+  removes_all boolean [note: 'Si el tipo quitaba toda la propina al aplicarla']
+  note varchar(500) [null, note: 'Motivo del gerente']
+  created_by varchar(255) [note: 'Correo del gerente que la aplicó']
+
+  created_at timestamp [default: 'now()', note: 'Fecha de registro']
+
+  indexes {
+    tip_pool_id
     user_assignment_id
   }
 }
@@ -506,4 +567,6 @@ TABLEGROUP propinas [color: #62D97F]
   tip_pool_areas
   tip_allocations
   tip_pool_shifts
+  tip_sanction_types
+  tip_sanctions
 }

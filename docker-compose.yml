@@ -1,5 +1,5 @@
 # Restaurant server: docker compose up -d --build
-# PostgreSQL is external; set DOCKER_DATABASE_URL in .env
+# PostgreSQL is external; set DOCKER_DATABASE_URL in .env. Redis runs here.
 services:
   server:
     build:
@@ -7,11 +7,24 @@ services:
       dockerfile: Dockerfile
     container_name: miyabi-restaurant-server
     restart: unless-stopped
+    depends_on:
+      - redis
     env_file:
       - .env
     environment:
       DATABASE_URL: ${DOCKER_DATABASE_URL:?Define DOCKER_DATABASE_URL en .env}
+      REDIS_URL: redis://redis:6379
     extra_hosts:
       - "host.docker.internal:host-gateway"
     ports:
       - "${PORT:-3520}:${PORT:-3520}"
+
+  redis:
+    image: redis:7.4-alpine
+    container_name: miyabi-restaurant-redis
+    restart: unless-stopped
+    volumes:
+      - restaurant-redis-data:/data
+
+volumes:
+  restaurant-redis-data:
