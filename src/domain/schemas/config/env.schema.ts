@@ -31,7 +31,6 @@ export const EnvSchema = pipe(
 
       //CLOUD
       CLOUD_GRPC_URL: requiredStringSchema,
-      CLOUD_SOCKET_URL: requiredStringSchema,
 
       //JWT
       JWT_SECRET_TOKEN: requiredStringSchema,

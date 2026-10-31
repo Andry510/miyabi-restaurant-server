@@ -81,7 +81,6 @@ Crea un archivo `.env` en la raíz (puedes copiar `.env.example`). El servidor v
 | `DATABASE_URL` | Sí | `postgresql://user:pass@localhost:5432/miyabi_restaurant` | Base del local. |
 | `REDIS_URL` | Sí | `redis://127.0.0.1:6379` | Caché de sesiones de gerente y de la configuración. En Docker se usa el Redis del `docker-compose.yml`. |
 | `CLOUD_GRPC_URL` | Sí | `localhost:5510` | gRPC de la nube. |
-| `CLOUD_SOCKET_URL` | Sí (sin uso) | `http://localhost:4510` | Ya no se usa desde que el servidor habla con la nube solo por gRPC; el schema de entorno todavía la exige. |
 | `JWT_SECRET_TOKEN` | Sí | (texto largo y aleatorio) | Firma del `access_token` de empleados. |
 | `JWT_SECRET_REFRESH_TOKEN` | Sí | (texto largo y aleatorio) | Firma del `refresh_token` de empleados. |
 | `JWT_SECRET_PASSWORD_TOKEN` | Sí | (texto largo y aleatorio) | Firma del token para cambiar la contraseña obligatoria. |
