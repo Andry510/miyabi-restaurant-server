@@ -17,7 +17,13 @@ CREATE TYPE "shift_status" AS ENUM ('scheduled', 'completed', 'cancelled');
 CREATE TYPE "tip_period" AS ENUM ('day', 'week', 'shift');
 
 -- CreateEnum
-CREATE TYPE "tip_split_method" AS ENUM ('equal', 'minutes', 'position_weight', 'manual');
+CREATE TYPE "tip_split_method" AS ENUM ('position_weight', 'manual');
+
+-- CreateEnum
+CREATE TYPE "week_day" AS ENUM ('monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday');
+
+-- CreateEnum
+CREATE TYPE "tip_sanction_destination" AS ENUM ('fund', 'area', 'all');
 
 -- CreateEnum
 CREATE TYPE "tip_pool_status" AS ENUM ('open', 'closed');
@@ -34,6 +40,10 @@ CREATE TABLE "server_settings" (
     "timezone" VARCHAR(50) NOT NULL DEFAULT 'UTC',
     "clock_in_window_minutes" SMALLINT NOT NULL DEFAULT 30,
     "tip_period" "tip_period" NOT NULL DEFAULT 'day',
+    "late_arrival_shifts" DECIMAL(4,2) NOT NULL DEFAULT 0.5,
+    "absence_shifts" DECIMAL(4,2) NOT NULL DEFAULT 2,
+    "tip_sanction_destination" "tip_sanction_destination" NOT NULL DEFAULT 'fund',
+    "week_start_day" "week_day" NOT NULL DEFAULT 'monday',
     "products_synced_at" TIMESTAMP(3),
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -148,6 +158,7 @@ CREATE TABLE "work_schedules" (
     "end_time" TIME(0) NOT NULL,
     "break_minutes" INTEGER NOT NULL DEFAULT 0,
     "late_tolerance_minutes" INTEGER NOT NULL DEFAULT 5,
+    "early_leave_tolerance_minutes" SMALLINT NOT NULL DEFAULT 0,
     "status" BOOLEAN NOT NULL DEFAULT true,
     "deleted_at" TIMESTAMP(3),
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -276,6 +287,8 @@ CREATE TABLE "attendance_records" (
     "clock_out" TIMESTAMP(3),
     "note" VARCHAR(500),
     "recorded_by_id" TEXT,
+    "corrected_by" VARCHAR(255),
+    "corrected_at" TIMESTAMP(3),
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -289,6 +302,9 @@ CREATE TABLE "attendance_incidents" (
     "type" "incident_type" NOT NULL,
     "minutes" INTEGER,
     "description" VARCHAR(500),
+    "justification" VARCHAR(500),
+    "justified_by" VARCHAR(255),
+    "justified_at" TIMESTAMP(3),
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "attendance_incidents_pkey" PRIMARY KEY ("id")
@@ -299,7 +315,7 @@ CREATE TABLE "tip_area_rules" (
     "id" TEXT NOT NULL,
     "work_area_id" TEXT NOT NULL,
     "percentage" DECIMAL(5,2) NOT NULL,
-    "method" "tip_split_method" NOT NULL DEFAULT 'minutes',
+    "method" "tip_split_method" NOT NULL DEFAULT 'position_weight',
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -315,6 +331,8 @@ CREATE TABLE "tip_pools" (
     "work_schedule_id" TEXT,
     "amount" DECIMAL(12,2) NOT NULL,
     "status" "tip_pool_status" NOT NULL DEFAULT 'open',
+    "sanction_destination" "tip_sanction_destination" NOT NULL DEFAULT 'fund',
+    "sanction_amount" DECIMAL(12,2) NOT NULL DEFAULT 0,
     "note" VARCHAR(500),
     "closed_at" TIMESTAMP(3),
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -331,6 +349,7 @@ CREATE TABLE "tip_pool_areas" (
     "percentage" DECIMAL(5,2) NOT NULL,
     "method" "tip_split_method" NOT NULL,
     "amount" DECIMAL(12,2) NOT NULL,
+    "enabled" BOOLEAN NOT NULL DEFAULT true,
 
     CONSTRAINT "tip_pool_areas_pkey" PRIMARY KEY ("id")
 );
@@ -340,9 +359,11 @@ CREATE TABLE "tip_allocations" (
     "id" TEXT NOT NULL,
     "tip_pool_area_id" TEXT NOT NULL,
     "user_assignment_id" TEXT NOT NULL,
-    "minutes" INTEGER NOT NULL,
+    "shifts" DECIMAL(6,2) NOT NULL,
+    "sanction_shifts" DECIMAL(6,2) NOT NULL DEFAULT 0,
     "weight" DECIMAL(4,2) NOT NULL,
     "amount" DECIMAL(12,2) NOT NULL,
+    "sanction_amount" DECIMAL(12,2) NOT NULL DEFAULT 0,
 
     CONSTRAINT "tip_allocations_pkey" PRIMARY KEY ("id")
 );
@@ -354,6 +375,33 @@ CREATE TABLE "tip_pool_shifts" (
     "employee_shift_id" TEXT NOT NULL,
 
     CONSTRAINT "tip_pool_shifts_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "tip_sanction_types" (
+    "id" TEXT NOT NULL,
+    "name" VARCHAR(100) NOT NULL,
+    "shifts" DECIMAL(4,2) NOT NULL DEFAULT 0,
+    "removes_all" BOOLEAN NOT NULL DEFAULT false,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "tip_sanction_types_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "tip_sanctions" (
+    "id" TEXT NOT NULL,
+    "tip_pool_id" TEXT NOT NULL,
+    "user_assignment_id" TEXT NOT NULL,
+    "tip_sanction_type_id" TEXT NOT NULL,
+    "shifts" DECIMAL(4,2) NOT NULL,
+    "removes_all" BOOLEAN NOT NULL,
+    "note" VARCHAR(500),
+    "created_by" VARCHAR(255) NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "tip_sanctions_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -455,6 +503,15 @@ CREATE UNIQUE INDEX "tip_pool_shifts_employee_shift_id_key" ON "tip_pool_shifts"
 -- CreateIndex
 CREATE INDEX "tip_pool_shifts_tip_pool_id_idx" ON "tip_pool_shifts"("tip_pool_id");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "tip_sanction_types_name_key" ON "tip_sanction_types"("name");
+
+-- CreateIndex
+CREATE INDEX "tip_sanctions_tip_pool_id_idx" ON "tip_sanctions"("tip_pool_id");
+
+-- CreateIndex
+CREATE INDEX "tip_sanctions_user_assignment_id_idx" ON "tip_sanctions"("user_assignment_id");
+
 -- AddForeignKey
 ALTER TABLE "profiles" ADD CONSTRAINT "profiles_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
@@ -541,3 +598,12 @@ ALTER TABLE "tip_pool_shifts" ADD CONSTRAINT "tip_pool_shifts_tip_pool_id_fkey" 
 
 -- AddForeignKey
 ALTER TABLE "tip_pool_shifts" ADD CONSTRAINT "tip_pool_shifts_employee_shift_id_fkey" FOREIGN KEY ("employee_shift_id") REFERENCES "employee_shifts"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "tip_sanctions" ADD CONSTRAINT "tip_sanctions_tip_pool_id_fkey" FOREIGN KEY ("tip_pool_id") REFERENCES "tip_pools"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "tip_sanctions" ADD CONSTRAINT "tip_sanctions_user_assignment_id_fkey" FOREIGN KEY ("user_assignment_id") REFERENCES "user_assignments"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "tip_sanctions" ADD CONSTRAINT "tip_sanctions_tip_sanction_type_id_fkey" FOREIGN KEY ("tip_sanction_type_id") REFERENCES "tip_sanction_types"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
