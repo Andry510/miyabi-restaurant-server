@@ -115,7 +115,8 @@ Igual que en la nube (`miyabi-api/CLAUDE.md` §3), con `local/` y `cloud/` donde
 |---|---|---|
 | `authentication` | local + cloud | Login de empleados y cambio de contraseña obligatoria; login, MFA y contraseña del gerente reenviados a la nube. |
 | `session` | local + cloud | Renovar y cerrar la sesión del empleado (local) o del gerente (nube). |
-| `me` | local + cloud | Perfil del empleado; perfil, foto y local del gerente en la nube. |
+| `me` | local + cloud | Perfil del empleado; perfil, foto, local y notificaciones de la nube del gerente. |
+| `notification` | local | Notificaciones del local: las guarda con su plantilla y las lee el empleado (las suyas) o el gerente (las del equipo). |
 | `user` | local | Empleados: alta, edición, baja, sesiones y asistencia. |
 | `work-area` | local | Áreas de trabajo. |
 | `job-position` | local | Puestos. |
@@ -137,7 +138,7 @@ Igual que en la nube (`miyabi-api/CLAUDE.md` §3), con `local/` y `cloud/` donde
 
 ## 6. Rutas REST
 
-**116 rutas**: 91 locales (74 de gerente, 13 de empleado y 4 públicas de sesión) y 25 que pasan por la nube. Todas, excepto `POST /v1/pairing/register`, exigen que el servidor esté emparejado.
+**125 rutas**: 97 locales (77 de gerente, 16 de empleado y 4 públicas de sesión) y 28 que pasan por la nube. Todas, excepto `POST /v1/pairing/register`, exigen que el servidor esté emparejado.
 
 - **gerente:** `@HttpManagerAccess()`; el Bearer de la nube se valida con `session.validate`.
 - **gerente (nube):** sin guard de acceso local; el servidor reenvía el Bearer y la nube lo valida en su propio RPC.
@@ -160,12 +161,18 @@ La última columna es el diagrama en `documents/diagrams/workflows/`; `—` indi
 | POST | `/v1/sessions/local/refresh` | público | Renovar la sesión | `session/local/refresh_token` |
 | GET | `/v1/me/cloud` | gerente (nube) | Mi perfil | `me/cloud/user` |
 | GET | `/v1/me/cloud/location` | gerente (nube) | Mi local | `me/cloud/location` |
+| GET | `/v1/me/cloud/notifications` | gerente (nube) | Mis notificaciones de la nube (`read`, `cursor`, `limit`) | `me/cloud/notifications` |
+| GET | `/v1/me/cloud/notifications/unread-count` | gerente (nube) | Cuántas de la nube no he leído | `me/cloud/unread_count` |
+| PATCH | `/v1/me/cloud/notifications/read` | gerente (nube) | Marcar como leídas las de la nube (todas o `notification_ids`) | `me/cloud/read_notifications` |
 | DELETE | `/v1/me/cloud/picture` | gerente (nube) | Quitar mi foto | `me/cloud/remove_picture` |
 | POST | `/v1/me/cloud/picture` | gerente (nube) | Subir mi foto | `me/cloud/upload_picture` |
 | GET | `/v1/me/local` | empleado | Mi perfil | `me/local/user` |
 | GET | `/v1/me/local/attendance` | empleado | Mi asistencia | `user/local/my_attendance` |
 | PATCH | `/v1/me/local` | empleado | Cambiar mi teléfono | — |
 | PATCH | `/v1/me/local/password` | empleado | Cambiar mi contraseña (cierra la sesión) | — |
+| GET | `/v1/me/local/notifications` | empleado | Mis notificaciones (`read`, `cursor`, `limit`) | — |
+| GET | `/v1/me/local/notifications/unread-count` | empleado | Cuántas no he leído | — |
+| PATCH | `/v1/me/local/notifications/read` | empleado | Marcar como leídas (todas o `notification_ids`) | — |
 | GET | `/v1/users/local` | gerente | Listar empleados | `user/local/users` |
 | POST | `/v1/users/local` | gerente | Crear empleado | `user/local/register` |
 | DELETE | `/v1/users/local/:id` | gerente | Eliminar empleado | `user/local/remove` |
@@ -248,6 +255,9 @@ La última columna es el diagrama en `documents/diagrams/workflows/`; `—` indi
 | DELETE | `/v1/tip-sanctions/local/:id` | gerente | Eliminar tipo de sanción (si no se ha usado) | — |
 | GET | `/v1/settings/local` | gerente | Ver configuración | `setting/local/settings` |
 | PATCH | `/v1/settings/local` | gerente | Editar configuración | `setting/local/update` |
+| GET | `/v1/notifications/local` | gerente | Notificaciones del equipo (`read`, `cursor`, `limit`) | — |
+| GET | `/v1/notifications/local/unread-count` | gerente | Cuántas del equipo no he leído | — |
+| PATCH | `/v1/notifications/local/read` | gerente | Marcar como leídas las del equipo (todas o `notification_ids`) | — |
 | GET | `/v1/products/cloud` | gerente (nube) | Listar productos | `product/cloud/products` |
 | GET | `/v1/products/cloud/:id` | gerente (nube) | Ver producto | `product/cloud/product` |
 | GET | `/v1/products/local` | empleado | Listar productos | `product/local/products` |
@@ -324,6 +334,7 @@ Los guards son globales y se activan con su decorador; no se usa `@UseGuards`. R
 | `session_revoked` | `session` | Borra de la caché la sesión de ese gerente. |
 | `transfer` | — | Llega por el canal; el aviso a las pantallas de los gerentes es otra implementación. |
 | `session_expired` | `channel` | Cierra el canal y, según el motivo, reintenta o se detiene. |
+| `notification` | — | Notificación de la nube para un gerente. Se guarda en la nube y el gerente la lee con `me/cloud/notifications`; el aviso en vivo a su pantalla es otra implementación. |
 | `attendance_request` (solicitud) | `shift` (`ReportService`) | Responde con los turnos del rango y su asistencia (empleado, fecha, horario, entrada, salida, estado, retardo, salida anticipada e incidencias). |
 
 - **Estado:** el canal le manda a la nube versión, segundos encendido, si la base responde, `products_synced_at` y envíos pendientes y fallidos. Lo hace al abrir el canal, cada 5 minutos y cuando termina una hidratación o un envío de pedido, con al menos 35 s entre reportes (la nube descarta los que lleguen con menos de 30 s).
@@ -378,6 +389,16 @@ Ver `states/order.drawio`, `states/order-dispatch.drawio` y `sequences/order-sen
 
 Ver `states/tip-pool.drawio`.
 
+### Notificaciones
+
+- Son dos listas separadas. Las del local se guardan aquí (`notifications`); las de la nube (pedidos) se guardan en la nube y el gerente las lee con `me/cloud/notifications`, que necesita internet.
+- Cada aviso usa una plantilla (`notification_templates`, con `audience` `employee` o `manager`). El servidor crea al arrancar las que falten y no cambia las que ya existen; una plantilla con `status` falso no genera avisos.
+- El título y el texto se guardan ya armados, con las fechas en la zona horaria de `server_settings.timezone`.
+- **Al empleado** (una fila por empleado, `read_at` vacío = sin leer): `SHIFT_SCHEDULED` (alta de turnos y copiar semana), `SHIFT_CHANGED`, `SHIFT_CANCELLED`, `ATTENDANCE_CORRECTED`, `INCIDENT_JUSTIFIED`, `TIP_POOL_CLOSED` (a cada quien con lo que le tocó) y `TIP_SANCTION_APPLIED`.
+- **A los gerentes** (una fila para todos los gerentes del local): `ORDER_REQUEST_SUBMITTED` (cada producto que pide un empleado), `ATTENDANCE_LATE` (entrada con retardo) y `ORDER_DISPATCH_FAILED` (envíos a la nube que fallaron). El gerente es un usuario de la nube, así que lo que ya leyó se guarda por su correo en `notification_reads` (el correo no cambia en la nube).
+- Se avisa después de guardar y nunca si el paso falla. Si el aviso falla, el paso no falla.
+- La lista usa paginación por cursor (`next_cursor`), las más nuevas primero.
+
 ## 10. Formato de las respuestas y códigos
 
 - Todo mensaje es `{ code, message }` (`TApiMessage`); `code` no cambia y `message` es texto en español.
@@ -429,6 +450,7 @@ Igual que la nube (`miyabi-api/CLAUDE.md` §4), con estas diferencias:
 - **Turno `completed`:** lo asignan la salida del checador y la corrección del gerente cuando hay hora de salida.
 - **`.env.example`:** lista todas las variables, incluida `DOCKER_DATABASE_URL` para `docker-compose.yml`.
 - **Sin suite de pruebas** automáticas.
+- **Notificaciones locales:** nada las borra todavía. `ATTENDANCE_ABSENT` no existe porque el servidor aún no detecta las faltas en el momento (se calculan al consultar la asistencia).
 
 ## 14. Cómo agregar una ruta
 
