@@ -34,6 +34,9 @@ CREATE TYPE "attendance_status" AS ENUM ('present', 'absent', 'excused', 'incomp
 -- CreateEnum
 CREATE TYPE "incident_type" AS ENUM ('late_arrival', 'early_departure', 'late_departure', 'absence', 'missed_clock_in', 'missed_clock_out');
 
+-- CreateEnum
+CREATE TYPE "notification_audience" AS ENUM ('employee', 'manager');
+
 -- CreateTable
 CREATE TABLE "server_settings" (
     "id" TEXT NOT NULL DEFAULT 'server',
@@ -404,6 +407,47 @@ CREATE TABLE "tip_sanctions" (
     CONSTRAINT "tip_sanctions_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "notification_templates" (
+    "code" VARCHAR(80) NOT NULL,
+    "category" VARCHAR(30) NOT NULL,
+    "audience" "notification_audience" NOT NULL,
+    "title" VARCHAR(150) NOT NULL,
+    "body" VARCHAR(500) NOT NULL,
+    "status" BOOLEAN NOT NULL DEFAULT true,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "notification_templates_pkey" PRIMARY KEY ("code")
+);
+
+-- CreateTable
+CREATE TABLE "notifications" (
+    "id" TEXT NOT NULL,
+    "audience" "notification_audience" NOT NULL,
+    "user_id" TEXT,
+    "template_code" TEXT NOT NULL,
+    "data" JSONB NOT NULL,
+    "title" VARCHAR(150) NOT NULL,
+    "body" VARCHAR(500) NOT NULL,
+    "entity_type" VARCHAR(30),
+    "entity_id" VARCHAR(100),
+    "read_at" TIMESTAMP(3),
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "notifications_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "notification_reads" (
+    "id" TEXT NOT NULL,
+    "notification_id" TEXT NOT NULL,
+    "reader_email" VARCHAR(255) NOT NULL,
+    "read_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "notification_reads_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "profiles_user_id_key" ON "profiles"("user_id");
 
@@ -512,6 +556,21 @@ CREATE INDEX "tip_sanctions_tip_pool_id_idx" ON "tip_sanctions"("tip_pool_id");
 -- CreateIndex
 CREATE INDEX "tip_sanctions_user_assignment_id_idx" ON "tip_sanctions"("user_assignment_id");
 
+-- CreateIndex
+CREATE INDEX "notifications_user_id_created_at_id_idx" ON "notifications"("user_id", "created_at", "id");
+
+-- CreateIndex
+CREATE INDEX "notifications_user_id_read_at_idx" ON "notifications"("user_id", "read_at");
+
+-- CreateIndex
+CREATE INDEX "notifications_audience_created_at_id_idx" ON "notifications"("audience", "created_at", "id");
+
+-- CreateIndex
+CREATE INDEX "notification_reads_reader_email_idx" ON "notification_reads"("reader_email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "notification_reads_notification_id_reader_email_key" ON "notification_reads"("notification_id", "reader_email");
+
 -- AddForeignKey
 ALTER TABLE "profiles" ADD CONSTRAINT "profiles_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
@@ -607,3 +666,12 @@ ALTER TABLE "tip_sanctions" ADD CONSTRAINT "tip_sanctions_user_assignment_id_fke
 
 -- AddForeignKey
 ALTER TABLE "tip_sanctions" ADD CONSTRAINT "tip_sanctions_tip_sanction_type_id_fkey" FOREIGN KEY ("tip_sanction_type_id") REFERENCES "tip_sanction_types"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "notifications" ADD CONSTRAINT "notifications_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "notifications" ADD CONSTRAINT "notifications_template_code_fkey" FOREIGN KEY ("template_code") REFERENCES "notification_templates"("code") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "notification_reads" ADD CONSTRAINT "notification_reads_notification_id_fkey" FOREIGN KEY ("notification_id") REFERENCES "notifications"("id") ON DELETE CASCADE ON UPDATE CASCADE;

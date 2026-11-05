@@ -91,6 +91,11 @@ enum incident_type {
   missed_clock_out
 }
 
+enum notification_audience {
+  employee
+  manager
+}
+
 model server_settings {
   id String @id @default("server")
 
@@ -117,6 +122,7 @@ model users {
   sessions             sessions[]           @relation("user_sessions")
   assignments          user_assignments[]   @relation("user_to_assignments")
   recorded_attendances attendance_records[] @relation("recorded_by_user")
+  notifications        notifications[]      @relation("user_notifications")
 
   deleted_at DateTime?
   created_at DateTime  @default(now())
@@ -596,4 +602,59 @@ model tip_sanctions {
 
   @@index([tip_pool_id])
   @@index([user_assignment_id])
+}
+
+model notification_templates {
+  code     String                @id @db.VarChar(80)
+  category String                @db.VarChar(30)
+  audience notification_audience
+  title    String                @db.VarChar(150)
+  body     String                @db.VarChar(500)
+  status   Boolean               @default(true)
+
+  notifications notifications[] @relation("template_notifications")
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model notifications {
+  id String @id @default(uuid(7))
+
+  audience notification_audience
+
+  user_id String?
+  user    users?  @relation("user_notifications", fields: [user_id], references: [id])
+
+  template_code String
+  template      notification_templates @relation("template_notifications", fields: [template_code], references: [code])
+
+  data        Json
+  title       String  @db.VarChar(150)
+  body        String  @db.VarChar(500)
+  entity_type String? @db.VarChar(30)
+  entity_id   String? @db.VarChar(100)
+
+  reads notification_reads[] @relation("notification_reads")
+
+  read_at    DateTime?
+  created_at DateTime  @default(now())
+
+  @@index([user_id, created_at, id])
+  @@index([user_id, read_at])
+  @@index([audience, created_at, id])
+}
+
+model notification_reads {
+  id String @id @default(uuid(7))
+
+  notification_id String
+  notification    notifications @relation("notification_reads", fields: [notification_id], references: [id], onDelete: Cascade)
+
+  reader_email String @db.VarChar(255)
+
+  read_at DateTime @default(now())
+
+  @@unique([notification_id, reader_email])
+  @@index([reader_email])
 }

@@ -4,6 +4,7 @@ package server.v1;
 
 import "server-product.proto";
 import "transfer.proto";
+import "me.proto";
 
 service server_service {
   rpc register(register_request) returns (register_response) {}
@@ -81,6 +82,7 @@ message cloud_message {
     session_revoked session_revoked = 8;
     session_expired session_expired = 9;
     attendance_request attendance_request = 10;
+    notification_event notification = 11;
   }
 }
 
@@ -112,4 +114,9 @@ message session_expired {
 message attendance_request {
   string from = 1;
   string to = 2;
+}
+
+message notification_event {
+  string user_id = 1;
+  me.v1.notification_data notification = 2;
 }

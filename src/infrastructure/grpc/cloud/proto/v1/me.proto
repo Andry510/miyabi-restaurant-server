@@ -10,6 +10,9 @@ service me_service {
   rpc change_password(change_password_request) returns (change_password_response) {}
   rpc sessions(sessions_request) returns (sessions_response) {}
   rpc remove_sessions(remove_sessions_request) returns (remove_sessions_response) {}
+  rpc notifications(notifications_request) returns (notifications_response) {}
+  rpc unread_notifications_count(unread_notifications_count_request) returns (unread_notifications_count_response) {}
+  rpc read_notifications(read_notifications_request) returns (read_notifications_response) {}
 }
 
 /*<----------- Request ----------->*/
@@ -152,4 +155,76 @@ message remove_sessions_response {
   string message = 1;
   string timestamp = 2;
   string code = 3;
+}
+
+message notifications_request {
+  optional bool read = 1;
+  optional string location_id = 2;
+  optional string cursor = 3;
+  optional int32 limit = 4;
+}
+
+message notifications_response {
+  string message = 1;
+  notifications_data data = 2;
+  string timestamp = 3;
+  string code = 4;
+}
+
+message notifications_data {
+  repeated notification_data notifications = 1;
+  optional string next_cursor = 2;
+}
+
+message notification_data {
+  string id = 1;
+  string template_code = 2;
+  string category = 3;
+  string title = 4;
+  string body = 5;
+  string data = 6;
+  optional string entity_type = 7;
+  optional string entity_id = 8;
+  optional notification_location origin_location = 9;
+  optional notification_server origin_server = 10;
+  optional notification_location recipient_location = 11;
+  optional string read_at = 12;
+  string created_at = 13;
+}
+
+message notification_location {
+  string id = 1;
+  string name = 2;
+  string type = 3;
+}
+
+message notification_server {
+  string id = 1;
+  string name = 2;
+}
+
+message unread_notifications_count_request {
+  optional string location_id = 1;
+}
+
+message unread_notifications_count_response {
+  string message = 1;
+  notifications_count_data data = 2;
+  string timestamp = 3;
+  string code = 4;
+}
+
+message notifications_count_data {
+  int32 count = 1;
+}
+
+message read_notifications_request {
+  repeated string notification_ids = 1;
+}
+
+message read_notifications_response {
+  string message = 1;
+  notifications_count_data data = 2;
+  string timestamp = 3;
+  string code = 4;
 }
