@@ -7,4 +7,9 @@ export const HTTP_CLOUD_ME_ROUTER = Object.freeze({
   LOCATION: {
     LOCATION: 'me/cloud/location',
   },
+  NOTIFICATION: {
+    NOTIFICATIONS: 'me/cloud/notifications',
+    UNREAD_COUNT: 'me/cloud/notifications/unread-count',
+    READ: 'me/cloud/notifications/read',
+  },
 });

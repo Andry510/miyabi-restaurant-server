@@ -3,6 +3,7 @@ import type { Provider } from '@nestjs/common';
 //Application
 import {
   AllocationService,
+  NoticeService,
   RuleService,
   SanctionService,
   TipService,
@@ -15,6 +16,10 @@ export const TIP_SERVICES_PROVIDERS: Provider[] = [
   {
     provide: TIP_PROVIDER_TOKENS.SERVICES.ALLOCATION,
     useClass: AllocationService,
+  },
+  {
+    provide: TIP_PROVIDER_TOKENS.SERVICES.NOTICE,
+    useClass: NoticeService,
   },
   {
     provide: TIP_PROVIDER_TOKENS.SERVICES.RULE,

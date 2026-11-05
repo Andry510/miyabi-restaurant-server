@@ -10,10 +10,11 @@ import { CHECK_SERVICES_PROVIDERS } from './application/services';
 import { CHECK_REPOSITORIES_PROVIDERS } from './infrastructure/repositories';
 
 //Modules
+import { NotificationModule } from '../notification';
 import { SettingModule } from '../setting';
 
 @Module({
-  imports: [SettingModule],
+  imports: [NotificationModule, SettingModule],
   controllers: Object.values(CHECK_CONTROLLERS_PROVIDERS),
   providers: [...CHECK_SERVICES_PROVIDERS, ...CHECK_REPOSITORIES_PROVIDERS],
 })

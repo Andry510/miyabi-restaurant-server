@@ -8,6 +8,7 @@ import type { ServiceError } from '@domain/errors';
 import { ResultPattern } from '@domain/patterns/results';
 import type { ISanctionRepository } from '../../../domain/interfaces/repositories';
 import type {
+  INoticeService,
   ISanctionService,
   ITipService,
 } from '../../../domain/interfaces/services';
@@ -35,6 +36,8 @@ export class SanctionService implements ISanctionService {
   private readonly logger = new Logger(TIP_LOGGER_NAME.SERVICE.SANCTION);
 
   constructor(
+    @Inject(TIP_PROVIDER_TOKENS.SERVICES.NOTICE)
+    private readonly notice_service: INoticeService,
     @Inject(TIP_PROVIDER_TOKENS.SERVICES.TIP)
     private readonly tip_service: ITipService,
     @Inject(TIP_PROVIDER_TOKENS.REPOSITORIES.SANCTION)
@@ -177,7 +180,15 @@ export class SanctionService implements ISanctionService {
       return ServiceResultMapper.Conflict(API_TIP_MESSAGE.ERROR.POOL_NOT_OPEN);
     }
 
-    return this.tip_service.update(poolId, {});
+    const updateResult = await this.tip_service.update(poolId, {});
+
+    this.notice_service.sanctioned(
+      input.user_id,
+      typeResult.Value.name,
+      updateResult,
+    );
+
+    return updateResult;
   }
 
   async remove(

@@ -28,6 +28,7 @@ import type {
   TOrderLine,
 } from '../../../domain/types/repositories';
 import type { IChannelService } from '../../../../channel/domain/interfaces/services';
+import type { INotificationService } from '../../../../notification/domain/interfaces/services';
 import type { ICatalogService } from '../../../../repository/domain/interfaces/services';
 import type { ISettingService } from '../../../../setting/domain/interfaces/services';
 import type { ITransferService } from '../../../../transfer/domain/interfaces/services';
@@ -42,6 +43,11 @@ import {
 } from '../../../infrastructure/constants';
 import { OrderMapper } from '../../../infrastructure/mappers';
 import { CHANNEL_PROVIDER_TOKENS } from '../../../../channel/infrastructure/constants';
+import {
+  NOTIFICATION_ENTITY,
+  NOTIFICATION_PROVIDER_TOKENS,
+  NOTIFICATION_TEMPLATE,
+} from '../../../../notification/infrastructure/constants';
 import { REPOSITORY_PROVIDER_TOKENS } from '../../../../repository/infrastructure/constants';
 import { SETTING_PROVIDER_TOKENS } from '../../../../setting/infrastructure/constants';
 import { TRANSFER_PROVIDER_TOKENS } from '../../../../transfer/infrastructure/constants';
@@ -53,6 +59,8 @@ export class OrderService implements IOrderService {
   private readonly logger = new Logger(ORDER_LOGGER_NAME.SERVICE.ORDER);
 
   constructor(
+    @Inject(NOTIFICATION_PROVIDER_TOKENS.SERVICES.NOTIFICATION)
+    private readonly notification_service: INotificationService,
     @Inject(REPOSITORY_PROVIDER_TOKENS.SERVICES.CATALOG)
     private readonly catalog_service: ICatalogService,
     @Inject(SETTING_PROVIDER_TOKENS.SERVICES.SETTING)
@@ -375,6 +383,17 @@ export class OrderService implements IOrderService {
 
     if (finishResult.IsFailure) {
       this.logger.error(finishResult.Error);
+    }
+
+    const failed = results.filter((result) => !result.sent).length;
+
+    if (finishResult.IsSuccess && failed > 0) {
+      void this.notification_service.notify({
+        template_code: NOTIFICATION_TEMPLATE.ORDER_DISPATCH_FAILED,
+        data: { count: failed },
+        entity_type: NOTIFICATION_ENTITY.ORDER,
+        entity_id: orderId,
+      });
     }
 
     this.channel_service.reportStatus();

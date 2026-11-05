@@ -11,11 +11,17 @@ import { SHIFT_REPOSITORIES_PROVIDERS } from './infrastructure/repositories';
 
 //Modules
 import { ChannelModule } from '../channel';
+import { NotificationModule } from '../notification';
 import { SettingModule } from '../setting';
 import { WorkScheduleModule } from '../work-schedule';
 
 @Module({
-  imports: [ChannelModule, SettingModule, WorkScheduleModule],
+  imports: [
+    ChannelModule,
+    NotificationModule,
+    SettingModule,
+    WorkScheduleModule,
+  ],
   controllers: Object.values(SHIFT_CONTROLLERS_PROVIDERS),
   providers: [...SHIFT_SERVICES_PROVIDERS, ...SHIFT_REPOSITORIES_PROVIDERS],
 })

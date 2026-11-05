@@ -13,6 +13,9 @@ import type {
 } from '@domain/types/shared';
 import type { ICloudMeRepository } from '../../../domain/interfaces/repositories';
 import type {
+  TCloudNotificationsCountOutput,
+  TCloudNotificationsInput,
+  TCloudNotificationsOutput,
   TLocationOutput,
   TUserOutput,
 } from '../../../domain/types/entities';
@@ -23,6 +26,10 @@ import {
   CLOUD_GRPC_SERVICE,
   CloudRequest,
 } from '@infrastructure/grpc/cloud';
+import {
+  CloudNotificationMapper,
+  type TGrpcNotifications,
+} from '../../mappers';
 
 type TEmpty = Record<string, never>;
 
@@ -47,6 +54,21 @@ type TMeGrpc = {
     metadata: Metadata,
     options: CallOptions,
   ): Observable<TMessageResponse>;
+  notifications(
+    data: { read?: boolean; cursor?: string; limit: number },
+    metadata: Metadata,
+    options: CallOptions,
+  ): Observable<TDataResponse<TGrpcNotifications>>;
+  unread_notifications_count(
+    data: TEmpty,
+    metadata: Metadata,
+    options: CallOptions,
+  ): Observable<TDataResponse<TCloudNotificationsCountOutput>>;
+  read_notifications(
+    data: { notification_ids: string[] },
+    metadata: Metadata,
+    options: CallOptions,
+  ): Observable<TDataResponse<TCloudNotificationsCountOutput>>;
 };
 
 @Injectable()
@@ -133,5 +155,67 @@ export class CloudMeRepository implements ICloudMeRepository, OnModuleInit {
     }
 
     return ResultPattern.Success(null);
+  };
+
+  notifications = async (
+    input: TCloudNotificationsInput,
+    tokens: TCloudTokens,
+  ): Promise<ResultPattern<TCloudNotificationsOutput, ServiceError>> => {
+    const response = await CloudRequest.send(
+      this.me_service.notifications(
+        {
+          ...(input.read === null ? {} : { read: input.read }),
+          ...(input.cursor ? { cursor: input.cursor } : {}),
+          limit: input.take,
+        },
+        CloudRequest.metadata(tokens),
+        CloudRequest.options(),
+      ),
+    );
+
+    if (response.IsFailure) {
+      return ResultPattern.Failure(response.Error);
+    }
+
+    return ResultPattern.Success(
+      CloudNotificationMapper.toOutput(response.Value.data),
+    );
+  };
+
+  unreadNotificationsCount = async (
+    tokens: TCloudTokens,
+  ): Promise<ResultPattern<TCloudNotificationsCountOutput, ServiceError>> => {
+    const response = await CloudRequest.send(
+      this.me_service.unread_notifications_count(
+        {},
+        CloudRequest.metadata(tokens),
+        CloudRequest.options(),
+      ),
+    );
+
+    if (response.IsFailure) {
+      return ResultPattern.Failure(response.Error);
+    }
+
+    return ResultPattern.Success({ count: response.Value.data?.count ?? 0 });
+  };
+
+  readNotifications = async (
+    notificationIds: string[],
+    tokens: TCloudTokens,
+  ): Promise<ResultPattern<TCloudNotificationsCountOutput, ServiceError>> => {
+    const response = await CloudRequest.send(
+      this.me_service.read_notifications(
+        { notification_ids: notificationIds },
+        CloudRequest.metadata(tokens),
+        CloudRequest.options(),
+      ),
+    );
+
+    if (response.IsFailure) {
+      return ResultPattern.Failure(response.Error);
+    }
+
+    return ResultPattern.Success({ count: response.Value.data?.count ?? 0 });
   };
 }

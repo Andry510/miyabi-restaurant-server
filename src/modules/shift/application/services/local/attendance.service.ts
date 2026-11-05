@@ -18,6 +18,7 @@ import type {
 } from '../../../domain/schemas';
 import type { TShiftOutput } from '../../../domain/types/entities';
 import type { TShiftAttendance } from '../../../domain/types/repositories';
+import type { INotificationService } from '../../../../notification/domain/interfaces/services';
 
 //Infrastructure
 import { Logger } from '@infrastructure/audits';
@@ -27,6 +28,12 @@ import {
   SHIFT_LOGGER_NAME,
   SHIFT_PROVIDER_TOKENS,
 } from '../../../infrastructure/constants';
+import {
+  NOTIFICATION_ENTITY,
+  NOTIFICATION_INCIDENT_LABEL,
+  NOTIFICATION_PROVIDER_TOKENS,
+  NOTIFICATION_TEMPLATE,
+} from '../../../../notification/infrastructure/constants';
 
 const CLOCK_MARGIN_MS = 12 * 60 * Duration.MINUTE_MS;
 
@@ -35,6 +42,8 @@ export class AttendanceService implements IAttendanceService {
   private readonly logger = new Logger(SHIFT_LOGGER_NAME.SERVICE.ATTENDANCE);
 
   constructor(
+    @Inject(NOTIFICATION_PROVIDER_TOKENS.SERVICES.NOTIFICATION)
+    private readonly notification_service: INotificationService,
     @Inject(SHIFT_PROVIDER_TOKENS.REPOSITORIES.ATTENDANCE)
     private readonly attendance_repository: IAttendanceRepository,
     @Inject(SHIFT_PROVIDER_TOKENS.REPOSITORIES.SHIFT)
@@ -142,7 +151,22 @@ export class AttendanceService implements IAttendanceService {
       return ServiceResultMapper.InternalServerError();
     }
 
-    return this.shift(id);
+    const outputResult = await this.shift(id);
+
+    if (outputResult.IsSuccess) {
+      void this.notification_service.notify({
+        template_code: NOTIFICATION_TEMPLATE.ATTENDANCE_CORRECTED,
+        user_ids: [outputResult.Value.user.id],
+        data: {
+          start: outputResult.Value.scheduled_start,
+          reason: input.reason,
+        },
+        entity_type: NOTIFICATION_ENTITY.SHIFT,
+        entity_id: id,
+      });
+    }
+
+    return outputResult;
   }
 
   async justify(
@@ -192,7 +216,7 @@ export class AttendanceService implements IAttendanceService {
         return ServiceResultMapper.InternalServerError();
       }
 
-      return this.shift(id);
+      return this.justified(id, input.type);
     }
 
     if (!incident) {
@@ -215,10 +239,32 @@ export class AttendanceService implements IAttendanceService {
       );
     }
 
-    return this.shift(id);
+    return this.justified(id, input.type);
   }
 
   //Functions
+  private async justified(
+    id: string,
+    type: INCIDENT_TYPE,
+  ): Promise<ResultPattern<TShiftOutput, ServiceError>> {
+    const outputResult = await this.shift(id);
+
+    if (outputResult.IsSuccess) {
+      void this.notification_service.notify({
+        template_code: NOTIFICATION_TEMPLATE.INCIDENT_JUSTIFIED,
+        user_ids: [outputResult.Value.user.id],
+        data: {
+          incident: NOTIFICATION_INCIDENT_LABEL[type],
+          start: outputResult.Value.scheduled_start,
+        },
+        entity_type: NOTIFICATION_ENTITY.SHIFT,
+        entity_id: id,
+      });
+    }
+
+    return outputResult;
+  }
+
   private async shift(
     id: string,
   ): Promise<ResultPattern<TShiftOutput, ServiceError>> {

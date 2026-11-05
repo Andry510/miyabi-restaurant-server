@@ -19,6 +19,7 @@ import type {
 } from '../../../domain/schemas';
 import type { TMyRequestOutput } from '../../../domain/types/entities';
 import type { TRequestChangeResult } from '../../../domain/types/repositories';
+import type { INotificationService } from '../../../../notification/domain/interfaces/services';
 import type { ISettingService } from '../../../../setting/domain/interfaces/services';
 
 //Infrastructure
@@ -29,6 +30,11 @@ import {
   ORDER_LOGGER_NAME,
   ORDER_PROVIDER_TOKENS,
 } from '../../../infrastructure/constants';
+import {
+  NOTIFICATION_ENTITY,
+  NOTIFICATION_PROVIDER_TOKENS,
+  NOTIFICATION_TEMPLATE,
+} from '../../../../notification/infrastructure/constants';
 import { SETTING_PROVIDER_TOKENS } from '../../../../setting/infrastructure/constants';
 
 const SAVE_ATTEMPTS = 2;
@@ -38,6 +44,8 @@ export class RequestService implements IRequestService {
   private readonly logger = new Logger(ORDER_LOGGER_NAME.SERVICE.REQUEST);
 
   constructor(
+    @Inject(NOTIFICATION_PROVIDER_TOKENS.SERVICES.NOTIFICATION)
+    private readonly notification_service: INotificationService,
     @Inject(SETTING_PROVIDER_TOKENS.SERVICES.SETTING)
     private readonly setting_service: ISettingService,
     @Inject(ORDER_PROVIDER_TOKENS.REPOSITORIES.ORDER)
@@ -137,6 +145,18 @@ export class RequestService implements IRequestService {
       }
 
       if (saveResult.Value) {
+        void this.notification_service.notify({
+          template_code: NOTIFICATION_TEMPLATE.ORDER_REQUEST_SUBMITTED,
+          data: {
+            employee: `${user.first_name} ${user.last_name}`,
+            area: assignment.work_area.name,
+            quantity: saveResult.Value.quantity,
+            product: saveResult.Value.product.name,
+          },
+          entity_type: NOTIFICATION_ENTITY.ORDER,
+          entity_id: saveResult.Value.order.id,
+        });
+
         return ServiceResultMapper.Ok(saveResult.Value);
       }
     }

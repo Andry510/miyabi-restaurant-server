@@ -19,6 +19,7 @@ import type {
   TWeekCopy,
   TWeekSourceShift,
 } from '../../../domain/types/repositories';
+import type { INotificationService } from '../../../../notification/domain/interfaces/services';
 import type { ISettingService } from '../../../../setting/domain/interfaces/services';
 
 //Infrastructure
@@ -29,6 +30,11 @@ import {
   SHIFT_LOGGER_NAME,
   SHIFT_PROVIDER_TOKENS,
 } from '../../../infrastructure/constants';
+import {
+  NOTIFICATION_ENTITY,
+  NOTIFICATION_PROVIDER_TOKENS,
+  NOTIFICATION_TEMPLATE,
+} from '../../../../notification/infrastructure/constants';
 import { SETTING_PROVIDER_TOKENS } from '../../../../setting/infrastructure/constants';
 
 const WEEK_DAYS = [
@@ -46,6 +52,8 @@ export class WeekService implements IWeekService {
   private readonly logger = new Logger(SHIFT_LOGGER_NAME.SERVICE.WEEK);
 
   constructor(
+    @Inject(NOTIFICATION_PROVIDER_TOKENS.SERVICES.NOTIFICATION)
+    private readonly notification_service: INotificationService,
     @Inject(SETTING_PROVIDER_TOKENS.SERVICES.SETTING)
     private readonly setting_service: ISettingService,
     @Inject(SHIFT_PROVIDER_TOKENS.REPOSITORIES.WEEK)
@@ -152,10 +160,38 @@ export class WeekService implements IWeekService {
       return ServiceResultMapper.InternalServerError();
     }
 
+    this.notifyScheduled(createResult.Value);
+
     return ServiceResultMapper.Ok({ created: createResult.Value, skipped });
   }
 
   //Functions
+  private notifyScheduled(created: TCopyWeekOutput['created']): void {
+    const byUser = new Map<string, TCopyWeekOutput['created']>();
+
+    for (const shift of created) {
+      byUser.set(shift.user.id, [...(byUser.get(shift.user.id) ?? []), shift]);
+    }
+
+    for (const [userId, shifts] of byUser) {
+      const [first] = [...shifts].sort(
+        (a, b) => a.scheduled_start.getTime() - b.scheduled_start.getTime(),
+      );
+
+      if (!first) {
+        continue;
+      }
+
+      void this.notification_service.notify({
+        template_code: NOTIFICATION_TEMPLATE.SHIFT_SCHEDULED,
+        user_ids: [userId],
+        data: { count: shifts.length, start: first.scheduled_start },
+        entity_type: NOTIFICATION_ENTITY.SHIFT,
+        entity_id: first.id,
+      });
+    }
+  }
+
   private skipReason(
     shift: TWeekSourceShift,
     range: TShiftRange,

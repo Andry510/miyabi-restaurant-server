@@ -26,5 +26,17 @@ export const API_ME_MESSAGE = Object.freeze({
       code: 'SUCCESS_ME_LOCATION_RETRIEVED',
       message: 'Local obtenido correctamente',
     },
+    NOTIFICATIONS_RETRIEVED: {
+      code: 'SUCCESS_ME_NOTIFICATIONS_RETRIEVED',
+      message: 'Notificaciones obtenidas correctamente',
+    },
+    UNREAD_COUNT_RETRIEVED: {
+      code: 'SUCCESS_ME_NOTIFICATIONS_UNREAD_COUNT_RETRIEVED',
+      message: 'Notificaciones sin leer obtenidas correctamente',
+    },
+    NOTIFICATIONS_READ: {
+      code: 'SUCCESS_ME_NOTIFICATIONS_READ',
+      message: 'Notificaciones marcadas como leídas',
+    },
   },
 });

@@ -2,7 +2,13 @@
 import type { ServiceError } from '@domain/errors';
 import type { ResultPattern } from '@domain/patterns/results';
 import type { TCloudTokens } from '@domain/types/shared';
-import type { TLocationOutput, TUserOutput } from '../../../types/entities';
+import type {
+  TCloudNotificationsCountOutput,
+  TCloudNotificationsInput,
+  TCloudNotificationsOutput,
+  TLocationOutput,
+  TUserOutput,
+} from '../../../types/entities';
 
 export interface ICloudMeRepository {
   user(tokens: TCloudTokens): Promise<ResultPattern<TUserOutput, ServiceError>>;
@@ -19,4 +25,18 @@ export interface ICloudMeRepository {
   removePicture(
     tokens: TCloudTokens,
   ): Promise<ResultPattern<null, ServiceError>>;
+
+  notifications(
+    input: TCloudNotificationsInput,
+    tokens: TCloudTokens,
+  ): Promise<ResultPattern<TCloudNotificationsOutput, ServiceError>>;
+
+  unreadNotificationsCount(
+    tokens: TCloudTokens,
+  ): Promise<ResultPattern<TCloudNotificationsCountOutput, ServiceError>>;
+
+  readNotifications(
+    notificationIds: string[],
+    tokens: TCloudTokens,
+  ): Promise<ResultPattern<TCloudNotificationsCountOutput, ServiceError>>;
 }

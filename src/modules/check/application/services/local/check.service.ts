@@ -11,6 +11,7 @@ import type { ICheckRepository } from '../../../domain/interfaces/repositories';
 import type { ICheckService } from '../../../domain/interfaces/services';
 import type { TCheckOutput } from '../../../domain/types/entities';
 import type { TCheckCandidate } from '../../../domain/types/repositories';
+import type { INotificationService } from '../../../../notification/domain/interfaces/services';
 import type { ISettingService } from '../../../../setting/domain/interfaces/services';
 
 //Infrastructure
@@ -22,6 +23,11 @@ import {
   CHECK_LOGGER_NAME,
   CHECK_PROVIDER_TOKENS,
 } from '../../../infrastructure/constants';
+import {
+  NOTIFICATION_ENTITY,
+  NOTIFICATION_PROVIDER_TOKENS,
+  NOTIFICATION_TEMPLATE,
+} from '../../../../notification/infrastructure/constants';
 import { SETTING_PROVIDER_TOKENS } from '../../../../setting/infrastructure/constants';
 
 const GRACE_MS = CHECK_OUT_GRACE_MINUTES * Duration.MINUTE_MS;
@@ -38,6 +44,8 @@ export class CheckService implements ICheckService {
   private readonly logger = new Logger(CHECK_LOGGER_NAME.SERVICE.CHECK);
 
   constructor(
+    @Inject(NOTIFICATION_PROVIDER_TOKENS.SERVICES.NOTIFICATION)
+    private readonly notification_service: INotificationService,
     @Inject(SETTING_PROVIDER_TOKENS.SERVICES.SETTING)
     private readonly setting_service: ISettingService,
     @Inject(CHECK_PROVIDER_TOKENS.REPOSITORIES.CHECK)
@@ -153,6 +161,19 @@ export class CheckService implements ICheckService {
       return ServiceResultMapper.Conflict(
         API_CHECK_MESSAGE.ERROR.ALREADY_CHECKED_IN,
       );
+    }
+
+    if (lateMinutes) {
+      void this.notification_service.notify({
+        template_code: NOTIFICATION_TEMPLATE.ATTENDANCE_LATE,
+        data: {
+          employee: `${user.first_name} ${user.last_name}`,
+          minutes: lateMinutes,
+          start: next.scheduled_start,
+        },
+        entity_type: NOTIFICATION_ENTITY.SHIFT,
+        entity_id: next.id,
+      });
     }
 
     return ServiceResultMapper.Ok(

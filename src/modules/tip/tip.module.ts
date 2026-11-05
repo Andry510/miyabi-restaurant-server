@@ -11,11 +11,17 @@ import { TIP_REPOSITORIES_PROVIDERS } from './infrastructure/repositories';
 
 //Modules
 import { RepositoryModule } from '../repository';
+import { NotificationModule } from '../notification';
 import { SettingModule } from '../setting';
 import { WorkScheduleModule } from '../work-schedule';
 
 @Module({
-  imports: [RepositoryModule, SettingModule, WorkScheduleModule],
+  imports: [
+    RepositoryModule,
+    NotificationModule,
+    SettingModule,
+    WorkScheduleModule,
+  ],
   controllers: Object.values(TIP_CONTROLLERS_PROVIDERS),
   providers: [...TIP_SERVICES_PROVIDERS, ...TIP_REPOSITORIES_PROVIDERS],
 })

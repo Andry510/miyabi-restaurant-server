@@ -2,7 +2,7 @@ import type { Provider } from '@nestjs/common';
 
 //Application
 import { LocalUserService } from './local';
-import { LocationService, UserService } from './cloud';
+import { LocationService, NotificationService, UserService } from './cloud';
 
 //Infrastructure
 import { ME_PROVIDER_TOKENS } from '../../infrastructure/constants';
@@ -15,6 +15,10 @@ export const ME_SERVICES_PROVIDERS: Provider[] = [
   {
     provide: ME_PROVIDER_TOKENS.SERVICES.LOCATION,
     useClass: LocationService,
+  },
+  {
+    provide: ME_PROVIDER_TOKENS.SERVICES.NOTIFICATION,
+    useClass: NotificationService,
   },
   {
     provide: ME_PROVIDER_TOKENS.SERVICES.LOCAL,

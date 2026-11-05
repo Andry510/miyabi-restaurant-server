@@ -18,6 +18,7 @@ import type {
   ITipRepository,
 } from '../../../domain/interfaces/repositories';
 import type { ITipService } from '../../../domain/interfaces/services';
+import type { INoticeService } from '../../../domain/interfaces/services/local';
 import type {
   TPoolsQuerySchema,
   TRegisterSchema,
@@ -58,6 +59,8 @@ export class TipService implements ITipService {
   private readonly logger = new Logger(TIP_LOGGER_NAME.SERVICE.TIP);
 
   constructor(
+    @Inject(TIP_PROVIDER_TOKENS.SERVICES.NOTICE)
+    private readonly notice_service: INoticeService,
     @Inject(SETTING_PROVIDER_TOKENS.SERVICES.SETTING)
     private readonly setting_service: ISettingService,
     @Inject(WORK_SCHEDULE_PROVIDER_TOKENS.SERVICES.WORK_SCHEDULE)
@@ -335,10 +338,12 @@ export class TipService implements ITipService {
     });
   }
 
-  close(
+  async close(
     id: string,
   ): Promise<ResultPattern<TTipPoolDetailOutput, ServiceError>> {
-    return this.recalculate(id, { close: true });
+    return this.notice_service.closed(
+      await this.recalculate(id, { close: true }),
+    );
   }
 
   async reopen(

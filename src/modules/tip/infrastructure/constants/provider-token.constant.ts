@@ -1,6 +1,7 @@
 export const TIP_PROVIDER_TOKENS = Object.freeze({
   SERVICES: {
     ALLOCATION: Symbol('TIP_ALLOCATION_SERVICE'),
+    NOTICE: Symbol('TIP_NOTICE_SERVICE'),
     RULE: Symbol('TIP_RULE_SERVICE'),
     SANCTION: Symbol('TIP_SANCTION_SERVICE'),
     TIP: Symbol('TIP_SERVICE'),

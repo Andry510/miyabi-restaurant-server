@@ -16,6 +16,7 @@ import type {
 } from '../../../domain/schemas';
 import type { TShiftOutput } from '../../../domain/types/entities';
 import type { TShiftRange } from '../../../domain/types/repositories';
+import type { INotificationService } from '../../../../notification/domain/interfaces/services';
 import type { ISettingService } from '../../../../setting/domain/interfaces/services';
 import type { IWorkScheduleService } from '../../../../work-schedule/domain/interfaces/services';
 import type { TWorkScheduleOutput } from '../../../../work-schedule/domain/types/entities';
@@ -28,6 +29,11 @@ import {
   SHIFT_LOGGER_NAME,
   SHIFT_PROVIDER_TOKENS,
 } from '../../../infrastructure/constants';
+import {
+  NOTIFICATION_ENTITY,
+  NOTIFICATION_PROVIDER_TOKENS,
+  NOTIFICATION_TEMPLATE,
+} from '../../../../notification/infrastructure/constants';
 import { SETTING_PROVIDER_TOKENS } from '../../../../setting/infrastructure/constants';
 import { WORK_SCHEDULE_PROVIDER_TOKENS } from '../../../../work-schedule/infrastructure/constants';
 
@@ -36,6 +42,8 @@ export class ShiftService implements IShiftService {
   private readonly logger = new Logger(SHIFT_LOGGER_NAME.SERVICE.SHIFT);
 
   constructor(
+    @Inject(NOTIFICATION_PROVIDER_TOKENS.SERVICES.NOTIFICATION)
+    private readonly notification_service: INotificationService,
     @Inject(SETTING_PROVIDER_TOKENS.SERVICES.SETTING)
     private readonly setting_service: ISettingService,
     @Inject(WORK_SCHEDULE_PROVIDER_TOKENS.SERVICES.WORK_SCHEDULE)
@@ -210,6 +218,23 @@ export class ShiftService implements IShiftService {
       return ServiceResultMapper.InternalServerError();
     }
 
+    const [first] = [...createResult.Value].sort(
+      (a, b) => a.scheduled_start.getTime() - b.scheduled_start.getTime(),
+    );
+
+    if (first) {
+      void this.notification_service.notify({
+        template_code: NOTIFICATION_TEMPLATE.SHIFT_SCHEDULED,
+        user_ids: [first.user.id],
+        data: {
+          count: createResult.Value.length,
+          start: first.scheduled_start,
+        },
+        entity_type: NOTIFICATION_ENTITY.SHIFT,
+        entity_id: first.id,
+      });
+    }
+
     return ServiceResultMapper.Ok(createResult.Value);
   }
 
@@ -282,7 +307,21 @@ export class ShiftService implements IShiftService {
       return ServiceResultMapper.Conflict(API_SHIFT_MESSAGE.ERROR.NOT_EDITABLE);
     }
 
-    return this.findOutput(id);
+    const outputResult = await this.findOutput(id);
+
+    if (outputResult.IsSuccess) {
+      const shift = outputResult.Value;
+
+      void this.notification_service.notify({
+        template_code: NOTIFICATION_TEMPLATE.SHIFT_CHANGED,
+        user_ids: [shift.user.id],
+        data: { start: shift.scheduled_start, end: shift.scheduled_end },
+        entity_type: NOTIFICATION_ENTITY.SHIFT,
+        entity_id: shift.id,
+      });
+    }
+
+    return outputResult;
   }
 
   async cancel(id: string): Promise<ResultPattern<TShiftOutput, ServiceError>> {
@@ -302,6 +341,14 @@ export class ShiftService implements IShiftService {
     if (!cancelResult.Value) {
       return ServiceResultMapper.Conflict(API_SHIFT_MESSAGE.ERROR.NOT_EDITABLE);
     }
+
+    void this.notification_service.notify({
+      template_code: NOTIFICATION_TEMPLATE.SHIFT_CANCELLED,
+      user_ids: [outputResult.Value.user.id],
+      data: { start: outputResult.Value.scheduled_start },
+      entity_type: NOTIFICATION_ENTITY.SHIFT,
+      entity_id: id,
+    });
 
     return outputResult;
   }

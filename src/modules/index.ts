@@ -6,6 +6,7 @@ export * from './check';
 export * from './job-position';
 export * from './location';
 export * from './me';
+export * from './notification';
 export * from './order';
 export * from './pairing';
 export * from './product';

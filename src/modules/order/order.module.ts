@@ -12,11 +12,18 @@ import { ORDER_REPOSITORIES_PROVIDERS } from './infrastructure/repositories';
 //Modules
 import { ChannelModule } from '../channel';
 import { RepositoryModule } from '../repository';
+import { NotificationModule } from '../notification';
 import { SettingModule } from '../setting';
 import { TransferModule } from '../transfer';
 
 @Module({
-  imports: [ChannelModule, RepositoryModule, SettingModule, TransferModule],
+  imports: [
+    ChannelModule,
+    RepositoryModule,
+    NotificationModule,
+    SettingModule,
+    TransferModule,
+  ],
   controllers: Object.values(ORDER_CONTROLLERS_PROVIDERS),
   providers: [...ORDER_SERVICES_PROVIDERS, ...ORDER_REPOSITORIES_PROVIDERS],
 })
