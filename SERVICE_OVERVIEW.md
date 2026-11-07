@@ -138,7 +138,7 @@ Igual que en la nube (`miyabi-api/CLAUDE.md` §3), con `local/` y `cloud/` donde
 
 ## 6. Rutas REST
 
-**125 rutas**: 97 locales (77 de gerente, 16 de empleado y 4 públicas de sesión) y 28 que pasan por la nube. Todas, excepto `POST /v1/pairing/register`, exigen que el servidor esté emparejado.
+**126 rutas**: 98 locales (78 de gerente, 16 de empleado y 4 públicas de sesión) y 28 que pasan por la nube. Todas, excepto `POST /v1/pairing/register`, exigen que el servidor esté emparejado.
 
 - **gerente:** `@HttpManagerAccess()`; el Bearer de la nube se valida con `session.validate`.
 - **gerente (nube):** sin guard de acceso local; el servidor reenvía el Bearer y la nube lo valida en su propio RPC.
@@ -226,6 +226,7 @@ La última columna es el diagrama en `documents/diagrams/workflows/`; `—` indi
 | GET | `/v1/orders/local` | gerente | Listar pedidos | `order/local/orders` |
 | GET | `/v1/orders/local/:id` | gerente | Ver pedido | `order/local/order` |
 | POST | `/v1/orders/local/:id/retry` | gerente | Reintentar envíos del pedido | `order/local/retry` |
+| GET | `/v1/orders/local/:id/export` | gerente | Excel del pedido | — |
 | GET | `/v1/orders/local/current` | gerente | Pedido abierto del día | `order/local/current` |
 | DELETE | `/v1/orders/local/current/items/:product_id` | gerente | Restablecer un producto del pedido | `order/local/reset_item` |
 | PUT | `/v1/orders/local/current/items/:product_id` | gerente | Guardar un producto del pedido | `order/local/save_item` |
@@ -373,6 +374,7 @@ Los cambios de productos se aplican en una cola, de uno en uno, y una hidrataci�
 - El gerente ajusta la cantidad y el almacén de cada producto, o lo restablece a lo que pidieron los empleados.
 - Al enviar: `open → sending`, se crea un envío por almacén con su `idempotency_key` y se registra en la nube con `transfer.register`. Cada envío queda `sent` (con su `transfer_id`) o `failed` (con `last_error`); el pedido queda `sent` o `partially_sent`. Un fallo no detiene a los demás.
 - `POST /v1/orders/local/:id/retry` reintenta los envíos que no quedaron `sent`, con la misma `idempotency_key`, así la nube no duplica el pedido.
+- `GET /v1/orders/local/:id/export` arma el Excel del pedido para compartirlo (WhatsApp u otra app) sin internet: fecha, estado, quién lo envió y, por producto, código, unidad, cantidad, lo que pidieron los empleados, estado del envío y notas. Las fechas van en la zona horaria del local.
 
 Ver `states/order.drawio`, `states/order-dispatch.drawio` y `sequences/order-send.drawio`.
 

@@ -70,6 +70,17 @@ export class TimeZone {
     ),
   });
 
+  static format = (instant: Date, timeZone: string): string =>
+    new Intl.DateTimeFormat('es-MX', {
+      timeZone,
+      weekday: 'short',
+      day: '2-digit',
+      month: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hourCycle: 'h23',
+    }).format(instant);
+
   static weekDayOf = (day: string): number =>
     new Date(`${day}T00:00:00Z`).getUTCDay();
 

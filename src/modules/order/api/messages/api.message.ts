@@ -42,6 +42,10 @@ export const API_ORDER_MESSAGE = Object.freeze({
     },
   },
   SUCCESS: {
+    ORDER_EXPORTED: {
+      code: 'SUCCESS_ORDER_EXPORTED',
+      message: 'Pedido exportado correctamente',
+    },
     REQUEST_SAVED: {
       code: 'SUCCESS_ORDER_REQUEST_SAVED',
       message: 'Solicitud guardada correctamente',

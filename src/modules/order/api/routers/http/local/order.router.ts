@@ -8,4 +8,5 @@ export const HTTP_LOCAL_ORDER_ROUTER = Object.freeze({
   ORDERS: 'orders/local',
   ORDER: 'orders/local/:id',
   RETRY: 'orders/local/:id/retry',
+  EXPORT: 'orders/local/:id/export',
 });

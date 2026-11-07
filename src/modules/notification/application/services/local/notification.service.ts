@@ -11,6 +11,7 @@ import type { ISettingService } from '../../../../setting/domain/interfaces/serv
 
 //Infrastructure
 import { Logger } from '@infrastructure/audits';
+import { TimeZone } from '@infrastructure/utils';
 import {
   NOTIFICATION_AUDIENCE,
   NOTIFICATION_LOGGER_NAME,
@@ -119,20 +120,12 @@ export class NotificationService implements INotificationService, OnModuleInit {
     data: Record<string, TNotificationValue>,
     timeZone: string,
   ): Record<string, string> {
-    const dateFormat = new Intl.DateTimeFormat('es-MX', {
-      timeZone,
-      weekday: 'short',
-      day: '2-digit',
-      month: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      hourCycle: 'h23',
-    });
-
     return Object.fromEntries(
       Object.entries(data).map(([key, value]) => [
         key,
-        value instanceof Date ? dateFormat.format(value) : String(value),
+        value instanceof Date
+          ? TimeZone.format(value, timeZone)
+          : String(value),
       ]),
     );
   }
