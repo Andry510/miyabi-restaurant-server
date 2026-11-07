@@ -18,6 +18,7 @@ services:
       - "host.docker.internal:host-gateway"
     ports:
       - "${PORT:-3520}:${PORT:-3520}"
+      - "${PORT_SOCKET:-4520}:${PORT_SOCKET:-4520}"
 
   redis:
     image: redis:7.4-alpine

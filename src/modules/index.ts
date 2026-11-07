@@ -15,6 +15,7 @@ export * from './server-product';
 export * from './session';
 export * from './setting';
 export * from './shift';
+export * from './socket';
 export * from './supplier';
 export * from './supplier-product';
 export * from './tip';

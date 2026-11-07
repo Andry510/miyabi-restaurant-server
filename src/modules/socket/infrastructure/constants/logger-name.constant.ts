@@ -1,0 +1,8 @@
+export const SOCKET_LOGGER_NAME = Object.freeze({
+  GATEWAY: {
+    SOCKET: 'SOCKET-GATEWAY',
+  },
+  SERVICE: {
+    CONNECTION: 'SOCKET-CONNECTION-SERVICE',
+  },
+});

@@ -5,6 +5,7 @@ export const CHANNEL_EVENT = Object.freeze({
   TRANSFER: 'transfer',
   SESSION_REVOKED: 'session_revoked',
   SESSION_EXPIRED: 'session_expired',
+  NOTIFICATION: 'notification',
 } as const);
 
 export const CHANNEL_REQUEST = Object.freeze({

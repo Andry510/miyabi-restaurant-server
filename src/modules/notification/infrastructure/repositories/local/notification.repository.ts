@@ -7,6 +7,7 @@ import { ResultPattern } from '@domain/patterns/results';
 import type { INotificationRepository } from '../../../domain/interfaces/repositories';
 import type {
   TNotificationCreate,
+  TNotificationCreated,
   TNotificationCursor,
   TNotificationOutput,
   TNotificationReader,
@@ -75,25 +76,37 @@ export class NotificationRepository implements INotificationRepository {
         }),
     );
 
-  createMany = (input: TNotificationCreate): Promise<ResultPattern<number>> =>
+  createMany = (
+    input: TNotificationCreate,
+  ): Promise<ResultPattern<TNotificationCreated[]>> =>
     ResultPattern.tryCatchAsync(
       'Infrastructure',
       NotificationRepository.name,
       async () => {
-        const response = await this.primaryDatabase.notifications.createMany({
-          data: input.user_ids.map((userId) => ({
-            audience: input.audience,
-            user_id: userId,
-            template_code: input.template_code,
-            data: input.data,
-            title: input.title,
-            body: input.body,
-            entity_type: input.entity_type,
-            entity_id: input.entity_id,
-          })),
+        const created =
+          await this.primaryDatabase.notifications.createManyAndReturn({
+            select: { id: true },
+            data: input.user_ids.map((userId) => ({
+              audience: input.audience,
+              user_id: userId,
+              template_code: input.template_code,
+              data: input.data,
+              title: input.title,
+              body: input.body,
+              entity_type: input.entity_type,
+              entity_id: input.entity_id,
+            })),
+          });
+
+        const response = await this.primaryDatabase.notifications.findMany({
+          where: { id: { in: created.map((row) => row.id) } },
+          select: { ...NOTIFICATION_SELECT, user_id: true },
         });
 
-        return response.count;
+        return response.map((row) => ({
+          user_id: row.user_id,
+          notification: NotificationMapper.toOutput(row),
+        }));
       },
     );
 

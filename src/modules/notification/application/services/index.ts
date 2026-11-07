@@ -1,6 +1,7 @@
 import type { Provider } from '@nestjs/common';
 
 //Application
+import { RelayService } from './cloud';
 import { CleanupService, NotificationService, ReaderService } from './local';
 
 //Infrastructure
@@ -18,5 +19,9 @@ export const NOTIFICATION_SERVICES_PROVIDERS: Provider[] = [
   {
     provide: NOTIFICATION_PROVIDER_TOKENS.SERVICES.CLEANUP,
     useClass: CleanupService,
+  },
+  {
+    provide: NOTIFICATION_PROVIDER_TOKENS.SERVICES.RELAY,
+    useClass: RelayService,
   },
 ];

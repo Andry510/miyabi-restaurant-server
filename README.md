@@ -78,6 +78,7 @@ Crea un archivo `.env` en la raíz (puedes copiar `.env.example`). El servidor v
 | Variable | Obligatoria | Ejemplo | Uso |
 |---|---|---|---|
 | `PORT` | Sí | `3520` | Puerto HTTP. |
+| `PORT_SOCKET` | No | `4520` | Puerto del socket local (avisos en vivo a las pantallas del local). |
 | `DATABASE_URL` | Sí | `postgresql://user:pass@localhost:5432/miyabi_restaurant` | Base del local. |
 | `REDIS_URL` | Sí | `redis://127.0.0.1:6379` | Caché de sesiones de gerente y de la configuración. En Docker se usa el Redis del `docker-compose.yml`. |
 | `CLOUD_GRPC_URL` | Sí | `localhost:5510` | gRPC de la nube. |

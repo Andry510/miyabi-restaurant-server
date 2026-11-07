@@ -22,6 +22,11 @@ export const EnvSchema = pipe(
     {
       //SERVER
       PORT: requiredNumberSchema,
+      PORT_SOCKET: pipe(
+        optional(string(), '4520'),
+        transform((value) => Number(value)),
+        number(),
+      ),
 
       //DATABASE
       DATABASE_URL: requiredStringSchema,

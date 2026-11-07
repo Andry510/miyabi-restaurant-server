@@ -134,6 +134,7 @@ Igual que en la nube (`miyabi-api/CLAUDE.md` §3), con `local/` y `cloud/` donde
 | `transfer`, `transfer-item` | cloud | Pedidos del restaurante en la nube: listar, ver, crear, recibir, cancelar y sus productos. |
 | `pairing` | cloud | Emparejar el servidor con la nube. |
 | `channel` | cloud | Canal gRPC con la nube (`server.channel`): reparte sus mensajes, responde sus solicitudes y reporta el estado del servidor. |
+| `socket` | local | Socket.io del local (`PORT_SOCKET`, 4520): avisos en vivo a las pantallas de empleados y gerentes. |
 | `repository` | local + cloud | Validación de acceso para los guards (`validateAccess`, `validateManagerAccess`, `serverToken`) y `CatalogService` (`workAreasExist`, `jobPositionsExist`, `productsExist`). |
 
 ## 6. Rutas REST
@@ -335,12 +336,20 @@ Los guards son globales y se activan con su decorador; no se usa `@UseGuards`. R
 | `session_revoked` | `session` | Borra de la caché la sesión de ese gerente. |
 | `transfer` | — | Llega por el canal; el aviso a las pantallas de los gerentes es otra implementación. |
 | `session_expired` | `channel` | Cierra el canal y, según el motivo, reintenta o se detiene. |
-| `notification` | — | Notificación de la nube para un gerente. Se guarda en la nube y el gerente la lee con `me/cloud/notifications`; el aviso en vivo a su pantalla es otra implementación. |
+| `notification` | `notification` (`RelayService`) | Notificación de la nube para un gerente. Se guarda en la nube (la lista es `me/cloud/notifications`) y se le reenvía en vivo por el socket local como `cloud.notification`. |
 | `attendance_request` (solicitud) | `shift` (`ReportService`) | Responde con los turnos del rango y su asistencia (empleado, fecha, horario, entrada, salida, estado, retardo, salida anticipada e incidencias). |
 
 - **Estado:** el canal le manda a la nube versión, segundos encendido, si la base responde, `products_synced_at` y envíos pendientes y fallidos. Lo hace al abrir el canal, cada 5 minutos y cuando termina una hidratación o un envío de pedido, con al menos 35 s entre reportes (la nube descarta los que lleguen con menos de 30 s).
 
 Los cambios de productos se aplican en una cola, de uno en uno, y una hidratación pedida mientras otra espera no se duplica. Ver `sequences/product-sync.drawio`.
+
+### Socket local
+
+- Socket.io en su propio puerto (`PORT_SOCKET`, 4520 por defecto). Se conecta con `access_token` en `auth` o en un header; el gerente manda además `audience: "manager"`.
+- **Empleado:** se valida su JWT local y entra a `employee:<id>`. **Gerente:** se valida con la nube (`validateManagerAccess`, con caché) y entra a `managers`; si la nube responde, también a `manager:<id de la nube>`.
+- Cada 60 s se revalida cada conexión; si ya no es válida recibe `session.expired` y se desconecta.
+- Eventos: `notification.created` (notificación local nueva: al empleado o a todos los gerentes) y `cloud.notification` (la que manda la nube por el canal, al gerente al que va dirigida).
+- Si falla la conexión, `connect_error` trae `data: { status, code }` con el mismo `code` de la API.
 
 ## 9. Reglas de negocio del local
 

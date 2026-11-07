@@ -2,6 +2,7 @@
 import type { ResultPattern } from '@domain/patterns/results';
 import type {
   TNotificationCreate,
+  TNotificationCreated,
   TNotificationCursor,
   TNotificationOutput,
   TNotificationReader,
@@ -16,7 +17,9 @@ export interface INotificationRepository {
 
   findTemplate(code: string): Promise<ResultPattern<TStoredTemplate | null>>;
 
-  createMany(input: TNotificationCreate): Promise<ResultPattern<number>>;
+  createMany(
+    input: TNotificationCreate,
+  ): Promise<ResultPattern<TNotificationCreated[]>>;
 
   findMany(
     reader: TNotificationReader,

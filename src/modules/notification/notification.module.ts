@@ -11,10 +11,12 @@ import { NOTIFICATION_PROVIDER_TOKENS } from './infrastructure/constants';
 import { NOTIFICATION_REPOSITORIES_PROVIDERS } from './infrastructure/repositories';
 
 //Modules
+import { ChannelModule } from '../channel';
 import { SettingModule } from '../setting';
+import { SocketModule } from '../socket';
 
 @Module({
-  imports: [SettingModule],
+  imports: [ChannelModule, SettingModule, SocketModule],
   controllers: Object.values(NOTIFICATION_CONTROLLERS_PROVIDERS),
   providers: [
     ...NOTIFICATION_SERVICES_PROVIDERS,

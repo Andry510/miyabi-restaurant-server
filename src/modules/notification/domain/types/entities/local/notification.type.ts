@@ -61,6 +61,11 @@ export type TNotificationOutput = {
   created_at: Date;
 };
 
+export type TNotificationCreated = {
+  user_id: string | null;
+  notification: TNotificationOutput;
+};
+
 export type TNotificationsOutput = {
   notifications: TNotificationOutput[];
   next_cursor: string | null;

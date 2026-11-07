@@ -8,6 +8,7 @@ import type {
   TNotifyInput,
 } from '../../../domain/types/entities';
 import type { ISettingService } from '../../../../setting/domain/interfaces/services';
+import type { ISocketService } from '../../../../socket/domain/interfaces/services';
 
 //Infrastructure
 import { Logger } from '@infrastructure/audits';
@@ -19,6 +20,10 @@ import {
   NOTIFICATION_TEMPLATES,
 } from '../../../infrastructure/constants';
 import { SETTING_PROVIDER_TOKENS } from '../../../../setting/infrastructure/constants';
+import {
+  SOCKET_EVENT,
+  SOCKET_PROVIDER_TOKENS,
+} from '../../../../socket/infrastructure/constants';
 
 const PLACEHOLDER = /{{\s*(\w+)\s*}}/g;
 
@@ -35,6 +40,8 @@ export class NotificationService implements INotificationService, OnModuleInit {
     private readonly setting_service: ISettingService,
     @Inject(NOTIFICATION_PROVIDER_TOKENS.REPOSITORIES.NOTIFICATION)
     private readonly notification_repository: INotificationRepository,
+    @Inject(SOCKET_PROVIDER_TOKENS.SERVICES.SOCKET)
+    private readonly socket_service: ISocketService,
   ) {}
 
   async onModuleInit(): Promise<void> {
@@ -100,6 +107,22 @@ export class NotificationService implements INotificationService, OnModuleInit {
 
     if (createResult.IsFailure) {
       this.logger.error(createResult.Error);
+      return;
+    }
+
+    for (const { user_id, notification } of createResult.Value) {
+      if (user_id) {
+        this.socket_service.emitToEmployee(
+          user_id,
+          SOCKET_EVENT.NOTIFICATION_CREATED,
+          notification,
+        );
+      } else {
+        this.socket_service.emitToManagers(
+          SOCKET_EVENT.NOTIFICATION_CREATED,
+          notification,
+        );
+      }
     }
   }
 
