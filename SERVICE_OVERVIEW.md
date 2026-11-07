@@ -372,7 +372,8 @@ Los cambios de productos se aplican en una cola, de uno en uno, y una hidrataci�
 - Hay un solo pedido `open` a la vez (`transfer_drafts.open_lock` único).
 - El empleado crea solicitudes con productos **de su área**; necesita tener área asignada.
 - El gerente ajusta la cantidad y el almacén de cada producto, o lo restablece a lo que pidieron los empleados.
-- Al enviar: `open → sending`, se crea un envío por almacén con su `idempotency_key` y se registra en la nube con `transfer.register`. Cada envío queda `sent` (con su `transfer_id`) o `failed` (con `last_error`); el pedido queda `sent` o `partially_sent`. Un fallo no detiene a los demás.
+- El almacén es opcional (hoy no hay almacenes en producción). Los productos sin almacén van juntos en un solo envío sin destino; la nube registra ese pedido sin almacén y el restaurante lo marca como recibido con `transfer` (`receive_transfer`), sin aceptar, rechazar, repartidor ni envío.
+- Al enviar: `open → sending`, se crea un envío por almacén (y uno sin destino) con su `idempotency_key` y se registra en la nube con `transfer.register`. Cada envío queda `sent` (con su `transfer_id`) o `failed` (con `last_error`); el pedido queda `sent` o `partially_sent`. Un fallo no detiene a los demás.
 - `POST /v1/orders/local/:id/retry` reintenta los envíos que no quedaron `sent`, con la misma `idempotency_key`, así la nube no duplica el pedido.
 - `GET /v1/orders/local/:id/export` arma el Excel del pedido para compartirlo (WhatsApp u otra app) sin internet: fecha, estado, quién lo envió y, por producto, código, unidad, cantidad, lo que pidieron los empleados, estado del envío y notas. Las fechas van en la zona horaria del local.
 
@@ -397,7 +398,7 @@ Ver `states/tip-pool.drawio`.
 - Cada aviso usa una plantilla (`notification_templates`, con `audience` `employee` o `manager`). El servidor crea al arrancar las que falten y no cambia las que ya existen; una plantilla con `status` falso no genera avisos.
 - El título y el texto se guardan ya armados, con las fechas en la zona horaria de `server_settings.timezone`.
 - **Al empleado** (una fila por empleado, `read_at` vacío = sin leer): `SHIFT_SCHEDULED` (alta de turnos y copiar semana), `SHIFT_CHANGED`, `SHIFT_CANCELLED`, `ATTENDANCE_CORRECTED`, `INCIDENT_JUSTIFIED`, `TIP_POOL_CLOSED` (a cada quien con lo que le tocó) y `TIP_SANCTION_APPLIED`.
-- **A los gerentes** (una fila para todos los gerentes del local): `ORDER_REQUEST_SUBMITTED` (cada producto que pide un empleado), `ATTENDANCE_LATE` (entrada con retardo) y `ORDER_DISPATCH_FAILED` (envíos a la nube que fallaron). El gerente es un usuario de la nube, así que lo que ya leyó se guarda por su correo en `notification_reads` (el correo no cambia en la nube).
+- **A los gerentes** (una fila para todos los gerentes del local): `ORDER_REQUEST_SUBMITTED` (cuando un empleado pide un producto nuevo; cambiar la cantidad no avisa), `ATTENDANCE_LATE` (entrada con retardo) y `ORDER_DISPATCH_FAILED` (envíos a la nube que fallaron). El gerente es un usuario de la nube, así que lo que ya leyó se guarda por su correo en `notification_reads` (el correo no cambia en la nube).
 - Se avisa después de guardar y nunca si el paso falla. Si el aviso falla, el paso no falla.
 - La lista usa paginación por cursor (`next_cursor`), las más nuevas primero.
 
@@ -452,7 +453,7 @@ Igual que la nube (`miyabi-api/CLAUDE.md` §4), con estas diferencias:
 - **Turno `completed`:** lo asignan la salida del checador y la corrección del gerente cuando hay hora de salida.
 - **`.env.example`:** lista todas las variables, incluida `DOCKER_DATABASE_URL` para `docker-compose.yml`.
 - **Sin suite de pruebas** automáticas.
-- **Notificaciones locales:** nada las borra todavía. `ATTENDANCE_ABSENT` no existe porque el servidor aún no detecta las faltas en el momento (se calculan al consultar la asistencia).
+- **Notificaciones locales:** el servidor borra al arrancar y cada 24 h las vistas de más de 90 días (`CleanupService`): las del empleado ya leídas y las de gerentes que al menos uno leyó. `ATTENDANCE_ABSENT` no existe porque el servidor aún no detecta las faltas en el momento (se calculan al consultar la asistencia).
 
 ## 14. Cómo agregar una ruta
 

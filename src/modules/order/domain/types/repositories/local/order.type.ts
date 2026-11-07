@@ -1,6 +1,7 @@
 //Domain
 import type { ORDER_LINE_CHANGE } from '@domain/enums/shared';
 import type {
+  TMyRequestOutput,
   TOrderDispatchOutput,
   TOrderOutput,
   TOrderProductOutput,
@@ -40,20 +41,25 @@ export type TOrderLine = {
 
 export type TDispatchPlan = {
   idempotency_key: string;
-  to_location_id: string;
+  to_location_id: string | null;
   product_ids: string[];
 };
 
 export type TDispatchToSend = {
   id: string;
   idempotency_key: string;
-  to_location_id: string;
+  to_location_id: string | null;
   items: Array<{ cloud_product_id: string; quantity: number }>;
 };
 
 export type TDispatchResult =
   | { id: string; sent: true; transfer_id: string }
   | { id: string; sent: false; error: string };
+
+export type TSavedRequest = {
+  request: TMyRequestOutput;
+  created: boolean;
+};
 
 export type TSaveRequestInput = {
   order_id: string;

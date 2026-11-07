@@ -32,10 +32,6 @@ export const API_ORDER_MESSAGE = Object.freeze({
       code: 'ERROR_ORDER_EMPTY',
       message: 'El pedido no tiene productos',
     },
-    MISSING_WAREHOUSE: {
-      code: 'ERROR_ORDER_MISSING_WAREHOUSE',
-      message: 'Falta el almacén al que se enviará el pedido',
-    },
     NOTHING_TO_RETRY: {
       code: 'ERROR_ORDER_NOTHING_TO_RETRY',
       message: 'Este pedido no tiene envíos pendientes por reintentar',

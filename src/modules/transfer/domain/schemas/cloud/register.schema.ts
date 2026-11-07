@@ -44,10 +44,12 @@ const TransferItemSchema = strictObject({
 });
 
 export const RegisterBodySchema = strictObject({
-  to_location_id: pipe(
-    string(ERROR_MESSAGE_SCHEMA.to_location_id.type),
-    nonEmpty(ERROR_MESSAGE_SCHEMA.to_location_id.nonEmpty),
-    uuid(ERROR_MESSAGE_SCHEMA.to_location_id.uuid),
+  to_location_id: optional(
+    pipe(
+      string(ERROR_MESSAGE_SCHEMA.to_location_id.type),
+      nonEmpty(ERROR_MESSAGE_SCHEMA.to_location_id.nonEmpty),
+      uuid(ERROR_MESSAGE_SCHEMA.to_location_id.uuid),
+    ),
   ),
   items: pipe(
     array(TransferItemSchema, ERROR_MESSAGE_SCHEMA.items.type),

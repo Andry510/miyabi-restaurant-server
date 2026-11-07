@@ -39,7 +39,7 @@ export type TOrderLineOutput = {
 
 export type TOrderDispatchOutput = {
   id: string;
-  to_location_id: string;
+  to_location_id: string | null;
   status: DISPATCH_STATUS;
   transfer_id: string | null;
   last_error: string | null;

@@ -31,7 +31,7 @@ type TOrderRow = {
 
 type TDispatchRow = {
   id: string;
-  to_location_id: string;
+  to_location_id: string | null;
   status: string;
   transfer_id: string | null;
   last_error: string | null;
@@ -49,7 +49,7 @@ type TMyRequestRow = {
 type TDispatchSendRow = {
   id: string;
   idempotency_key: string;
-  to_location_id: string;
+  to_location_id: string | null;
   items: Array<{ quantity: number; product: { cloud_id: string } }>;
 };
 

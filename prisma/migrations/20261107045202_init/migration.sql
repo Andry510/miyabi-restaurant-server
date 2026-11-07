@@ -254,7 +254,7 @@ CREATE TABLE "transfer_draft_items" (
 CREATE TABLE "transfer_draft_dispatches" (
     "id" TEXT NOT NULL,
     "transfer_draft_id" TEXT NOT NULL,
-    "to_location_id" UUID NOT NULL,
+    "to_location_id" UUID,
     "status" "transfer_dispatch_status" NOT NULL DEFAULT 'pending',
     "idempotency_key" UUID NOT NULL,
     "transfer_id" UUID,

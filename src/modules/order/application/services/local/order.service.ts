@@ -246,12 +246,6 @@ export class OrderService implements IOrderService {
       return ServiceResultMapper.Conflict(API_ORDER_MESSAGE.ERROR.EMPTY_ORDER);
     }
 
-    if (toSend.some((line) => !line.to_location_id)) {
-      return ServiceResultMapper.Conflict(
-        API_ORDER_MESSAGE.ERROR.MISSING_WAREHOUSE,
-      );
-    }
-
     const startResult = await this.order_repository.startSend(
       id,
       lines,
@@ -351,7 +345,9 @@ export class OrderService implements IOrderService {
     for (const dispatch of dispatches) {
       const registerResult = await this.transfer_service.register(
         {
-          to_location_id: dispatch.to_location_id,
+          ...(dispatch.to_location_id
+            ? { to_location_id: dispatch.to_location_id }
+            : {}),
           idempotency_key: dispatch.idempotency_key,
           items: dispatch.items.map((item) => ({
             product_id: item.cloud_product_id,

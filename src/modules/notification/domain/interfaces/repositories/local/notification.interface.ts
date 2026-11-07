@@ -27,6 +27,8 @@ export interface INotificationRepository {
 
   countUnread(reader: TNotificationReader): Promise<ResultPattern<number>>;
 
+  deleteSeen(before: Date): Promise<ResultPattern<number>>;
+
   markRead(
     reader: TNotificationReader,
     ids: string[],

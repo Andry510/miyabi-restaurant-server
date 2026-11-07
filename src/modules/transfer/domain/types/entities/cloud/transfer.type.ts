@@ -12,7 +12,7 @@ type TUserMetadata = {
 export type TTransferOutput = {
   id: string;
   from: TLocationMetadata;
-  to: TLocationMetadata;
+  to: TLocationMetadata | null;
   status: string;
   note?: string;
   requested_by: TUserMetadata;
@@ -30,7 +30,7 @@ export type TTransferOutput = {
 export type TTransfersOutput = {
   id: string;
   from: TLocationMetadata;
-  to: TLocationMetadata;
+  to: TLocationMetadata | null;
   items_count: number;
   status: string;
   created_at: string;

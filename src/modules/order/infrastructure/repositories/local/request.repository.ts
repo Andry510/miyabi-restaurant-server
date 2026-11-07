@@ -8,6 +8,7 @@ import type { TUpdateRequestSchema } from '../../../domain/schemas';
 import type { TMyRequestOutput } from '../../../domain/types/entities';
 import type {
   TRequestChangeResult,
+  TSavedRequest,
   TSaveRequestInput,
 } from '../../../domain/types/repositories';
 
@@ -53,7 +54,7 @@ export class RequestRepository implements IRequestRepository {
 
   save = (
     input: TSaveRequestInput,
-  ): Promise<ResultPattern<TMyRequestOutput | null>> =>
+  ): Promise<ResultPattern<TSavedRequest | null>> =>
     ResultPattern.tryCatchAsync('Infrastructure', RequestRepository.name, () =>
       this.primaryDatabase.$transaction(async (transaction) => {
         const open = await transaction.transfer_drafts.count({
@@ -64,14 +65,20 @@ export class RequestRepository implements IRequestRepository {
           return null;
         }
 
-        const response = await transaction.transfer_draft_requests.upsert({
-          where: {
-            transfer_draft_id_created_by_id_product_id: {
-              transfer_draft_id: input.order_id,
-              created_by_id: input.assignment_id,
-              product_id: input.product_id,
-            },
+        const where = {
+          transfer_draft_id_created_by_id_product_id: {
+            transfer_draft_id: input.order_id,
+            created_by_id: input.assignment_id,
+            product_id: input.product_id,
           },
+        };
+
+        const existing = await transaction.transfer_draft_requests.count({
+          where: where.transfer_draft_id_created_by_id_product_id,
+        });
+
+        const response = await transaction.transfer_draft_requests.upsert({
+          where,
           create: {
             transfer_draft_id: input.order_id,
             created_by_id: input.assignment_id,
@@ -83,7 +90,10 @@ export class RequestRepository implements IRequestRepository {
           select: MY_REQUEST_SELECT,
         });
 
-        return OrderMapper.toMyRequest(response, null);
+        return {
+          request: OrderMapper.toMyRequest(response, null),
+          created: existing === 0,
+        };
       }),
     );
 

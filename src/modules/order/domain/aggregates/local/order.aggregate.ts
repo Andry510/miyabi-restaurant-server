@@ -60,10 +60,10 @@ export class OrderAggregate {
     lines: TOrderLine[],
     idempotencyKey: () => string,
   ): TDispatchPlan[] => {
-    const byLocation = new Map<string, string[]>();
+    const byLocation = new Map<string | null, string[]>();
 
     for (const line of lines) {
-      if (line.quantity > 0 && line.to_location_id) {
+      if (line.quantity > 0) {
         byLocation.set(line.to_location_id, [
           ...(byLocation.get(line.to_location_id) ?? []),
           line.product.id,

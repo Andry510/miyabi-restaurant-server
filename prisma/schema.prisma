@@ -396,7 +396,7 @@ model transfer_draft_dispatches {
   transfer_draft_id String
   transfer_draft    transfer_drafts @relation(fields: [transfer_draft_id], references: [id], onDelete: Cascade)
 
-  to_location_id String @db.Uuid
+  to_location_id String? @db.Uuid
 
   status transfer_dispatch_status @default(pending)
 

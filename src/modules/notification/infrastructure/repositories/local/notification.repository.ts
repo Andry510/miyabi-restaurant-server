@@ -151,6 +151,28 @@ export class NotificationRepository implements INotificationRepository {
         }),
     );
 
+  deleteSeen = (before: Date): Promise<ResultPattern<number>> =>
+    ResultPattern.tryCatchAsync(
+      'Infrastructure',
+      NotificationRepository.name,
+      async () => {
+        const response = await this.primaryDatabase.notifications.deleteMany({
+          where: {
+            OR: [
+              { audience: 'employee', read_at: { lt: before } },
+              {
+                audience: 'manager',
+                created_at: { lt: before },
+                reads: { some: { read_at: { lt: before } } },
+              },
+            ],
+          },
+        });
+
+        return response.count;
+      },
+    );
+
   markRead = (
     reader: TNotificationReader,
     ids: string[],

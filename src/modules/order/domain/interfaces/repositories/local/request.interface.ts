@@ -4,6 +4,7 @@ import type { TUpdateRequestSchema } from '../../../schemas';
 import type { TMyRequestOutput } from '../../../types/entities';
 import type {
   TRequestChangeResult,
+  TSavedRequest,
   TSaveRequestInput,
 } from '../../../types/repositories';
 
@@ -13,9 +14,7 @@ export interface IRequestRepository {
     workAreaId: string,
   ): Promise<ResultPattern<boolean>>;
 
-  save(
-    input: TSaveRequestInput,
-  ): Promise<ResultPattern<TMyRequestOutput | null>>;
+  save(input: TSaveRequestInput): Promise<ResultPattern<TSavedRequest | null>>;
 
   update(
     id: string,

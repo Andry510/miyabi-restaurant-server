@@ -144,20 +144,24 @@ export class RequestService implements IRequestService {
         return ServiceResultMapper.InternalServerError();
       }
 
-      if (saveResult.Value) {
+      const saved = saveResult.Value;
+
+      if (saved?.created) {
         void this.notification_service.notify({
           template_code: NOTIFICATION_TEMPLATE.ORDER_REQUEST_SUBMITTED,
           data: {
             employee: `${user.first_name} ${user.last_name}`,
             area: assignment.work_area.name,
-            quantity: saveResult.Value.quantity,
-            product: saveResult.Value.product.name,
+            quantity: saved.request.quantity,
+            product: saved.request.product.name,
           },
           entity_type: NOTIFICATION_ENTITY.ORDER,
-          entity_id: saveResult.Value.order.id,
+          entity_id: saved.request.order.id,
         });
+      }
 
-        return ServiceResultMapper.Ok(saveResult.Value);
+      if (saved) {
+        return ServiceResultMapper.Ok(saved.request);
       }
     }
 

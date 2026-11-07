@@ -16,7 +16,7 @@ service transfer_service {
 
 /*<----------- Request ----------->*/
 message register_transfer_request {
-  string to_location_id = 1;
+  optional string to_location_id = 1;
   repeated transfer_item_metadata items = 2;
   optional string note = 3;
   optional string idempotency_key = 4;
