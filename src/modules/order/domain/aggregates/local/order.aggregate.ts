@@ -44,7 +44,8 @@ export class OrderAggregate {
     return [...lines.values()]
       .map((line) => {
         const item = items.get(line.product.id);
-        const quantity = item ? item.quantity : line.requested_quantity;
+        const draftQuantity = item ? item.quantity : line.requested_quantity;
+        const quantity = line.available ? draftQuantity : 0;
 
         return {
           ...line,
@@ -105,6 +106,7 @@ export class OrderAggregate {
       product,
       requested_quantity: 0,
       quantity: 0,
+      available: product.deleted_at === null,
       to_location_id: null,
       suggested_location_id: this.suggestions.get(product.id) ?? null,
       change: ORDER_LINE_CHANGE.UNCHANGED,

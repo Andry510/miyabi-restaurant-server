@@ -10,6 +10,7 @@ import type {
 
 export type TOrderProductRow = TOrderProductOutput & {
   cloud_id: string;
+  deleted_at: Date | null;
 };
 
 export type TOrderRequestRow = TOrderRequestOutput & {
@@ -33,6 +34,7 @@ export type TOrderLine = {
   product: TOrderProductRow;
   requested_quantity: number;
   quantity: number;
+  available: boolean;
   to_location_id: string | null;
   suggested_location_id: string | null;
   change: ORDER_LINE_CHANGE;

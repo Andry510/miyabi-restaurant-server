@@ -71,6 +71,7 @@ export const ORDER_PRODUCT_SELECT = {
   name: true,
   unit: true,
   storage_code: true,
+  deleted_at: true,
 } as const;
 
 export class OrderMapper {

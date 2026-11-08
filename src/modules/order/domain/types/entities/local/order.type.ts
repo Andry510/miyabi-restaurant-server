@@ -31,6 +31,7 @@ export type TOrderLineOutput = {
   product: TOrderProductOutput;
   requested_quantity: number;
   quantity: number;
+  available: boolean;
   to_location_id: string | null;
   suggested_location_id: string | null;
   change: ORDER_LINE_CHANGE;
