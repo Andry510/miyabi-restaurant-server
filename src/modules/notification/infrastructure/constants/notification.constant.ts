@@ -13,6 +13,7 @@ export const NOTIFICATION_TEMPLATE = Object.freeze({
   ORDER_REQUEST_SUBMITTED: 'ORDER_REQUEST_SUBMITTED',
   ATTENDANCE_LATE: 'ATTENDANCE_LATE',
   ORDER_DISPATCH_FAILED: 'ORDER_DISPATCH_FAILED',
+  ORDER_DISPATCH_PENDING: 'ORDER_DISPATCH_PENDING',
 } as const);
 
 export const NOTIFICATION_ENTITY = Object.freeze({
@@ -108,6 +109,13 @@ export const NOTIFICATION_TEMPLATES: readonly TNotificationTemplate[] =
       audience: NOTIFICATION_AUDIENCE.MANAGER,
       title: 'Envío fallido',
       body: 'No se pudieron enviar {{count}} pedido(s) a la nube; reinténtalo',
+    },
+    {
+      code: NOTIFICATION_TEMPLATE.ORDER_DISPATCH_PENDING,
+      category: 'order',
+      audience: NOTIFICATION_AUDIENCE.MANAGER,
+      title: 'Pedidos sin enviar',
+      body: 'Volvió la conexión con la nube y hay {{count}} pedido(s) sin enviar; reinténtalos',
     },
   ]);
 

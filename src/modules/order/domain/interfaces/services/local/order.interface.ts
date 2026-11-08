@@ -26,6 +26,10 @@ export interface IOrderService {
     accessToken: string | null,
   ): Promise<ResultPattern<TOrderDetailOutput, ServiceError>>;
 
+  retryAll(
+    accessToken: string | null,
+  ): Promise<ResultPattern<TOrderDetailOutput[], ServiceError>>;
+
   orders(
     input: TOrdersQuerySchema,
   ): Promise<ResultPattern<TPaginationService<TOrderOutput>, ServiceError>>;

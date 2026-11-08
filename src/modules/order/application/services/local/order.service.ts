@@ -12,7 +12,10 @@ import { ResultPattern } from '@domain/patterns/results';
 import type { TPaginationService } from '@domain/types/shared';
 import { OrderAggregate } from '../../../domain/aggregates';
 import type { IOrderRepository } from '../../../domain/interfaces/repositories';
-import type { IOrderService } from '../../../domain/interfaces/services';
+import type {
+  IDispatchService,
+  IOrderService,
+} from '../../../domain/interfaces/services';
 import type {
   TItemBodySchema,
   TOrdersQuerySchema,
@@ -22,16 +25,11 @@ import type {
   TOrderOutput,
 } from '../../../domain/types/entities';
 import type {
-  TDispatchResult,
-  TDispatchToSend,
   TOrderDraft,
   TOrderLine,
 } from '../../../domain/types/repositories';
-import type { IChannelService } from '../../../../channel/domain/interfaces/services';
-import type { INotificationService } from '../../../../notification/domain/interfaces/services';
 import type { ICatalogService } from '../../../../repository/domain/interfaces/services';
 import type { ISettingService } from '../../../../setting/domain/interfaces/services';
-import type { ITransferService } from '../../../../transfer/domain/interfaces/services';
 
 //Infrastructure
 import { Logger } from '@infrastructure/audits';
@@ -42,15 +40,8 @@ import {
   ORDER_PROVIDER_TOKENS,
 } from '../../../infrastructure/constants';
 import { OrderMapper } from '../../../infrastructure/mappers';
-import { CHANNEL_PROVIDER_TOKENS } from '../../../../channel/infrastructure/constants';
-import {
-  NOTIFICATION_ENTITY,
-  NOTIFICATION_PROVIDER_TOKENS,
-  NOTIFICATION_TEMPLATE,
-} from '../../../../notification/infrastructure/constants';
 import { REPOSITORY_PROVIDER_TOKENS } from '../../../../repository/infrastructure/constants';
 import { SETTING_PROVIDER_TOKENS } from '../../../../setting/infrastructure/constants';
-import { TRANSFER_PROVIDER_TOKENS } from '../../../../transfer/infrastructure/constants';
 
 type TOrderState = { draft: TOrderDraft; lines: TOrderLine[] };
 
@@ -59,18 +50,14 @@ export class OrderService implements IOrderService {
   private readonly logger = new Logger(ORDER_LOGGER_NAME.SERVICE.ORDER);
 
   constructor(
-    @Inject(NOTIFICATION_PROVIDER_TOKENS.SERVICES.NOTIFICATION)
-    private readonly notification_service: INotificationService,
     @Inject(REPOSITORY_PROVIDER_TOKENS.SERVICES.CATALOG)
     private readonly catalog_service: ICatalogService,
     @Inject(SETTING_PROVIDER_TOKENS.SERVICES.SETTING)
     private readonly setting_service: ISettingService,
-    @Inject(TRANSFER_PROVIDER_TOKENS.SERVICES.TRANSFER)
-    private readonly transfer_service: ITransferService,
+    @Inject(ORDER_PROVIDER_TOKENS.SERVICES.DISPATCH)
+    private readonly dispatch_service: IDispatchService,
     @Inject(ORDER_PROVIDER_TOKENS.REPOSITORIES.ORDER)
     private readonly order_repository: IOrderRepository,
-    @Inject(CHANNEL_PROVIDER_TOKENS.SERVICES.CHANNEL)
-    private readonly channel_service: IChannelService,
   ) {}
 
   //<--------- Validations --------->
@@ -246,25 +233,35 @@ export class OrderService implements IOrderService {
       return ServiceResultMapper.Conflict(API_ORDER_MESSAGE.ERROR.EMPTY_ORDER);
     }
 
-    const startResult = await this.order_repository.startSend(
-      id,
-      lines,
-      OrderAggregate.plan(lines, () => randomUUID()),
-      TokenPayload.email(accessToken),
-    );
-
-    if (startResult.IsFailure) {
-      this.logger.error(startResult.Error);
-      return ServiceResultMapper.InternalServerError();
-    }
-
-    if (!startResult.Value) {
+    if (!this.dispatch_service.claim(id)) {
       return ServiceResultMapper.Conflict(
-        API_ORDER_MESSAGE.ERROR.ORDER_NOT_OPEN,
+        API_ORDER_MESSAGE.ERROR.ORDER_SENDING,
       );
     }
 
-    await this.dispatch(id, startResult.Value, accessToken);
+    try {
+      const startResult = await this.order_repository.startSend(
+        id,
+        lines,
+        OrderAggregate.plan(lines, () => randomUUID()),
+        TokenPayload.email(accessToken),
+      );
+
+      if (startResult.IsFailure) {
+        this.logger.error(startResult.Error);
+        return ServiceResultMapper.InternalServerError();
+      }
+
+      if (!startResult.Value) {
+        return ServiceResultMapper.Conflict(
+          API_ORDER_MESSAGE.ERROR.ORDER_NOT_OPEN,
+        );
+      }
+
+      await this.dispatch_service.dispatch(id, startResult.Value, accessToken);
+    } finally {
+      this.dispatch_service.release(id);
+    }
 
     return this.order(id);
   }
@@ -273,28 +270,108 @@ export class OrderService implements IOrderService {
     id: string,
     accessToken: string | null,
   ): Promise<ResultPattern<TOrderDetailOutput, ServiceError>> {
-    const pendingResult = await this.order_repository.findPendingDispatches(id);
+    if (!this.dispatch_service.claim(id)) {
+      return ServiceResultMapper.Conflict(
+        API_ORDER_MESSAGE.ERROR.ORDER_SENDING,
+      );
+    }
 
-    if (pendingResult.IsFailure) {
-      this.logger.error(pendingResult.Error);
+    try {
+      const pendingResult = await this.order_repository.findPendingDispatches(
+        id,
+        false,
+      );
+
+      if (pendingResult.IsFailure) {
+        this.logger.error(pendingResult.Error);
+        return ServiceResultMapper.InternalServerError();
+      }
+
+      const pending = pendingResult.Value;
+
+      if (!pending || pending.length === 0) {
+        const orderResult = await this.order(id);
+
+        return orderResult.IsFailure
+          ? orderResult
+          : ServiceResultMapper.Conflict(
+              API_ORDER_MESSAGE.ERROR.NOTHING_TO_RETRY,
+            );
+      }
+
+      await this.dispatch_service.dispatch(id, pending, accessToken);
+    } finally {
+      this.dispatch_service.release(id);
+    }
+
+    return this.order(id);
+  }
+
+  async retryAll(
+    accessToken: string | null,
+  ): Promise<ResultPattern<TOrderDetailOutput[], ServiceError>> {
+    const idsResult = await this.order_repository.findRetryableOrderIds();
+
+    if (idsResult.IsFailure) {
+      this.logger.error(idsResult.Error);
       return ServiceResultMapper.InternalServerError();
     }
 
-    const pending = pendingResult.Value;
+    const ids = idsResult.Value.filter(
+      (id) => !this.dispatch_service.isSending(id),
+    );
 
-    if (!pending || pending.length === 0) {
-      const orderResult = await this.order(id);
-
-      return orderResult.IsFailure
-        ? orderResult
-        : ServiceResultMapper.Conflict(
-            API_ORDER_MESSAGE.ERROR.NOTHING_TO_RETRY,
-          );
+    if (ids.length === 0) {
+      return ServiceResultMapper.Conflict(
+        API_ORDER_MESSAGE.ERROR.NO_PENDING_ORDERS,
+      );
     }
 
-    await this.dispatch(id, pending, accessToken);
+    const orders: TOrderDetailOutput[] = [];
 
-    return this.order(id);
+    for (const id of ids) {
+      if (!this.dispatch_service.claim(id)) {
+        continue;
+      }
+
+      let reachable = true;
+
+      try {
+        const pendingResult = await this.order_repository.findPendingDispatches(
+          id,
+          true,
+        );
+
+        if (pendingResult.IsFailure) {
+          this.logger.error(pendingResult.Error);
+          continue;
+        }
+
+        if (!pendingResult.Value || pendingResult.Value.length === 0) {
+          continue;
+        }
+
+        reachable = await this.dispatch_service.dispatch(
+          id,
+          pendingResult.Value,
+          accessToken,
+        );
+      } finally {
+        this.dispatch_service.release(id);
+      }
+
+      const orderResult = await this.order(id);
+
+      if (orderResult.IsSuccess) {
+        orders.push(orderResult.Value);
+      }
+
+      if (!reachable) {
+        break;
+      }
+    }
+
+    return ServiceResultMapper.Ok(orders);
   }
 
   async orders(
@@ -332,66 +409,5 @@ export class OrderService implements IOrderService {
     return ServiceResultMapper.Ok(
       OrderMapper.toDetail(draft.header, lines, draft.dispatches),
     );
-  }
-
-  //Functions
-  private async dispatch(
-    orderId: string,
-    dispatches: TDispatchToSend[],
-    accessToken: string | null,
-  ): Promise<void> {
-    const results: TDispatchResult[] = [];
-
-    for (const dispatch of dispatches) {
-      const registerResult = await this.transfer_service.register(
-        {
-          ...(dispatch.to_location_id
-            ? { to_location_id: dispatch.to_location_id }
-            : {}),
-          idempotency_key: dispatch.idempotency_key,
-          items: dispatch.items.map((item) => ({
-            product_id: item.cloud_product_id,
-            requested_qty: String(item.quantity),
-          })),
-        },
-        accessToken,
-      );
-
-      results.push(
-        registerResult.IsSuccess
-          ? {
-              id: dispatch.id,
-              sent: true,
-              transfer_id: registerResult.Value.id,
-            }
-          : {
-              id: dispatch.id,
-              sent: false,
-              error: registerResult.Error.message_code,
-            },
-      );
-    }
-
-    const finishResult = await this.order_repository.finishSend(
-      orderId,
-      results,
-    );
-
-    if (finishResult.IsFailure) {
-      this.logger.error(finishResult.Error);
-    }
-
-    const failed = results.filter((result) => !result.sent).length;
-
-    if (finishResult.IsSuccess && failed > 0) {
-      void this.notification_service.notify({
-        template_code: NOTIFICATION_TEMPLATE.ORDER_DISPATCH_FAILED,
-        data: { count: failed },
-        entity_type: NOTIFICATION_ENTITY.ORDER,
-        entity_id: orderId,
-      });
-    }
-
-    this.channel_service.reportStatus();
   }
 }

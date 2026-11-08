@@ -206,4 +206,24 @@ export class OrderHttpController {
 
     return res.status(HttpStatus.OK).json(response);
   }
+
+  @Post(HTTP_LOCAL_ORDER_ROUTER.RETRY_ALL)
+  @HttpManagerAccess()
+  async retryAll(
+    @HttpAuthorization() access_token: string | null,
+    @Res() res: Response,
+  ): Promise<Response> {
+    const retryResult = await this.service.retryAll(access_token);
+
+    if (retryResult.IsFailure) {
+      return HttpErrorMapper.reply(res, retryResult.Error);
+    }
+
+    const response = ControllerResponseMapper.toDataResult(
+      API_ORDER_MESSAGE.SUCCESS.ORDERS_RETRIED,
+      retryResult.Value,
+    );
+
+    return res.status(HttpStatus.OK).json(response);
+  }
 }

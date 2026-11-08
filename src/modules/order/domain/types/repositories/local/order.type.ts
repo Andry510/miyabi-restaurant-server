@@ -54,7 +54,7 @@ export type TDispatchToSend = {
 
 export type TDispatchResult =
   | { id: string; sent: true; transfer_id: string }
-  | { id: string; sent: false; error: string };
+  | { id: string; sent: false; error: string; retryable: boolean };
 
 export type TSavedRequest = {
   request: TMyRequestOutput;

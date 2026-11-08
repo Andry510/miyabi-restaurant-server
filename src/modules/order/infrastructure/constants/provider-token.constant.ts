@@ -1,5 +1,6 @@
 export const ORDER_PROVIDER_TOKENS = Object.freeze({
   SERVICES: {
+    DISPATCH: Symbol('ORDER_DISPATCH_SERVICE'),
     EXPORT: Symbol('ORDER_EXPORT_SERVICE'),
     ORDER: Symbol('ORDER_SERVICE'),
     REQUEST: Symbol('ORDER_REQUEST_SERVICE'),

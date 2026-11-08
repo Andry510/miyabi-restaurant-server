@@ -36,6 +36,14 @@ export const API_ORDER_MESSAGE = Object.freeze({
       code: 'ERROR_ORDER_NOTHING_TO_RETRY',
       message: 'Este pedido no tiene envíos pendientes por reintentar',
     },
+    NO_PENDING_ORDERS: {
+      code: 'ERROR_ORDER_NO_PENDING_ORDERS',
+      message: 'No hay pedidos pendientes por reintentar',
+    },
+    ORDER_SENDING: {
+      code: 'ERROR_ORDER_SENDING',
+      message: 'Este pedido ya se está enviando, espera un momento',
+    },
   },
   SUCCESS: {
     ORDER_EXPORTED: {
@@ -73,6 +81,10 @@ export const API_ORDER_MESSAGE = Object.freeze({
     ORDER_SENT: {
       code: 'SUCCESS_ORDER_SENT',
       message: 'Pedido enviado correctamente',
+    },
+    ORDERS_RETRIED: {
+      code: 'SUCCESS_ORDERS_RETRIED',
+      message: 'Pedidos pendientes reintentados',
     },
     ORDERS_RETRIEVED: {
       code: 'SUCCESS_ORDERS_RETRIEVED',

@@ -323,6 +323,7 @@ export class OrderRepository implements IOrderRepository {
 
   findPendingDispatches = (
     orderId: string,
+    onlyRetryable: boolean,
   ): Promise<ResultPattern<TDispatchToSend[] | null>> =>
     ResultPattern.tryCatchAsync(
       'Infrastructure',
@@ -333,7 +334,11 @@ export class OrderRepository implements IOrderRepository {
           select: {
             status: true,
             dispatches: {
-              where: { status: { in: ['pending', 'failed'] } },
+              where: {
+                status: {
+                  in: onlyRetryable ? ['pending'] : ['pending', 'failed'],
+                },
+              },
               select: DISPATCH_SELECT,
             },
           },
@@ -347,6 +352,20 @@ export class OrderRepository implements IOrderRepository {
           OrderMapper.toDispatchToSend(dispatch),
         );
       },
+    );
+
+  findRetryableOrderIds = (): Promise<ResultPattern<string[]>> =>
+    ResultPattern.tryCatchAsync('Infrastructure', OrderRepository.name, () =>
+      this.primaryDatabase.transfer_drafts
+        .findMany({
+          where: {
+            status: { not: 'open' },
+            dispatches: { some: { status: 'pending' } },
+          },
+          select: { id: true },
+          orderBy: { created_at: 'asc' },
+        })
+        .then((drafts) => drafts.map((draft) => draft.id)),
     );
 
   finishSend = (
@@ -365,7 +384,10 @@ export class OrderRepository implements IOrderRepository {
                   last_error: null,
                   sent_at: new Date(),
                 }
-              : { status: 'failed', last_error: result.error.slice(0, 255) },
+              : {
+                  status: result.retryable ? 'pending' : 'failed',
+                  last_error: result.error.slice(0, 255),
+                },
           });
         }
 

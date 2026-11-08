@@ -43,7 +43,10 @@ export interface IOrderRepository {
 
   findPendingDispatches(
     orderId: string,
+    onlyRetryable: boolean,
   ): Promise<ResultPattern<TDispatchToSend[] | null>>;
+
+  findRetryableOrderIds(): Promise<ResultPattern<string[]>>;
 
   finishSend(
     orderId: string,
