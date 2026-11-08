@@ -10,7 +10,12 @@ import { TRANSFER_SERVICES_PROVIDERS } from './application/services';
 import { TRANSFER_PROVIDER_TOKENS } from './infrastructure/constants';
 import { TRANSFER_REPOSITORIES_PROVIDERS } from './infrastructure/repositories';
 
+//Modules
+import { ChannelModule } from '../channel';
+import { SocketModule } from '../socket';
+
 @Module({
+  imports: [ChannelModule, SocketModule],
   controllers: Object.values(TRANSFER_CONTROLLERS_PROVIDERS),
   providers: [
     ...TRANSFER_SERVICES_PROVIDERS,

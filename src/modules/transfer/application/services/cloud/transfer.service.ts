@@ -5,7 +5,10 @@ import type { ServiceError } from '@domain/errors';
 import type { ResultPattern } from '@domain/patterns/results';
 import type { TPaginationService } from '@domain/types/shared';
 import type { ICloudTransferRepository } from '../../../domain/interfaces/repositories';
-import type { ITransferService } from '../../../domain/interfaces/services';
+import type {
+  IConfirmationService,
+  ITransferService,
+} from '../../../domain/interfaces/services';
 import type {
   TReceiveTransferSchema,
   TRegisterBodySchema,
@@ -25,6 +28,8 @@ export class TransferService implements ITransferService {
   constructor(
     @Inject(TRANSFER_PROVIDER_TOKENS.REPOSITORIES.CLOUD_TRANSFER)
     private readonly cloud_transfer_repository: ICloudTransferRepository,
+    @Inject(TRANSFER_PROVIDER_TOKENS.SERVICES.CONFIRMATION)
+    private readonly confirmation_service: IConfirmationService,
   ) {}
 
   register(
@@ -60,17 +65,21 @@ export class TransferService implements ITransferService {
     input: TReceiveTransferSchema,
     accessToken: string | null,
   ): Promise<ResultPattern<TTransferOutput, ServiceError>> {
-    return this.cloud_transfer_repository.receive(input, {
-      authorization: accessToken,
-    });
+    return this.confirmation_service.confirm(input.id, accessToken, () =>
+      this.cloud_transfer_repository.receive(input, {
+        authorization: accessToken,
+      }),
+    );
   }
 
   cancel(
     input: TTransferParamSchema,
     accessToken: string | null,
   ): Promise<ResultPattern<TTransferOutput, ServiceError>> {
-    return this.cloud_transfer_repository.cancel(input, {
-      authorization: accessToken,
-    });
+    return this.confirmation_service.confirm(input.id, accessToken, () =>
+      this.cloud_transfer_repository.cancel(input, {
+        authorization: accessToken,
+      }),
+    );
   }
 }

@@ -21,4 +21,21 @@ export const API_TRANSFER_MESSAGE = Object.freeze({
       message: 'Pedido cancelado correctamente',
     },
   },
+  ERROR: {
+    TRANSFER_PROCESSING: {
+      code: 'ERROR_TRANSFER_PROCESSING',
+      message:
+        'Este pedido tiene un cambio en proceso; espera a que la nube lo confirme',
+    },
+    TRANSFER_UNCONFIRMED: {
+      code: 'ERROR_TRANSFER_UNCONFIRMED',
+      message:
+        'No hubo respuesta de la nube; el cambio quedó pendiente de confirmar y te avisaremos cuando se confirme',
+    },
+    TRANSFER_STATUS_CHANGED: {
+      code: 'ERROR_TRANSFER_INVALID_STATUS',
+      message:
+        'Este pedido ya cambió de estado; actualízalo para ver cómo quedó',
+    },
+  },
 });

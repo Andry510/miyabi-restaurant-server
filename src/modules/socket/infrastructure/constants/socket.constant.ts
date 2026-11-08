@@ -2,6 +2,7 @@ export const SOCKET_EVENT = Object.freeze({
   NOTIFICATION_CREATED: 'notification.created',
   CLOUD_NOTIFICATION: 'cloud.notification',
   SESSION_EXPIRED: 'session.expired',
+  TRANSFER_CHANGED: 'transfer.changed',
 } as const);
 
 export const SOCKET_CHANNEL = Object.freeze({
