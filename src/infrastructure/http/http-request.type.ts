@@ -5,6 +5,7 @@ declare global {
   namespace Express {
     interface Request {
       user?: TUserDetail;
+      cloud_access_token?: string;
     }
   }
 }

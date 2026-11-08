@@ -1,10 +1,12 @@
 import { Inject, Injectable, type OnModuleInit } from '@nestjs/common';
 
 //Domain
+import type { IManagerSessionService } from '../../../domain/interfaces/services';
 import type { IRepositoryService } from '../../../../repository/domain/interfaces/services';
 import type { IChannelService } from '../../../../channel/domain/interfaces/services';
 
 //Infrastructure
+import { SESSION_PROVIDER_TOKENS } from '../../../infrastructure/constants';
 import { REPOSITORY_PROVIDER_TOKENS } from '../../../../repository/infrastructure/constants';
 import {
   CHANNEL_EVENT,
@@ -18,6 +20,8 @@ export class RevocationService implements OnModuleInit {
     private readonly channel_service: IChannelService,
     @Inject(REPOSITORY_PROVIDER_TOKENS.SERVICES.REPOSITORY)
     private readonly repository_service: IRepositoryService,
+    @Inject(SESSION_PROVIDER_TOKENS.SERVICES.MANAGER)
+    private readonly manager_session_service: IManagerSessionService,
   ) {}
 
   onModuleInit(): void {
@@ -26,8 +30,14 @@ export class RevocationService implements OnModuleInit {
         ?.session_key;
 
       return typeof sessionKey === 'string'
-        ? this.repository_service.forgetManagerSession(sessionKey)
+        ? this.revoke(sessionKey)
         : undefined;
     });
+  }
+
+  //Functions
+  private async revoke(sessionKey: string): Promise<void> {
+    await this.manager_session_service.revoke(sessionKey);
+    await this.repository_service.forgetManagerSession(sessionKey);
   }
 }

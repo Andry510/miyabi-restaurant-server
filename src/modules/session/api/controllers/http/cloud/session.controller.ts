@@ -1,30 +1,27 @@
 import {
   Controller,
-  Headers,
   HttpStatus,
   Inject,
-  Ip,
   Post,
+  Req,
   Res,
   UsePipes,
 } from '@nestjs/common';
-import type { Response } from 'express';
+import type { Request, Response } from 'express';
 
 //Api
 import { API_SESSION_MESSAGE } from '../../../messages';
 import { HTTP_CLOUD_SESSION_ROUTER } from '../../../routers';
 
 //Common
-import { HttpAuthorization } from '@common/decorators/request';
 import { API_MESSAGE_GLOBAL } from '@common/messages';
 import { HttpValibotPipe } from '@common/pipes';
 
 //Domain
 import type { ISessionService } from '../../../../domain/interfaces/services';
-import type { TRefreshTokenOutput } from '../../../../domain/types/entities';
 
 //Infrastructure
-import { ExtractClient } from '@infrastructure/http';
+import { ExtractHttpToken } from '@infrastructure/http';
 import {
   ControllerResponseMapper,
   HttpErrorMapper,
@@ -40,50 +37,18 @@ export class SessionHttpController {
     private readonly service: ISessionService,
   ) {}
 
-  @Post(HTTP_CLOUD_SESSION_ROUTER.REFRESH_TOKEN)
-  async refreshToken(
-    @Ip() ip: string,
-    @Headers('user-agent') userAgent: string | undefined,
-    @HttpAuthorization() refresh_token: string | null,
-    @Res() res: Response,
-  ): Promise<Response> {
-    if (!refresh_token) {
-      const response = ServiceResultMapper.Unauthorized(
-        API_MESSAGE_GLOBAL.ERROR.MISSING_REFRESH_TOKEN,
-      );
-      return HttpErrorMapper.reply(res, response.Error);
-    }
-
-    const input = ExtractClient.client(ip, userAgent);
-
-    const refreshResult = await this.service.refreshToken(input, refresh_token);
-
-    if (refreshResult.IsFailure) {
-      const response = refreshResult.Error;
-      return HttpErrorMapper.reply(res, response);
-    }
-
-    const response = ControllerResponseMapper.toDataResult<TRefreshTokenOutput>(
-      API_SESSION_MESSAGE.SUCCESS.TOKEN_UPDATED,
-      refreshResult.Value,
-    );
-
-    return res.status(HttpStatus.OK).json(response);
-  }
-
   @Post(HTTP_CLOUD_SESSION_ROUTER.LOGOUT)
-  async logout(
-    @HttpAuthorization() refresh_token: string | null,
-    @Res() res: Response,
-  ): Promise<Response> {
-    if (!refresh_token) {
+  async logout(@Req() req: Request, @Res() res: Response): Promise<Response> {
+    const sessionToken = ExtractHttpToken.authorization(req);
+
+    if (!sessionToken) {
       const response = ServiceResultMapper.Unauthorized(
-        API_MESSAGE_GLOBAL.ERROR.MISSING_REFRESH_TOKEN,
+        API_MESSAGE_GLOBAL.ERROR.MISSING_TOKEN,
       );
       return HttpErrorMapper.reply(res, response.Error);
     }
 
-    const logoutResult = await this.service.logout(refresh_token);
+    const logoutResult = await this.service.logout(sessionToken);
 
     if (logoutResult.IsFailure) {
       const response = logoutResult.Error;

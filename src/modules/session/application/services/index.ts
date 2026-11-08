@@ -1,7 +1,7 @@
 import type { Provider } from '@nestjs/common';
 
 //Application
-import { LocalSessionService } from './local';
+import { LocalSessionService, ManagerSessionService } from './local';
 import { RevocationService, SessionService } from './cloud';
 
 //Infrastructure
@@ -16,5 +16,9 @@ export const SESSION_SERVICES_PROVIDERS: Provider[] = [
   {
     provide: SESSION_PROVIDER_TOKENS.SERVICES.LOCAL,
     useClass: LocalSessionService,
+  },
+  {
+    provide: SESSION_PROVIDER_TOKENS.SERVICES.MANAGER,
+    useClass: ManagerSessionService,
   },
 ];

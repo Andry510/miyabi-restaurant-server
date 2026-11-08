@@ -26,6 +26,7 @@ import { HttpValibotPipe } from '@common/pipes';
 //Domain
 import type { IPasswordService } from '../../../../domain/interfaces/services';
 import type { TResetPasswordOutput } from '../../../../domain/types/entities';
+import type { TWithSession } from '../../../../../session/domain/types/entities';
 import type { TResetPasswordInput } from '../../../../domain/types/services';
 
 //Infrastructure
@@ -72,11 +73,9 @@ export class PasswordHttpController {
       return HttpErrorMapper.reply(res, response);
     }
 
-    const response =
-      ControllerResponseMapper.toDataResult<TResetPasswordOutput>(
-        API_AUTHENTICATION_MESSAGE.SUCCESS.PASSWORD_UPDATED,
-        resetResult.Value,
-      );
+    const response = ControllerResponseMapper.toDataResult<
+      TWithSession<TResetPasswordOutput>
+    >(API_AUTHENTICATION_MESSAGE.SUCCESS.PASSWORD_UPDATED, resetResult.Value);
 
     return res.status(HttpStatus.OK).json(response);
   }

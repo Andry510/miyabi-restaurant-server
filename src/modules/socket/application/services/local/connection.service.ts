@@ -14,6 +14,7 @@ import type { ServiceError } from '@domain/errors';
 import { ResultPattern } from '@domain/patterns/results';
 import type { IUserService } from '../../../../me/domain/interfaces/services';
 import type { IRepositoryService } from '../../../../repository/domain/interfaces/services';
+import type { IManagerSessionService } from '../../../../session/domain/interfaces/services';
 import type { IConnectionService } from '../../../domain/interfaces/services';
 import type {
   TConnection,
@@ -23,9 +24,9 @@ import type {
 //Infrastructure
 import { Logger } from '@infrastructure/audits';
 import { ServiceResultMapper } from '@infrastructure/mappers/shared';
-import { TokenPayload } from '@infrastructure/utils';
 import { ME_PROVIDER_TOKENS } from '../../../../me/infrastructure/constants';
 import { REPOSITORY_PROVIDER_TOKENS } from '../../../../repository/infrastructure/constants';
+import { SESSION_PROVIDER_TOKENS } from '../../../../session/infrastructure/constants';
 import {
   SOCKET_AUDIENCE,
   SOCKET_CHANNEL,
@@ -51,6 +52,8 @@ export class ConnectionService
     private readonly repository_service: IRepositoryService,
     @Inject(ME_PROVIDER_TOKENS.SERVICES.USER)
     private readonly user_service: IUserService,
+    @Inject(SESSION_PROVIDER_TOKENS.SERVICES.MANAGER)
+    private readonly manager_session_service: IManagerSessionService,
   ) {}
 
   onApplicationBootstrap(): void {
@@ -129,15 +132,18 @@ export class ConnectionService
   }
 
   private async authenticateManager(
-    accessToken: string,
+    sessionToken: string,
   ): Promise<ResultPattern<TConnection, ServiceError>> {
-    const email = TokenPayload.email(accessToken);
+    const sessionResult = await this.manager_session_service.resolve(
+      sessionToken,
+      false,
+    );
 
-    if (!email) {
-      return ServiceResultMapper.Unauthorized(
-        API_MESSAGE_GLOBAL.ERROR.INVALID_ACCESS_TOKEN,
-      );
+    if (sessionResult.IsFailure) {
+      return ResultPattern.Failure(sessionResult.Error);
     }
+
+    const { access_token: accessToken, email } = sessionResult.Value;
 
     const accessResult =
       await this.repository_service.validateManagerAccess(accessToken);

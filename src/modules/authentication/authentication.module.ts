@@ -9,7 +9,11 @@ import { AUTHENTICATION_SERVICES_PROVIDERS } from './application/services';
 //Infrastructure
 import { AUTHENTICATION_REPOSITORIES_PROVIDERS } from './infrastructure/repositories';
 
+//Modules
+import { SessionModule } from '../session';
+
 @Module({
+  imports: [SessionModule],
   controllers: Object.values(AUTHENTICATION_CONTROLLERS_PROVIDERS),
   providers: [
     ...AUTHENTICATION_SERVICES_PROVIDERS,

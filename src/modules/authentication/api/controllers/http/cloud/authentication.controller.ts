@@ -25,6 +25,7 @@ import { HttpValibotPipe } from '@common/pipes';
 //Domain
 import type { IAuthenticationService } from '../../../../domain/interfaces/services';
 import type { TLoginOutput } from '../../../../domain/types/entities';
+import type { TWithSession } from '../../../../../session/domain/types/entities';
 import type { TLoginInput } from '../../../../domain/types/services';
 
 //Infrastructure
@@ -72,10 +73,9 @@ export class AuthenticationHttpController {
       message = API_AUTHENTICATION_MESSAGE.SUCCESS.PASSWORD_RESET_REQUIRED;
     }
 
-    const response = ControllerResponseMapper.toDataResult<TLoginOutput>(
-      message,
-      loginResult.Value,
-    );
+    const response = ControllerResponseMapper.toDataResult<
+      TWithSession<TLoginOutput>
+    >(message, loginResult.Value);
 
     return res.status(HttpStatus.OK).json(response);
   }

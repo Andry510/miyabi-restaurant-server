@@ -199,6 +199,28 @@ model sessions {
   @@index([status, expire_at, last_access_at])
 }
 
+model manager_sessions {
+  id String @id @default(uuid(7))
+
+  token_hash        String   @unique @db.VarChar(64)
+  email             String   @db.VarChar(255)
+  cloud_session_key String   @db.VarChar(255)
+  access_token_enc  String   @db.Text()
+  refresh_token_enc String   @db.Text()
+  access_expires_at DateTime
+  last_access_at    DateTime @default(now())
+
+  requester_ip String? @db.VarChar(50)
+  device       String? @db.VarChar(150)
+  browser      String? @db.VarChar(150)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([cloud_session_key])
+  @@index([last_access_at])
+}
+
 model work_areas {
   id String @id @default(uuid(7))
 

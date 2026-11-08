@@ -1,4 +1,15 @@
 export const API_SESSION_MESSAGE = Object.freeze({
+  ERROR: {
+    MANAGER_SESSION_INVALID: {
+      code: 'ERROR_MANAGER_SESSION_INVALID',
+      message: 'La sesión no es válida; inicia sesión de nuevo',
+    },
+    MANAGER_SESSION_EXPIRED: {
+      code: 'ERROR_MANAGER_SESSION_EXPIRED',
+      message:
+        'La sesión venció por inactividad o fue cerrada; inicia sesión de nuevo',
+    },
+  },
   SUCCESS: {
     TOKEN_UPDATED: {
       code: 'SUCCESS_TOKEN_UPDATED',

@@ -5,6 +5,11 @@ import { createParamDecorator, type ExecutionContext } from '@nestjs/common';
 import { ExtractHttpToken } from '@infrastructure/http';
 
 export const HttpAuthorization = createParamDecorator(
-  (_param: unknown, ctx: ExecutionContext): string | null =>
-    ExtractHttpToken.authorization(ctx.switchToHttp().getRequest<Request>()),
+  (_param: unknown, ctx: ExecutionContext): string | null => {
+    const request = ctx.switchToHttp().getRequest<Request>();
+
+    return (
+      request.cloud_access_token ?? ExtractHttpToken.authorization(request)
+    );
+  },
 );

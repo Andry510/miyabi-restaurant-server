@@ -7,6 +7,7 @@ import * as SESSION_CONTROLLERS_PROVIDERS from './api/controllers';
 import { SESSION_SERVICES_PROVIDERS } from './application/services';
 
 //Infrastructure
+import { SESSION_PROVIDER_TOKENS } from './infrastructure/constants';
 import { SESSION_REPOSITORIES_PROVIDERS } from './infrastructure/repositories';
 
 //Modules
@@ -17,5 +18,6 @@ import { ChannelModule } from '../channel';
   imports: [RepositoryModule, ChannelModule],
   controllers: Object.values(SESSION_CONTROLLERS_PROVIDERS),
   providers: [...SESSION_SERVICES_PROVIDERS, ...SESSION_REPOSITORIES_PROVIDERS],
+  exports: [SESSION_PROVIDER_TOKENS.SERVICES.MANAGER],
 })
 export class SessionModule {}

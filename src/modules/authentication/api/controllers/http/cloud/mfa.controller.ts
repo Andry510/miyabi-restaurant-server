@@ -27,6 +27,7 @@ import { HttpValibotPipe } from '@common/pipes';
 //Domain
 import type { IMfaService } from '../../../../domain/interfaces/services';
 import type { TMfaCodeOutput } from '../../../../domain/types/entities';
+import type { TWithSession } from '../../../../../session/domain/types/entities';
 import type { TMfaCodeInput } from '../../../../domain/types/services';
 
 //Infrastructure
@@ -104,10 +105,9 @@ export class MfaHttpController {
       ? API_AUTHENTICATION_MESSAGE.SUCCESS.PASSWORD_RESET_REQUIRED
       : API_AUTHENTICATION_MESSAGE.SUCCESS.LOGIN;
 
-    const response = ControllerResponseMapper.toDataResult<TMfaCodeOutput>(
-      message,
-      codeResult.Value,
-    );
+    const response = ControllerResponseMapper.toDataResult<
+      TWithSession<TMfaCodeOutput>
+    >(message, codeResult.Value);
 
     return res.status(HttpStatus.OK).json(response);
   }

@@ -16,11 +16,13 @@ import { API_MESSAGE_GLOBAL } from '@common/messages';
 //Domain
 import { ServiceErrorFactory } from '@domain/patterns/errors';
 import type { IRepositoryService } from '../../modules/repository/domain/interfaces/services';
+import type { IManagerSessionService } from '../../modules/session/domain/interfaces/services';
 
 //Infrastructure
 import { ExtractHttpToken } from '@infrastructure/http';
 import { HttpErrorMapper } from '@infrastructure/mappers/shared';
 import { REPOSITORY_PROVIDER_TOKENS } from '../../modules/repository/infrastructure/constants';
+import { SESSION_PROVIDER_TOKENS } from '../../modules/session/infrastructure/constants';
 
 @Injectable()
 export class HttpManagerAccessGuard implements CanActivate {
@@ -28,6 +30,8 @@ export class HttpManagerAccessGuard implements CanActivate {
     private readonly reflector: Reflector,
     @Inject(REPOSITORY_PROVIDER_TOKENS.SERVICES.REPOSITORY)
     private readonly repository: IRepositoryService,
+    @Inject(SESSION_PROVIDER_TOKENS.SERVICES.MANAGER)
+    private readonly manager_session_service: IManagerSessionService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -36,15 +40,30 @@ export class HttpManagerAccessGuard implements CanActivate {
       [context.getHandler(), context.getClass()],
     );
 
-    if (!managerAccess) {
-      return true;
-    }
-
     const http = context.switchToHttp();
     const request = http.getRequest<Request>();
     const response = http.getResponse<Response>();
 
-    const accessToken = ExtractHttpToken.authorization(request);
+    const bearer = ExtractHttpToken.authorization(request);
+
+    if (this.manager_session_service.owns(bearer)) {
+      const sessionResult = await this.manager_session_service.resolve(
+        bearer as string,
+      );
+
+      if (sessionResult.IsFailure) {
+        HttpErrorMapper.reply(response, sessionResult.Error);
+        return false;
+      }
+
+      request.cloud_access_token = sessionResult.Value.access_token;
+    }
+
+    if (!managerAccess) {
+      return true;
+    }
+
+    const accessToken = request.cloud_access_token;
 
     if (!accessToken) {
       HttpErrorMapper.reply(
