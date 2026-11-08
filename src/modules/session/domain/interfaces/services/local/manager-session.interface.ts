@@ -5,6 +5,7 @@ import type { TClientInput } from '@domain/types/shared';
 import type {
   TManagerSession,
   TRefreshTokenOutput,
+  TSessionClosedHandler,
   TWithSession,
 } from '../../../types/entities';
 
@@ -31,4 +32,6 @@ export interface IManagerSessionService {
   close(sessionToken: string): Promise<ResultPattern<null, ServiceError>>;
 
   revoke(cloudSessionKey: string): Promise<void>;
+
+  onClosed(handler: TSessionClosedHandler): void;
 }

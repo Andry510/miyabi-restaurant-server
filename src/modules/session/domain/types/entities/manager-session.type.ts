@@ -33,6 +33,10 @@ export type TManagerSessionTokens = Pick<
   | 'access_expires_at'
 >;
 
+export type TSessionClosedHandler = (
+  sessionIds: string[],
+) => Promise<void> | void;
+
 export type TSessionAccess = {
   session_token: string;
 };

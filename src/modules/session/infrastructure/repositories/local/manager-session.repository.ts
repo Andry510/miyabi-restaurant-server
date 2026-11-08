@@ -122,27 +122,35 @@ export class ManagerSessionRepository implements IManagerSessionRepository {
 
   deleteByCloudSessionKey = (
     sessionKey: string,
-  ): Promise<ResultPattern<number>> =>
+  ): Promise<ResultPattern<string[]>> =>
     ResultPattern.tryCatchAsync(
       'Infrastructure',
       ManagerSessionRepository.name,
-      async () =>
-        (
-          await this.primaryDatabase.manager_sessions.deleteMany({
-            where: { cloud_session_key: sessionKey },
-          })
-        ).count,
+      () =>
+        this.primaryDatabase.$transaction(async (transaction) => {
+          const ids = (
+            await transaction.manager_sessions.findMany({
+              where: { cloud_session_key: sessionKey },
+              select: { id: true },
+            })
+          ).map(({ id }) => id);
+
+          await transaction.manager_sessions.deleteMany({
+            where: { id: { in: ids } },
+          });
+
+          return ids;
+        }),
     );
 
-  deleteIdle = (before: Date): Promise<ResultPattern<number>> =>
+  findIdle = (before: Date): Promise<ResultPattern<TManagerSessionRow[]>> =>
     ResultPattern.tryCatchAsync(
       'Infrastructure',
       ManagerSessionRepository.name,
-      async () =>
-        (
-          await this.primaryDatabase.manager_sessions.deleteMany({
-            where: { last_access_at: { lt: before } },
-          })
-        ).count,
+      () =>
+        this.primaryDatabase.manager_sessions.findMany({
+          where: { last_access_at: { lt: before } },
+          select: MANAGER_SESSION_SELECT,
+        }),
     );
 }

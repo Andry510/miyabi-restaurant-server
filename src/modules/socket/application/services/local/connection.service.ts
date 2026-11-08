@@ -3,6 +3,7 @@ import {
   Injectable,
   type OnApplicationBootstrap,
   type OnModuleDestroy,
+  type OnModuleInit,
 } from '@nestjs/common';
 import type { Server } from 'socket.io';
 
@@ -38,7 +39,11 @@ import {
 
 @Injectable()
 export class ConnectionService
-  implements IConnectionService, OnApplicationBootstrap, OnModuleDestroy
+  implements
+    IConnectionService,
+    OnModuleInit,
+    OnApplicationBootstrap,
+    OnModuleDestroy
 {
   private readonly logger = new Logger(SOCKET_LOGGER_NAME.SERVICE.CONNECTION);
 
@@ -59,6 +64,12 @@ export class ConnectionService
     @Inject(SESSION_PROVIDER_TOKENS.SERVICES.MANAGER)
     private readonly manager_session_service: IManagerSessionService,
   ) {}
+
+  onModuleInit(): void {
+    this.manager_session_service.onClosed((sessionIds) =>
+      this.expireSessions(sessionIds),
+    );
+  }
 
   onApplicationBootstrap(): void {
     this.revalidateTimer = setInterval(
@@ -213,18 +224,38 @@ export class ConnectionService
 
         const reason = await this.expiredReason(tokens, connection);
 
-        if (!reason) {
-          continue;
+        if (reason) {
+          this.expire(socketId, reason);
         }
-
-        socket.emit(SOCKET_EVENT.SESSION_EXPIRED, { reason });
-        socket.disconnect(true);
-        this.untrack(socketId);
       }
     } catch (error) {
       this.logger.error(error);
     } finally {
       this.revalidating = false;
+    }
+  }
+
+  private expireSessions(sessionIds: string[]): void {
+    const closed = new Set(sessionIds);
+
+    for (const [socketId, { connection }] of this.connections) {
+      if (connection.kind === 'manager' && closed.has(connection.session_id)) {
+        this.expire(
+          socketId,
+          API_SESSION_MESSAGE.ERROR.MANAGER_SESSION_EXPIRED.code,
+        );
+      }
+    }
+  }
+
+  private expire(socketId: string, reason: string): void {
+    const socket = this.io?.of('/').sockets.get(socketId);
+
+    this.untrack(socketId);
+
+    if (socket) {
+      socket.emit(SOCKET_EVENT.SESSION_EXPIRED, { reason });
+      socket.disconnect(true);
     }
   }
 }

@@ -23,6 +23,7 @@ import type {
   TManagerSessionRow,
   TManagerSessionTokens,
   TRefreshTokenOutput,
+  TSessionClosedHandler,
   TWithSession,
 } from '../../../domain/types/entities';
 import type { IRepositoryService } from '../../../../repository/domain/interfaces/services';
@@ -49,6 +50,7 @@ export class ManagerSessionService
     string,
     Promise<ResultPattern<string, ServiceError>>
   >();
+  private readonly handlers: TSessionClosedHandler[] = [];
   private cleanupTimer: NodeJS.Timeout | null = null;
 
   constructor(
@@ -159,7 +161,7 @@ export class ManagerSessionService
     const now = Date.now();
 
     if (now - row.last_access_at.getTime() > MANAGER_SESSION_LIMITS.IDLE_MS) {
-      await this.manager_session_repository.deleteById(row.id);
+      await this.discard(row);
       return ServiceResultMapper.Unauthorized(
         API_SESSION_MESSAGE.ERROR.MANAGER_SESSION_EXPIRED,
       );
@@ -228,6 +230,31 @@ export class ManagerSessionService
       return ServiceResultMapper.Ok(null);
     }
 
+    return (await this.discard(row))
+      ? ServiceResultMapper.Ok(null)
+      : ServiceResultMapper.InternalServerError();
+  }
+
+  async revoke(cloudSessionKey: string): Promise<void> {
+    const deleteResult =
+      await this.manager_session_repository.deleteByCloudSessionKey(
+        cloudSessionKey,
+      );
+
+    if (deleteResult.IsFailure) {
+      this.logger.error(deleteResult.Error);
+      return;
+    }
+
+    await this.notifyClosed(deleteResult.Value);
+  }
+
+  onClosed(handler: TSessionClosedHandler): void {
+    this.handlers.push(handler);
+  }
+
+  //Functions
+  private async discard(row: TManagerSessionRow): Promise<boolean> {
     const refreshResult = this.decrypt(row.refresh_token_enc);
 
     if (refreshResult.IsSuccess) {
@@ -242,26 +269,29 @@ export class ManagerSessionService
 
     if (deleteResult.IsFailure) {
       this.logger.error(deleteResult.Error);
-      return ServiceResultMapper.InternalServerError();
+      return false;
     }
 
     await this.repository_service.forgetManagerSession(row.cloud_session_key);
+    await this.notifyClosed([row.id]);
 
-    return ServiceResultMapper.Ok(null);
+    return true;
   }
 
-  async revoke(cloudSessionKey: string): Promise<void> {
-    const deleteResult =
-      await this.manager_session_repository.deleteByCloudSessionKey(
-        cloudSessionKey,
-      );
+  private async notifyClosed(sessionIds: string[]): Promise<void> {
+    if (!sessionIds.length) {
+      return;
+    }
 
-    if (deleteResult.IsFailure) {
-      this.logger.error(deleteResult.Error);
+    for (const handler of this.handlers) {
+      try {
+        await handler(sessionIds);
+      } catch (error) {
+        this.logger.error(error);
+      }
     }
   }
 
-  //Functions
   private refresh(
     row: TManagerSessionRow,
   ): Promise<ResultPattern<string, ServiceError>> {
@@ -303,6 +333,7 @@ export class ManagerSessionService
       }
 
       await this.manager_session_repository.deleteById(row.id);
+      await this.notifyClosed([row.id]);
       return ServiceResultMapper.Unauthorized(
         API_SESSION_MESSAGE.ERROR.MANAGER_SESSION_EXPIRED,
       );
@@ -372,12 +403,17 @@ export class ManagerSessionService
   }
 
   private async cleanup(): Promise<void> {
-    const cleanupResult = await this.manager_session_repository.deleteIdle(
+    const idleResult = await this.manager_session_repository.findIdle(
       new Date(Date.now() - MANAGER_SESSION_LIMITS.IDLE_MS),
     );
 
-    if (cleanupResult.IsFailure) {
-      this.logger.error(cleanupResult.Error);
+    if (idleResult.IsFailure) {
+      this.logger.error(idleResult.Error);
+      return;
+    }
+
+    for (const row of idleResult.Value) {
+      await this.discard(row);
     }
   }
 }

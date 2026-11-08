@@ -24,7 +24,7 @@ export interface IManagerSessionRepository {
 
   deleteById(id: string): Promise<ResultPattern<null>>;
 
-  deleteByCloudSessionKey(sessionKey: string): Promise<ResultPattern<number>>;
+  deleteByCloudSessionKey(sessionKey: string): Promise<ResultPattern<string[]>>;
 
-  deleteIdle(before: Date): Promise<ResultPattern<number>>;
+  findIdle(before: Date): Promise<ResultPattern<TManagerSessionRow[]>>;
 }
