@@ -82,6 +82,15 @@ export const API_ORDER_MESSAGE = Object.freeze({
       code: 'SUCCESS_ORDER_SENT',
       message: 'Pedido enviado correctamente',
     },
+    ORDER_PENDING: {
+      code: 'SUCCESS_ORDER_PENDING',
+      message: 'Pedido guardado; se enviará cuando vuelva la conexión',
+    },
+    ORDER_FAILED: {
+      code: 'SUCCESS_ORDER_FAILED',
+      message:
+        'Pedido guardado, pero algunos envíos fallaron; revísalos y reintenta',
+    },
     ORDERS_RETRIED: {
       code: 'SUCCESS_ORDERS_RETRIED',
       message: 'Pedidos pendientes reintentados',

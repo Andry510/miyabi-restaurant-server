@@ -33,6 +33,8 @@ import { HttpAuthorization } from '@common/decorators/request';
 import { HttpValibotPipe } from '@common/pipes';
 
 //Domain
+import { DISPATCH_STATUS } from '@domain/enums/shared';
+import type { TApiMessage } from '@domain/types/shared';
 import type { TParamIdSchema } from '@domain/schemas/shared';
 import type { IOrderService } from '../../../../domain/interfaces/services';
 import type {
@@ -40,6 +42,7 @@ import type {
   TItemParamSchema,
   TOrdersQuerySchema,
 } from '../../../../domain/schemas';
+import type { TOrderDetailOutput } from '../../../../domain/types/entities';
 
 //Infrastructure
 import {
@@ -132,7 +135,7 @@ export class OrderHttpController {
     }
 
     const response = ControllerResponseMapper.toDataResult(
-      API_ORDER_MESSAGE.SUCCESS.ORDER_SENT,
+      this.dispatchMessage(sendResult.Value),
       sendResult.Value,
     );
 
@@ -200,7 +203,7 @@ export class OrderHttpController {
     }
 
     const response = ControllerResponseMapper.toDataResult(
-      API_ORDER_MESSAGE.SUCCESS.ORDER_SENT,
+      this.dispatchMessage(retryResult.Value),
       retryResult.Value,
     );
 
@@ -225,5 +228,18 @@ export class OrderHttpController {
     );
 
     return res.status(HttpStatus.OK).json(response);
+  }
+
+  //Functions
+  private dispatchMessage(order: TOrderDetailOutput): TApiMessage {
+    const statuses = new Set(order.dispatches.map(({ status }) => status));
+
+    if (statuses.has(DISPATCH_STATUS.FAILED)) {
+      return API_ORDER_MESSAGE.SUCCESS.ORDER_FAILED;
+    }
+
+    return statuses.has(DISPATCH_STATUS.PENDING)
+      ? API_ORDER_MESSAGE.SUCCESS.ORDER_PENDING
+      : API_ORDER_MESSAGE.SUCCESS.ORDER_SENT;
   }
 }
