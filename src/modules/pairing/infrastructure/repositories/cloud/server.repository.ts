@@ -25,11 +25,20 @@ type TServerGrpc = {
   ): Observable<TDataResponse<string>>;
 };
 
+type TServerProductGrpc = {
+  server_products(
+    data: { updated_since: string },
+    metadata: Metadata,
+    options: CallOptions,
+  ): Observable<unknown>;
+};
+
 @Injectable()
 export class CloudServerRepository
   implements ICloudServerRepository, OnModuleInit
 {
   private server_service!: TServerGrpc;
+  private server_product_service!: TServerProductGrpc;
 
   constructor(
     @Inject(CLOUD_GRPC_CLIENT)
@@ -40,6 +49,9 @@ export class CloudServerRepository
     this.server_service = this.client.getService<TServerGrpc>(
       CLOUD_GRPC_SERVICE.SERVER,
     );
+    this.server_product_service = this.client.getService<TServerProductGrpc>(
+      CLOUD_GRPC_SERVICE.SERVER_PRODUCT,
+    );
   }
 
   register = async (
@@ -49,9 +61,10 @@ export class CloudServerRepository
     const response = await CloudRequest.send(
       this.server_service.register(
         data,
-        CloudRequest.metadata({ authorization: enrollmentToken }),
+        CloudRequest.metadata({ authorization: enrollmentToken }, null),
         CloudRequest.options(),
       ),
+      false,
     );
 
     if (response.IsFailure) {
@@ -59,5 +72,24 @@ export class CloudServerRepository
     }
 
     return ResultPattern.Success(response.Value.data);
+  };
+
+  verify = async (
+    serverToken: string,
+  ): Promise<ResultPattern<null, ServiceError>> => {
+    const response = await CloudRequest.send(
+      this.server_product_service.server_products(
+        { updated_since: new Date().toISOString() },
+        CloudRequest.metadata({}, serverToken),
+        CloudRequest.options(),
+      ),
+      false,
+    );
+
+    if (response.IsFailure) {
+      return ResultPattern.Failure(response.Error);
+    }
+
+    return ResultPattern.Success(null);
   };
 }

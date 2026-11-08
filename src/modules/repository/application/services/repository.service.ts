@@ -18,7 +18,6 @@ import { Logger } from '@infrastructure/audits';
 // oxlint-disable-next-line typescript/consistent-type-imports
 import { RedisManager } from '@infrastructure/cache';
 import { CACHE_KEY } from '@infrastructure/constants';
-import { Env } from '@infrastructure/config';
 import { ServiceResultMapper } from '@infrastructure/mappers/shared';
 // oxlint-disable-next-line typescript/consistent-type-imports
 import { Crypto, JwtManager } from '@infrastructure/securities';
@@ -42,16 +41,6 @@ export class RepositoryService implements IRepositoryService {
     @Inject(REPOSITORY_PROVIDER_TOKENS.REPOSITORIES.CLOUD_SESSION)
     private readonly cloud_session_repository: ICloudSessionRepository,
   ) {}
-
-  serverToken(): ResultPattern<string, ServiceError> {
-    if (!Env.SERVER_TOKEN) {
-      return ServiceResultMapper.Conflict(
-        API_MESSAGE_GLOBAL.ERROR.SERVER_NOT_PAIRED,
-      );
-    }
-
-    return ServiceResultMapper.Ok(Env.SERVER_TOKEN);
-  }
 
   async validateAccess(
     accessToken: string,

@@ -18,6 +18,12 @@ enum units {
   liter
 }
 
+enum pairing_status {
+  unpaired
+  paired
+  unlinked
+}
+
 enum session_status {
   active
   expired
@@ -107,6 +113,13 @@ model server_settings {
   tip_sanction_destination tip_sanction_destination @default(fund)
   week_start_day           week_day                 @default(monday)
   products_synced_at       DateTime?
+
+  pairing_status   pairing_status @default(unpaired)
+  server_token_enc String?
+  location_id      String?        @db.Uuid
+  unlinked_reason  String?        @db.VarChar(100)
+  paired_at        DateTime?
+  unlinked_at      DateTime?
 
   updated_at DateTime @updatedAt
 }

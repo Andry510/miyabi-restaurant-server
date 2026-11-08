@@ -14,6 +14,7 @@ export const NOTIFICATION_TEMPLATE = Object.freeze({
   ATTENDANCE_LATE: 'ATTENDANCE_LATE',
   ORDER_DISPATCH_FAILED: 'ORDER_DISPATCH_FAILED',
   ORDER_DISPATCH_PENDING: 'ORDER_DISPATCH_PENDING',
+  SERVER_UNLINKED: 'SERVER_UNLINKED',
 } as const);
 
 export const NOTIFICATION_ENTITY = Object.freeze({
@@ -116,6 +117,13 @@ export const NOTIFICATION_TEMPLATES: readonly TNotificationTemplate[] =
       audience: NOTIFICATION_AUDIENCE.MANAGER,
       title: 'Pedidos sin enviar',
       body: 'Volvió la conexión con la nube y hay {{count}} pedido(s) sin enviar; reinténtalos',
+    },
+    {
+      code: NOTIFICATION_TEMPLATE.SERVER_UNLINKED,
+      category: 'server',
+      audience: NOTIFICATION_AUDIENCE.MANAGER,
+      title: 'Servidor desvinculado',
+      body: 'La nube desvinculó este servidor ({{reason}}); pide al administrador un token nuevo para volver a conectarlo',
     },
   ]);
 

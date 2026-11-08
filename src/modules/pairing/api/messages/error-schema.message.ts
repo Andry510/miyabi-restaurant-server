@@ -3,6 +3,11 @@ export const ERROR_MESSAGE_SCHEMA = Object.freeze({
     type: 'El token de alta debe ser un texto válido',
     nonEmpty: 'El token de alta es obligatorio',
   },
+  server_token: {
+    type: 'El token del servidor debe ser un texto válido',
+    nonEmpty: 'El token del servidor es obligatorio',
+    maxLength: 'El token del servidor no puede superar los 2048 caracteres',
+  },
   name: {
     type: 'El nombre del servidor debe ser un texto válido',
     nonEmpty: 'El nombre del servidor es obligatorio',

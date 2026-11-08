@@ -1,7 +1,7 @@
 import type { Provider } from '@nestjs/common';
 
 //Application
-import { CatalogService } from './local';
+import { CatalogService, ServerService } from './local';
 import { RepositoryService } from './repository.service';
 
 //Infrastructure
@@ -15,5 +15,9 @@ export const REPOSITORY_SERVICES_PROVIDERS: Provider[] = [
   {
     provide: REPOSITORY_PROVIDER_TOKENS.SERVICES.CATALOG,
     useClass: CatalogService,
+  },
+  {
+    provide: REPOSITORY_PROVIDER_TOKENS.SERVICES.SERVER,
+    useClass: ServerService,
   },
 ];

@@ -2,7 +2,11 @@ import type { Provider } from '@nestjs/common';
 
 //Infrastructure
 import { REPOSITORY_PROVIDER_TOKENS } from '../constants';
-import { CatalogRepository, UserSessionRepository } from './local';
+import {
+  CatalogRepository,
+  ServerRepository,
+  UserSessionRepository,
+} from './local';
 import { CloudSessionRepository } from './cloud';
 
 export const REPOSITORY_REPOSITORIES_PROVIDERS: Provider[] = [
@@ -17,5 +21,9 @@ export const REPOSITORY_REPOSITORIES_PROVIDERS: Provider[] = [
   {
     provide: REPOSITORY_PROVIDER_TOKENS.REPOSITORIES.CATALOG,
     useClass: CatalogRepository,
+  },
+  {
+    provide: REPOSITORY_PROVIDER_TOKENS.REPOSITORIES.SERVER,
+    useClass: ServerRepository,
   },
 ];

@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   HttpStatus,
   Inject,
   Post,
@@ -15,7 +16,7 @@ import { HTTP_CLOUD_PAIRING_ROUTER } from '../../../routers';
 
 //Application
 // oxlint-disable-next-line typescript/consistent-type-imports
-import { RegisterDto } from '../../../../application/dto';
+import { RegisterDto, ReplaceTokenDto } from '../../../../application/dto';
 
 //Common
 import { HttpPairingAccess } from '@common/decorators/access';
@@ -23,8 +24,14 @@ import { HttpValibotPipe } from '@common/pipes';
 
 //Domain
 import type { IPairingService } from '../../../../domain/interfaces/services';
-import type { TRegisterSchema } from '../../../../domain/schemas';
-import type { TRegisterOutput } from '../../../../domain/types/entities';
+import type {
+  TRegisterSchema,
+  TReplaceTokenSchema,
+} from '../../../../domain/schemas';
+import type {
+  TPairingStatusOutput,
+  TRegisterOutput,
+} from '../../../../domain/types/entities';
 
 //Infrastructure
 import {
@@ -62,5 +69,48 @@ export class PairingHttpController {
     );
 
     return res.status(HttpStatus.CREATED).json(response);
+  }
+
+  @HttpPairingAccess()
+  @Post(HTTP_CLOUD_PAIRING_ROUTER.TOKEN)
+  async replaceToken(
+    @Body() data: ReplaceTokenDto,
+    @Res() res: Response,
+  ): Promise<Response> {
+    const input = data as unknown as TReplaceTokenSchema;
+
+    const replaceResult = await this.service.replaceToken(input);
+
+    if (replaceResult.IsFailure) {
+      const response = replaceResult.Error;
+      return HttpErrorMapper.reply(res, response);
+    }
+
+    const response =
+      ControllerResponseMapper.toDataResult<TPairingStatusOutput>(
+        API_PAIRING_MESSAGE.SUCCESS.TOKEN_REPLACED,
+        replaceResult.Value,
+      );
+
+    return res.status(HttpStatus.OK).json(response);
+  }
+
+  @HttpPairingAccess()
+  @Get(HTTP_CLOUD_PAIRING_ROUTER.STATUS)
+  status(@Res() res: Response): Response {
+    const statusResult = this.service.status();
+
+    if (statusResult.IsFailure) {
+      const response = statusResult.Error;
+      return HttpErrorMapper.reply(res, response);
+    }
+
+    const response =
+      ControllerResponseMapper.toDataResult<TPairingStatusOutput>(
+        API_PAIRING_MESSAGE.SUCCESS.STATUS_RETRIEVED,
+        statusResult.Value,
+      );
+
+    return res.status(HttpStatus.OK).json(response);
   }
 }

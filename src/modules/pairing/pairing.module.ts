@@ -10,10 +10,13 @@ import { PAIRING_SERVICES_PROVIDERS } from './application/services';
 import { PAIRING_REPOSITORIES_PROVIDERS } from './infrastructure/repositories';
 
 //Modules
+import { ChannelModule } from '../channel';
+import { NotificationModule } from '../notification';
 import { RepositoryModule } from '../repository';
+import { SocketModule } from '../socket';
 
 @Module({
-  imports: [RepositoryModule],
+  imports: [ChannelModule, NotificationModule, RepositoryModule, SocketModule],
   controllers: Object.values(PAIRING_CONTROLLERS_PROVIDERS),
   providers: [...PAIRING_SERVICES_PROVIDERS, ...PAIRING_REPOSITORIES_PROVIDERS],
 })

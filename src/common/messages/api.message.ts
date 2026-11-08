@@ -87,6 +87,11 @@ export const API_MESSAGE_GLOBAL = Object.freeze({
       code: 'ERROR_SERVER_NOT_PAIRED',
       message: 'El servidor del local todavía no está emparejado',
     },
+    SERVER_UNLINKED: {
+      code: 'ERROR_SERVER_UNLINKED',
+      message:
+        'El servidor del local está desvinculado de la nube; pide al administrador un token nuevo',
+    },
     MISSING_REFRESH_TOKEN: {
       code: 'ERROR_MISSING_REFRESH_TOKEN',
       message: 'Falta el token para renovar la sesión',

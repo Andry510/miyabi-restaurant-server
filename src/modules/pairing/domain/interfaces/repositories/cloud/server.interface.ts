@@ -8,4 +8,6 @@ export interface ICloudServerRepository {
     data: TCloudRegisterInput,
     enrollmentToken: string,
   ): Promise<ResultPattern<string, ServiceError>>;
+
+  verify(serverToken: string): Promise<ResultPattern<null, ServiceError>>;
 }

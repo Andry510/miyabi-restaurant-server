@@ -1,4 +1,5 @@
 import {
+  check,
   type InferOutput,
   number,
   objectWithRest,
@@ -47,14 +48,19 @@ export const EnvSchema = pipe(
       JWT_EXPIRES_REFRESH_TOKEN: requiredNumberSchema,
       JWT_EXPIRES_PASSWORD_TOKEN: requiredNumberSchema,
 
-      //PAIRING
-      SERVER_TOKEN: optional(string()),
+      //ENCRYPTION
+      DATA_ENCRYPTION_KEY: pipe(
+        string(),
+        check(
+          (value) => Buffer.from(value, 'base64').length === 32,
+          'DATA_ENCRYPTION_KEY debe ser una llave de 32 bytes en base64',
+        ),
+      ),
     },
     unknown(),
   ),
-  transform(({ SERVER_TOKEN, ...res }) => ({
+  transform((res) => ({
     ...res,
-    SERVER_TOKEN: SERVER_TOKEN?.trim() || null,
 
     SESSION_EXPIRES_MS: res.JWT_EXPIRES_REFRESH_TOKEN * 1000,
   })),

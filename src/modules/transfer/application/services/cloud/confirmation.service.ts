@@ -3,6 +3,9 @@ import { Inject, Injectable, type OnModuleInit } from '@nestjs/common';
 //Api
 import { API_TRANSFER_MESSAGE } from '../../../api/messages';
 
+//Common
+import { API_MESSAGE_GLOBAL } from '@common/messages';
+
 //Domain
 import { SERVICE_ERROR_CODE } from '@domain/enums/shared';
 import { ServiceError } from '@domain/errors';
@@ -41,6 +44,8 @@ type TPending = {
 
 const INVALID_STATUS_CODE =
   API_TRANSFER_MESSAGE.ERROR.TRANSFER_STATUS_CHANGED.code;
+
+const CLOUD_UNAVAILABLE_CODE = API_MESSAGE_GLOBAL.ERROR.CLOUD_UNAVAILABLE.code;
 
 const STATUS_CHANGED_KIND = 'status_changed';
 
@@ -89,7 +94,7 @@ export class ConfirmationService implements IConfirmationService, OnModuleInit {
       return result;
     }
 
-    if (result.Error.code === SERVICE_ERROR_CODE.UNAVAILABLE) {
+    if (result.Error.message_code === CLOUD_UNAVAILABLE_CODE) {
       const entry = this.pending.get(transferId);
 
       if (entry) {

@@ -10,7 +10,7 @@ import { Subject, type Subscription } from 'rxjs';
 import { SYSTEM_MESSAGE } from '@common/messages';
 
 //Domain
-import type { IRepositoryService } from '../../../../repository/domain/interfaces/services';
+import type { IServerService } from '../../../../repository/domain/interfaces/services';
 import type {
   ICloudChannelRepository,
   IStatusRepository,
@@ -28,7 +28,11 @@ import type {
 //Infrastructure
 import { Logger } from '@infrastructure/audits';
 import { GrpcState, SERVER_VERSION } from '@infrastructure/constants';
-import { REPOSITORY_PROVIDER_TOKENS } from '../../../../repository/infrastructure/constants';
+import { CloudErrorMapper } from '@infrastructure/grpc/cloud';
+import {
+  REPOSITORY_PROVIDER_TOKENS,
+  SERVER_UNLINK_REASONS,
+} from '../../../../repository/infrastructure/constants';
 import {
   CHANNEL_EVENT,
   CHANNEL_FATAL_REASONS,
@@ -65,8 +69,8 @@ export class ChannelService
   private stopped = false;
 
   constructor(
-    @Inject(REPOSITORY_PROVIDER_TOKENS.SERVICES.REPOSITORY)
-    private readonly repository_service: IRepositoryService,
+    @Inject(REPOSITORY_PROVIDER_TOKENS.SERVICES.SERVER)
+    private readonly server_service: IServerService,
     @Inject(CHANNEL_PROVIDER_TOKENS.REPOSITORIES.CLOUD_CHANNEL)
     private readonly cloud_channel_repository: ICloudChannelRepository,
     @Inject(CHANNEL_PROVIDER_TOKENS.REPOSITORIES.STATUS)
@@ -105,7 +109,7 @@ export class ChannelService
   }
 
   connect(): void {
-    const tokenResult = this.repository_service.serverToken();
+    const tokenResult = this.server_service.serverToken();
 
     if (tokenResult.IsFailure) {
       this.logger.info(SYSTEM_MESSAGE.ERROR.CHANNEL_NOT_PAIRED);
@@ -176,6 +180,11 @@ export class ChannelService
       if (CHANNEL_FATAL_REASONS.includes(reason)) {
         this.stopped = true;
         this.close();
+
+        if (SERVER_UNLINK_REASONS.includes(reason)) {
+          void this.server_service.unlink(reason);
+        }
+
         return;
       }
     }
@@ -275,6 +284,13 @@ export class ChannelService
       this.logger.error(SYSTEM_MESSAGE.ERROR.CHANNEL_REJECTED(details));
       this.stopped = true;
       this.close();
+
+      const reason = CloudErrorMapper.toServiceError(error).message_code;
+
+      if (SERVER_UNLINK_REASONS.includes(reason)) {
+        void this.server_service.unlink(reason);
+      }
+
       return;
     }
 

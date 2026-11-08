@@ -5,6 +5,9 @@ export class TokenPayload {
   static sessionKey = (token: string | null): string | null =>
     TokenPayload.text(token, 'session_key');
 
+  static locationId = (token: string | null): string | null =>
+    TokenPayload.text(token, 'location_id');
+
   static expiresAt = (token: string | null): number | null => {
     const value = TokenPayload.decode(token)?.exp;
 
