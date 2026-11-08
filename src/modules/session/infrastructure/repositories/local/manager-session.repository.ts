@@ -80,6 +80,19 @@ export class ManagerSessionRepository implements IManagerSessionRepository {
       },
     );
 
+  findLastAccess = (id: string): Promise<ResultPattern<Date | null>> =>
+    ResultPattern.tryCatchAsync(
+      'Infrastructure',
+      ManagerSessionRepository.name,
+      async () =>
+        (
+          await this.primaryDatabase.manager_sessions.findUnique({
+            where: { id },
+            select: { last_access_at: true },
+          })
+        )?.last_access_at ?? null,
+    );
+
   touch = (id: string): Promise<ResultPattern<null>> =>
     ResultPattern.tryCatchAsync(
       'Infrastructure',

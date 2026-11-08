@@ -18,6 +18,8 @@ export interface IManagerSessionRepository {
     tokens: TManagerSessionTokens,
   ): Promise<ResultPattern<null>>;
 
+  findLastAccess(id: string): Promise<ResultPattern<Date | null>>;
+
   touch(id: string): Promise<ResultPattern<null>>;
 
   deleteById(id: string): Promise<ResultPattern<null>>;

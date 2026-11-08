@@ -27,6 +27,7 @@ import { ServiceResultMapper } from '@infrastructure/mappers/shared';
 import { ME_PROVIDER_TOKENS } from '../../../../me/infrastructure/constants';
 import { REPOSITORY_PROVIDER_TOKENS } from '../../../../repository/infrastructure/constants';
 import { SESSION_PROVIDER_TOKENS } from '../../../../session/infrastructure/constants';
+import { API_SESSION_MESSAGE } from '../../../../session/api/messages';
 import {
   SOCKET_AUDIENCE,
   SOCKET_CHANNEL,
@@ -42,7 +43,10 @@ export class ConnectionService
   private readonly logger = new Logger(SOCKET_LOGGER_NAME.SERVICE.CONNECTION);
 
   private io: Server | null = null;
-  private readonly tokens = new Map<string, TConnectionTokens>();
+  private readonly connections = new Map<
+    string,
+    { tokens: TConnectionTokens; connection: TConnection }
+  >();
 
   private revalidateTimer: NodeJS.Timeout | null = null;
   private revalidating = false;
@@ -75,12 +79,16 @@ export class ConnectionService
     this.io = server;
   }
 
-  track(socketId: string, tokens: TConnectionTokens): void {
-    this.tokens.set(socketId, tokens);
+  track(
+    socketId: string,
+    tokens: TConnectionTokens,
+    connection: TConnection,
+  ): void {
+    this.connections.set(socketId, { tokens, connection });
   }
 
   untrack(socketId: string): void {
-    this.tokens.delete(socketId);
+    this.connections.delete(socketId);
   }
 
   authenticate(
@@ -156,9 +164,33 @@ export class ConnectionService
 
     return ResultPattern.Success({
       kind: 'manager',
+      session_id: sessionResult.Value.id,
       email,
       cloud_user_id: userResult.IsSuccess ? userResult.Value.id : null,
     });
+  }
+
+  private async expiredReason(
+    tokens: TConnectionTokens,
+    connection: TConnection,
+  ): Promise<string | null> {
+    if (connection.kind === 'manager') {
+      return (await this.manager_session_service.isActive(
+        connection.session_id,
+      ))
+        ? null
+        : API_SESSION_MESSAGE.ERROR.MANAGER_SESSION_EXPIRED.code;
+    }
+
+    if (!tokens.access_token) {
+      return API_MESSAGE_GLOBAL.ERROR.MISSING_TOKEN.code;
+    }
+
+    const accessResult = await this.repository_service.validateAccess(
+      tokens.access_token,
+    );
+
+    return accessResult.IsFailure ? accessResult.Error.message_code : null;
   }
 
   private async revalidate(): Promise<void> {
@@ -171,7 +203,7 @@ export class ConnectionService
     try {
       const sockets = this.io.of('/').sockets;
 
-      for (const [socketId, tokens] of this.tokens) {
+      for (const [socketId, { tokens, connection }] of this.connections) {
         const socket = sockets.get(socketId);
 
         if (!socket) {
@@ -179,15 +211,13 @@ export class ConnectionService
           continue;
         }
 
-        const connectionResult = await this.authenticate(tokens);
+        const reason = await this.expiredReason(tokens, connection);
 
-        if (connectionResult.IsSuccess) {
+        if (!reason) {
           continue;
         }
 
-        socket.emit(SOCKET_EVENT.SESSION_EXPIRED, {
-          reason: connectionResult.Error.message_code,
-        });
+        socket.emit(SOCKET_EVENT.SESSION_EXPIRED, { reason });
         socket.disconnect(true);
         this.untrack(socketId);
       }

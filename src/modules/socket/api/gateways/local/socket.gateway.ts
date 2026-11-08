@@ -71,7 +71,11 @@ export class SocketGateway
       return;
     }
 
-    this.connection_service.track(socket.id, this.extractTokens(socket));
+    this.connection_service.track(
+      socket.id,
+      this.extractTokens(socket),
+      connection,
+    );
 
     await socket.join(this.connection_service.channels(connection));
   }

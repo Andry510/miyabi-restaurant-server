@@ -191,6 +191,23 @@ export class ManagerSessionService
     });
   }
 
+  async isActive(sessionId: string): Promise<boolean> {
+    const lastAccessResult =
+      await this.manager_session_repository.findLastAccess(sessionId);
+
+    if (lastAccessResult.IsFailure) {
+      this.logger.error(lastAccessResult.Error);
+      return true;
+    }
+
+    const lastAccess = lastAccessResult.Value;
+
+    return (
+      lastAccess !== null &&
+      Date.now() - lastAccess.getTime() <= MANAGER_SESSION_LIMITS.IDLE_MS
+    );
+  }
+
   async close(
     sessionToken: string,
   ): Promise<ResultPattern<null, ServiceError>> {

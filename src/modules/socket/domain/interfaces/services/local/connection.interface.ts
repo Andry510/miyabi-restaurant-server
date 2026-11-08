@@ -8,7 +8,11 @@ import type { TConnection, TConnectionTokens } from '../../../types/entities';
 export interface IConnectionService {
   attach(server: Server): void;
 
-  track(socketId: string, tokens: TConnectionTokens): void;
+  track(
+    socketId: string,
+    tokens: TConnectionTokens,
+    connection: TConnection,
+  ): void;
 
   untrack(socketId: string): void;
 

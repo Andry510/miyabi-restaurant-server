@@ -26,6 +26,8 @@ export interface IManagerSessionService {
     touch?: boolean,
   ): Promise<ResultPattern<TManagerSession, ServiceError>>;
 
+  isActive(sessionId: string): Promise<boolean>;
+
   close(sessionToken: string): Promise<ResultPattern<null, ServiceError>>;
 
   revoke(cloudSessionKey: string): Promise<void>;
