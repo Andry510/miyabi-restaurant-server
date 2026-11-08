@@ -29,3 +29,8 @@ export const CLOUD_GRPC_SERVICE = Object.freeze({
 });
 
 export const CLOUD_GRPC_DEADLINE_MS = 10_000;
+
+export const CLOUD_GRPC_RECONNECT_MS = Object.freeze({
+  INITIAL: 1_000,
+  MAX: 5_000,
+});
