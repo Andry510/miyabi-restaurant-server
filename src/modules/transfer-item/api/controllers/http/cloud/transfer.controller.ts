@@ -27,6 +27,7 @@ import {
 } from '../../../../application/dto';
 
 //Common
+import { HttpManagerAccess } from '@common/decorators/access';
 import { HttpDocs } from '@common/decorators/docs';
 import { HttpCloudAuthorization } from '@common/decorators/request';
 import { HttpValibotPipe } from '@common/pipes';
@@ -53,6 +54,7 @@ export class TransferHttpController {
 
   @HttpDocs(TRANSFER_ITEM_CLOUD_TRANSFER_ITEMS_DOCS)
   @Get(HTTP_CLOUD_TRANSFER_ITEM_ROUTER.TRANSFER.ITEMS)
+  @HttpManagerAccess()
   async items(
     @Param() params: TransferItemParamDto,
     @Query() query: TransferItemsQueryDto,

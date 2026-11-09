@@ -9,7 +9,7 @@ import type { THttpDocs } from '@infrastructure/http';
 
 export const LOCATION_CLOUD_LOCATIONS_DOCS: THttpDocs = {
   summary: 'Listar locales de la nube',
-  access: 'manager_cloud',
+  access: 'manager',
   cloud: true,
   query: LocationsQueryDto,
   success: API_MESSAGE_GLOBAL.SUCCESS.RETRIEVED,

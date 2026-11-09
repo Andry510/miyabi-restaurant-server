@@ -28,6 +28,7 @@ import {
 } from '../../../../application/dto';
 
 //Common
+import { HttpManagerAccess } from '@common/decorators/access';
 import { HttpDocs } from '@common/decorators/docs';
 import { HttpCloudAuthorization } from '@common/decorators/request';
 import { HttpValibotPipe } from '@common/pipes';
@@ -58,6 +59,7 @@ export class SupplierHttpController {
 
   @HttpDocs(SUPPLIER_CLOUD_SUPPLIERS_DOCS)
   @Get(HTTP_CLOUD_SUPPLIER_ROUTER.SUPPLIER.SUPPLIERS)
+  @HttpManagerAccess()
   async suppliers(
     @Query() query: SuppliersQueryDto,
     @HttpCloudAuthorization() access_token: string | null,
@@ -83,6 +85,7 @@ export class SupplierHttpController {
 
   @HttpDocs(SUPPLIER_CLOUD_SUPPLIER_DOCS)
   @Get(HTTP_CLOUD_SUPPLIER_ROUTER.SUPPLIER.SUPPLIER)
+  @HttpManagerAccess()
   async supplier(
     @Param() params: SupplierParamDto,
     @HttpCloudAuthorization() access_token: string | null,

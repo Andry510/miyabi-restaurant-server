@@ -100,11 +100,6 @@ const ACCESS_ERRORS: Record<THttpDocsAccess, readonly THttpDocsError[]> = {
     error(HttpStatus.FORBIDDEN, API_MESSAGE_GLOBAL.ERROR.FORBIDDEN),
     ...CLOUD_ERRORS,
   ],
-  manager_cloud: [
-    error(HttpStatus.UNAUTHORIZED, API_MESSAGE_GLOBAL.ERROR.MISSING_TOKEN),
-    ...MANAGER_SESSION_ERRORS,
-    ...CLOUD_ERRORS,
-  ],
 };
 
 const toSchema = ({ schema }: THttpDocsSchema): SchemaObject => {

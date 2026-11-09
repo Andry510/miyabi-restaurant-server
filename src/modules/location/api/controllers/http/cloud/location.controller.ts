@@ -19,6 +19,7 @@ import { HTTP_CLOUD_LOCATION_ROUTER } from '../../../routers';
 import { LocationsQueryDto } from '../../../../application/dto';
 
 //Common
+import { HttpManagerAccess } from '@common/decorators/access';
 import { HttpDocs } from '@common/decorators/docs';
 import { HttpCloudAuthorization } from '@common/decorators/request';
 import { API_MESSAGE_GLOBAL } from '@common/messages';
@@ -46,6 +47,7 @@ export class LocationHttpController {
 
   @HttpDocs(LOCATION_CLOUD_LOCATIONS_DOCS)
   @Get(HTTP_CLOUD_LOCATION_ROUTER.LOCATION.LOCATIONS)
+  @HttpManagerAccess()
   async locations(
     @Query() query: LocationsQueryDto,
     @HttpCloudAuthorization() access_token: string | null,

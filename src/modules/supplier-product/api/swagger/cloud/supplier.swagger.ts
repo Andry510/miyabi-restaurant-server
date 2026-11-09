@@ -12,7 +12,7 @@ import type { THttpDocs } from '@infrastructure/http';
 
 export const SUPPLIER_PRODUCT_CLOUD_SUPPLIER_PRODUCTS_DOCS: THttpDocs = {
   summary: 'Productos de un proveedor',
-  access: 'manager_cloud',
+  access: 'manager',
   cloud: true,
   params: SupplierProductIdParamDto,
   query: SupplierProductsQueryDto,

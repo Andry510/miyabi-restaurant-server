@@ -28,6 +28,7 @@ import { HTTP_CLOUD_ME_ROUTER } from '../../../routers';
 import { PictureFileDto } from '../../../../application/dto';
 
 //Common
+import { HttpManagerAccess } from '@common/decorators/access';
 import { HttpDocs } from '@common/decorators/docs';
 import { HttpCloudAuthorization } from '@common/decorators/request';
 import { HttpPictureInterceptor } from '@common/interceptors';
@@ -57,6 +58,7 @@ export class UserHttpController {
 
   @HttpDocs(ME_CLOUD_USER_USER_DOCS)
   @Get(HTTP_CLOUD_ME_ROUTER.USER.USER)
+  @HttpManagerAccess()
   async user(
     @HttpCloudAuthorization() access_token: string | null,
     @Res() res: Response,
@@ -78,6 +80,7 @@ export class UserHttpController {
 
   @HttpDocs(ME_CLOUD_USER_UPLOAD_PICTURE_DOCS)
   @Post(HTTP_CLOUD_ME_ROUTER.USER.UPLOAD_PICTURE)
+  @HttpManagerAccess()
   @UseInterceptors(HttpPictureInterceptor)
   async uploadPicture(
     @UploadedFile() picture: PictureFileDto,
@@ -103,6 +106,7 @@ export class UserHttpController {
 
   @HttpDocs(ME_CLOUD_USER_REMOVE_PICTURE_DOCS)
   @Delete(HTTP_CLOUD_ME_ROUTER.USER.REMOVE_PICTURE)
+  @HttpManagerAccess()
   async removePicture(
     @HttpCloudAuthorization() access_token: string | null,
     @Res() res: Response,

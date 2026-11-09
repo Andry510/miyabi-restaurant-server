@@ -25,6 +25,7 @@ import { HTTP_CLOUD_PRODUCT_ROUTER } from '../../../routers';
 import { ProductParamDto, ProductsQueryDto } from '../../../../application/dto';
 
 //Common
+import { HttpManagerAccess } from '@common/decorators/access';
 import { HttpDocs } from '@common/decorators/docs';
 import { HttpCloudAuthorization } from '@common/decorators/request';
 import { HttpValibotPipe } from '@common/pipes';
@@ -55,6 +56,7 @@ export class ProductHttpController {
 
   @HttpDocs(PRODUCT_CLOUD_PRODUCTS_DOCS)
   @Get(HTTP_CLOUD_PRODUCT_ROUTER.PRODUCTS)
+  @HttpManagerAccess()
   async products(
     @Query() query: ProductsQueryDto,
     @HttpCloudAuthorization() access_token: string | null,
@@ -80,6 +82,7 @@ export class ProductHttpController {
 
   @HttpDocs(PRODUCT_CLOUD_PRODUCT_DOCS)
   @Get(HTTP_CLOUD_PRODUCT_ROUTER.PRODUCT)
+  @HttpManagerAccess()
   async product(
     @Param() params: ProductParamDto,
     @HttpCloudAuthorization() access_token: string | null,

@@ -12,7 +12,7 @@ import type { THttpDocs } from '@infrastructure/http';
 
 export const TRANSFER_ITEM_CLOUD_TRANSFER_ITEMS_DOCS: THttpDocs = {
   summary: 'Productos de un pedido',
-  access: 'manager_cloud',
+  access: 'manager',
   cloud: true,
   params: TransferItemParamDto,
   query: TransferItemsQueryDto,

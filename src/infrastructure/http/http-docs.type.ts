@@ -16,7 +16,7 @@ export type THttpDocsParameter = {
 export type THttpDocsData =
   'none' | 'object' | 'array' | 'string' | 'pagination' | 'file';
 
-export type THttpDocsAccess = 'employee' | 'manager' | 'manager_cloud';
+export type THttpDocsAccess = 'employee' | 'manager';
 
 export type THttpDocsError = {
   status: HttpStatus;

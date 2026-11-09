@@ -30,6 +30,7 @@ import {
 } from '../../../../../notification/application/dto';
 
 //Common
+import { HttpManagerAccess } from '@common/decorators/access';
 import { HttpDocs } from '@common/decorators/docs';
 import { HttpCloudAuthorization } from '@common/decorators/request';
 import { HttpValibotPipe } from '@common/pipes';
@@ -59,6 +60,7 @@ export class NotificationHttpController {
 
   @HttpDocs(ME_CLOUD_NOTIFICATION_NOTIFICATIONS_DOCS)
   @Get(HTTP_CLOUD_ME_ROUTER.NOTIFICATION.NOTIFICATIONS)
+  @HttpManagerAccess()
   async notifications(
     @HttpCloudAuthorization() access_token: string | null,
     @Query() query: NotificationsQueryDto,
@@ -82,6 +84,7 @@ export class NotificationHttpController {
 
   @HttpDocs(ME_CLOUD_NOTIFICATION_UNREAD_COUNT_DOCS)
   @Get(HTTP_CLOUD_ME_ROUTER.NOTIFICATION.UNREAD_COUNT)
+  @HttpManagerAccess()
   async unreadCount(
     @HttpCloudAuthorization() access_token: string | null,
     @Res() res: Response,
@@ -102,6 +105,7 @@ export class NotificationHttpController {
 
   @HttpDocs(ME_CLOUD_NOTIFICATION_READ_DOCS)
   @Patch(HTTP_CLOUD_ME_ROUTER.NOTIFICATION.READ)
+  @HttpManagerAccess()
   async read(
     @HttpCloudAuthorization() access_token: string | null,
     @Body() body: ReadNotificationsBodyDto,

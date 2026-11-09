@@ -16,7 +16,7 @@ import type { THttpDocs } from '@infrastructure/http';
 
 export const TRANSFER_CLOUD_REGISTER_DOCS: THttpDocs = {
   summary: 'Crear pedido en la nube',
-  access: 'manager_cloud',
+  access: 'manager',
   cloud: true,
   body: RegisterBodyDto,
   status: HttpStatus.CREATED,
@@ -25,7 +25,7 @@ export const TRANSFER_CLOUD_REGISTER_DOCS: THttpDocs = {
 
 export const TRANSFER_CLOUD_TRANSFERS_DOCS: THttpDocs = {
   summary: 'Listar pedidos de la nube',
-  access: 'manager_cloud',
+  access: 'manager',
   cloud: true,
   query: TransfersQueryDto,
   success: API_TRANSFER_MESSAGE.SUCCESS.TRANSFERS_RETRIEVED,
@@ -34,7 +34,7 @@ export const TRANSFER_CLOUD_TRANSFERS_DOCS: THttpDocs = {
 
 export const TRANSFER_CLOUD_TRANSFER_DOCS: THttpDocs = {
   summary: 'Ver pedido de la nube',
-  access: 'manager_cloud',
+  access: 'manager',
   cloud: true,
   params: TransferParamDto,
   success: API_TRANSFER_MESSAGE.SUCCESS.TRANSFER_RETRIEVED,
@@ -44,7 +44,7 @@ export const TRANSFER_CLOUD_RECEIVE_DOCS: THttpDocs = {
   summary: 'Recibir pedido',
   description:
     'Si la nube no responde, el cambio queda pendiente de confirmar (503 ERROR_TRANSFER_UNCONFIRMED) y se avisa por el socket (transfer.changed) cuando se confirma.',
-  access: 'manager_cloud',
+  access: 'manager',
   cloud: true,
   params: TransferParamDto,
   body: ReceiveTransferBodyDto,
@@ -69,7 +69,7 @@ export const TRANSFER_CLOUD_CANCEL_DOCS: THttpDocs = {
   summary: 'Cancelar pedido',
   description:
     'Si la nube no responde, el cambio queda pendiente de confirmar (503 ERROR_TRANSFER_UNCONFIRMED) y se avisa por el socket (transfer.changed) cuando se confirma.',
-  access: 'manager_cloud',
+  access: 'manager',
   cloud: true,
   params: TransferParamDto,
   success: API_TRANSFER_MESSAGE.SUCCESS.TRANSFER_CANCELLED,

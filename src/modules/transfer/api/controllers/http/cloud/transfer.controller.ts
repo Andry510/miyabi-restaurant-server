@@ -36,6 +36,7 @@ import {
 } from '../../../../application/dto';
 
 //Common
+import { HttpManagerAccess } from '@common/decorators/access';
 import { HttpDocs } from '@common/decorators/docs';
 import { HttpCloudAuthorization } from '@common/decorators/request';
 import { HttpValibotPipe } from '@common/pipes';
@@ -68,6 +69,7 @@ export class TransferHttpController {
 
   @HttpDocs(TRANSFER_CLOUD_REGISTER_DOCS)
   @Post(HTTP_CLOUD_TRANSFER_ROUTER.TRANSFER.REGISTER)
+  @HttpManagerAccess()
   async register(
     @Body() body: RegisterBodyDto,
     @HttpCloudAuthorization() access_token: string | null,
@@ -92,6 +94,7 @@ export class TransferHttpController {
 
   @HttpDocs(TRANSFER_CLOUD_TRANSFERS_DOCS)
   @Get(HTTP_CLOUD_TRANSFER_ROUTER.TRANSFER.TRANSFERS)
+  @HttpManagerAccess()
   async transfers(
     @Query() query: TransfersQueryDto,
     @HttpCloudAuthorization() access_token: string | null,
@@ -117,6 +120,7 @@ export class TransferHttpController {
 
   @HttpDocs(TRANSFER_CLOUD_TRANSFER_DOCS)
   @Get(HTTP_CLOUD_TRANSFER_ROUTER.TRANSFER.TRANSFER)
+  @HttpManagerAccess()
   async transfer(
     @Param() params: TransferParamDto,
     @HttpCloudAuthorization() access_token: string | null,
@@ -141,6 +145,7 @@ export class TransferHttpController {
 
   @HttpDocs(TRANSFER_CLOUD_RECEIVE_DOCS)
   @Patch(HTTP_CLOUD_TRANSFER_ROUTER.FLOW.RECEIVE)
+  @HttpManagerAccess()
   async receive(
     @Param() params: TransferParamDto,
     @Body() body: ReceiveTransferBodyDto,
@@ -169,6 +174,7 @@ export class TransferHttpController {
 
   @HttpDocs(TRANSFER_CLOUD_CANCEL_DOCS)
   @Patch(HTTP_CLOUD_TRANSFER_ROUTER.FLOW.CANCEL)
+  @HttpManagerAccess()
   async cancel(
     @Param() params: TransferParamDto,
     @HttpCloudAuthorization() access_token: string | null,

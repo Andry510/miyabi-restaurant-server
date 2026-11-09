@@ -15,6 +15,7 @@ import { API_ME_MESSAGE } from '../../../messages';
 import { HTTP_CLOUD_ME_ROUTER } from '../../../routers';
 
 //Common
+import { HttpManagerAccess } from '@common/decorators/access';
 import { HttpDocs } from '@common/decorators/docs';
 import { HttpCloudAuthorization } from '@common/decorators/request';
 import { HttpValibotPipe } from '@common/pipes';
@@ -41,6 +42,7 @@ export class LocationHttpController {
 
   @HttpDocs(ME_CLOUD_LOCATION_LOCATION_DOCS)
   @Get(HTTP_CLOUD_ME_ROUTER.LOCATION.LOCATION)
+  @HttpManagerAccess()
   async location(
     @HttpCloudAuthorization() access_token: string | null,
     @Res() res: Response,

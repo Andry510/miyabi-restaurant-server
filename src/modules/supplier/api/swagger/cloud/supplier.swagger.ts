@@ -9,7 +9,7 @@ import type { THttpDocs } from '@infrastructure/http';
 
 export const SUPPLIER_CLOUD_SUPPLIERS_DOCS: THttpDocs = {
   summary: 'Listar proveedores',
-  access: 'manager_cloud',
+  access: 'manager',
   cloud: true,
   query: SuppliersQueryDto,
   success: API_SUPPLIER_MESSAGE.SUCCESS.SUPPLIERS_RETRIEVED,
@@ -18,7 +18,7 @@ export const SUPPLIER_CLOUD_SUPPLIERS_DOCS: THttpDocs = {
 
 export const SUPPLIER_CLOUD_SUPPLIER_DOCS: THttpDocs = {
   summary: 'Ver proveedor',
-  access: 'manager_cloud',
+  access: 'manager',
   cloud: true,
   params: SupplierParamDto,
   success: API_SUPPLIER_MESSAGE.SUCCESS.SUPPLIER_RETRIEVED,

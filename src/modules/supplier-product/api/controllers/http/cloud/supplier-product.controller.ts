@@ -23,6 +23,7 @@ import { HTTP_CLOUD_SUPPLIER_PRODUCT_ROUTER } from '../../../routers';
 import { SupplierProductParamDto } from '../../../../application/dto';
 
 //Common
+import { HttpManagerAccess } from '@common/decorators/access';
 import { HttpDocs } from '@common/decorators/docs';
 import { HttpCloudAuthorization } from '@common/decorators/request';
 import { HttpValibotPipe } from '@common/pipes';
@@ -50,6 +51,7 @@ export class SupplierProductHttpController {
 
   @HttpDocs(SUPPLIER_PRODUCT_CLOUD_DETAIL_DOCS)
   @Get(HTTP_CLOUD_SUPPLIER_PRODUCT_ROUTER.LINK.DETAIL)
+  @HttpManagerAccess()
   async detail(
     @Param() params: SupplierProductParamDto,
     @HttpCloudAuthorization() access_token: string | null,

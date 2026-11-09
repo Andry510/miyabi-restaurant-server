@@ -9,14 +9,14 @@ import type { THttpDocs } from '@infrastructure/http';
 
 export const ME_CLOUD_USER_USER_DOCS: THttpDocs = {
   summary: 'Mi perfil',
-  access: 'manager_cloud',
+  access: 'manager',
   cloud: true,
   success: API_ME_MESSAGE.SUCCESS.USER_RETRIEVED,
 };
 
 export const ME_CLOUD_USER_UPLOAD_PICTURE_DOCS: THttpDocs = {
   summary: 'Subir mi foto',
-  access: 'manager_cloud',
+  access: 'manager',
   cloud: true,
   picture: true,
   success: API_MESSAGE_GLOBAL.SUCCESS.PICTURE_UPLOADED,
@@ -24,7 +24,7 @@ export const ME_CLOUD_USER_UPLOAD_PICTURE_DOCS: THttpDocs = {
 
 export const ME_CLOUD_USER_REMOVE_PICTURE_DOCS: THttpDocs = {
   summary: 'Quitar mi foto',
-  access: 'manager_cloud',
+  access: 'manager',
   cloud: true,
   success: API_MESSAGE_GLOBAL.SUCCESS.PICTURE_REMOVED,
   data: 'none',
