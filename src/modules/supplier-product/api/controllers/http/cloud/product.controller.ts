@@ -28,7 +28,7 @@ import {
 
 //Common
 import { HttpDocs } from '@common/decorators/docs';
-import { HttpAuthorization } from '@common/decorators/request';
+import { HttpCloudAuthorization } from '@common/decorators/request';
 import { HttpValibotPipe } from '@common/pipes';
 
 //Domain
@@ -56,7 +56,7 @@ export class ProductHttpController {
   async suppliers(
     @Param() params: SupplierProductIdParamDto,
     @Query() query: ProductSuppliersQueryDto,
-    @HttpAuthorization() access_token: string | null,
+    @HttpCloudAuthorization() access_token: string | null,
     @Res() res: Response,
   ): Promise<Response> {
     const input = {

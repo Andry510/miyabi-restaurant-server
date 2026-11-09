@@ -37,7 +37,7 @@ import {
 
 //Common
 import { HttpDocs } from '@common/decorators/docs';
-import { HttpAuthorization } from '@common/decorators/request';
+import { HttpCloudAuthorization } from '@common/decorators/request';
 import { HttpValibotPipe } from '@common/pipes';
 
 //Domain
@@ -70,7 +70,7 @@ export class TransferHttpController {
   @Post(HTTP_CLOUD_TRANSFER_ROUTER.TRANSFER.REGISTER)
   async register(
     @Body() body: RegisterBodyDto,
-    @HttpAuthorization() access_token: string | null,
+    @HttpCloudAuthorization() access_token: string | null,
     @Res() res: Response,
   ): Promise<Response> {
     const input = body as unknown as TRegisterBodySchema;
@@ -94,7 +94,7 @@ export class TransferHttpController {
   @Get(HTTP_CLOUD_TRANSFER_ROUTER.TRANSFER.TRANSFERS)
   async transfers(
     @Query() query: TransfersQueryDto,
-    @HttpAuthorization() access_token: string | null,
+    @HttpCloudAuthorization() access_token: string | null,
     @Res() res: Response,
   ): Promise<Response> {
     const input = query as unknown as TTransfersQuerySchema;
@@ -119,7 +119,7 @@ export class TransferHttpController {
   @Get(HTTP_CLOUD_TRANSFER_ROUTER.TRANSFER.TRANSFER)
   async transfer(
     @Param() params: TransferParamDto,
-    @HttpAuthorization() access_token: string | null,
+    @HttpCloudAuthorization() access_token: string | null,
     @Res() res: Response,
   ): Promise<Response> {
     const input = params as unknown as TTransferParamSchema;
@@ -144,7 +144,7 @@ export class TransferHttpController {
   async receive(
     @Param() params: TransferParamDto,
     @Body() body: ReceiveTransferBodyDto,
-    @HttpAuthorization() access_token: string | null,
+    @HttpCloudAuthorization() access_token: string | null,
     @Res() res: Response,
   ): Promise<Response> {
     const input = {
@@ -171,7 +171,7 @@ export class TransferHttpController {
   @Patch(HTTP_CLOUD_TRANSFER_ROUTER.FLOW.CANCEL)
   async cancel(
     @Param() params: TransferParamDto,
-    @HttpAuthorization() access_token: string | null,
+    @HttpCloudAuthorization() access_token: string | null,
     @Res() res: Response,
   ): Promise<Response> {
     const input = params as unknown as TTransferParamSchema;

@@ -31,7 +31,7 @@ import {
 
 //Common
 import { HttpDocs } from '@common/decorators/docs';
-import { HttpAuthorization } from '@common/decorators/request';
+import { HttpCloudAuthorization } from '@common/decorators/request';
 import { HttpValibotPipe } from '@common/pipes';
 
 //Domain
@@ -60,7 +60,7 @@ export class NotificationHttpController {
   @HttpDocs(ME_CLOUD_NOTIFICATION_NOTIFICATIONS_DOCS)
   @Get(HTTP_CLOUD_ME_ROUTER.NOTIFICATION.NOTIFICATIONS)
   async notifications(
-    @HttpAuthorization() access_token: string | null,
+    @HttpCloudAuthorization() access_token: string | null,
     @Query() query: NotificationsQueryDto,
     @Res() res: Response,
   ): Promise<Response> {
@@ -83,7 +83,7 @@ export class NotificationHttpController {
   @HttpDocs(ME_CLOUD_NOTIFICATION_UNREAD_COUNT_DOCS)
   @Get(HTTP_CLOUD_ME_ROUTER.NOTIFICATION.UNREAD_COUNT)
   async unreadCount(
-    @HttpAuthorization() access_token: string | null,
+    @HttpCloudAuthorization() access_token: string | null,
     @Res() res: Response,
   ): Promise<Response> {
     const countResult = await this.service.unreadCount(access_token);
@@ -103,7 +103,7 @@ export class NotificationHttpController {
   @HttpDocs(ME_CLOUD_NOTIFICATION_READ_DOCS)
   @Patch(HTTP_CLOUD_ME_ROUTER.NOTIFICATION.READ)
   async read(
-    @HttpAuthorization() access_token: string | null,
+    @HttpCloudAuthorization() access_token: string | null,
     @Body() body: ReadNotificationsBodyDto,
     @Res() res: Response,
   ): Promise<Response> {

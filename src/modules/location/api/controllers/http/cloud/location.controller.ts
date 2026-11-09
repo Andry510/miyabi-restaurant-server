@@ -20,7 +20,7 @@ import { LocationsQueryDto } from '../../../../application/dto';
 
 //Common
 import { HttpDocs } from '@common/decorators/docs';
-import { HttpAuthorization } from '@common/decorators/request';
+import { HttpCloudAuthorization } from '@common/decorators/request';
 import { API_MESSAGE_GLOBAL } from '@common/messages';
 import { HttpValibotPipe } from '@common/pipes';
 
@@ -48,7 +48,7 @@ export class LocationHttpController {
   @Get(HTTP_CLOUD_LOCATION_ROUTER.LOCATION.LOCATIONS)
   async locations(
     @Query() query: LocationsQueryDto,
-    @HttpAuthorization() access_token: string | null,
+    @HttpCloudAuthorization() access_token: string | null,
     @Res() res: Response,
   ): Promise<Response> {
     const input = query as unknown as TLocationsQuerySchema;

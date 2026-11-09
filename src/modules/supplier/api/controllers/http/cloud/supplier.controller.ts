@@ -29,7 +29,7 @@ import {
 
 //Common
 import { HttpDocs } from '@common/decorators/docs';
-import { HttpAuthorization } from '@common/decorators/request';
+import { HttpCloudAuthorization } from '@common/decorators/request';
 import { HttpValibotPipe } from '@common/pipes';
 
 //Domain
@@ -60,7 +60,7 @@ export class SupplierHttpController {
   @Get(HTTP_CLOUD_SUPPLIER_ROUTER.SUPPLIER.SUPPLIERS)
   async suppliers(
     @Query() query: SuppliersQueryDto,
-    @HttpAuthorization() access_token: string | null,
+    @HttpCloudAuthorization() access_token: string | null,
     @Res() res: Response,
   ): Promise<Response> {
     const input = query as unknown as TSuppliersQuerySchema;
@@ -85,7 +85,7 @@ export class SupplierHttpController {
   @Get(HTTP_CLOUD_SUPPLIER_ROUTER.SUPPLIER.SUPPLIER)
   async supplier(
     @Param() params: SupplierParamDto,
-    @HttpAuthorization() access_token: string | null,
+    @HttpCloudAuthorization() access_token: string | null,
     @Res() res: Response,
   ): Promise<Response> {
     const input = params as unknown as TSupplierParamSchema;

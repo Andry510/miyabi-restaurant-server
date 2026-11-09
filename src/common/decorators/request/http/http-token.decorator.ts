@@ -13,3 +13,8 @@ export const HttpAuthorization = createParamDecorator(
     );
   },
 );
+
+export const HttpCloudAuthorization = createParamDecorator(
+  (_param: unknown, ctx: ExecutionContext): string | null =>
+    ctx.switchToHttp().getRequest<Request>().cloud_access_token ?? null,
+);

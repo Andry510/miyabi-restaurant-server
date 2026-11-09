@@ -29,7 +29,7 @@ import { PictureFileDto } from '../../../../application/dto';
 
 //Common
 import { HttpDocs } from '@common/decorators/docs';
-import { HttpAuthorization } from '@common/decorators/request';
+import { HttpCloudAuthorization } from '@common/decorators/request';
 import { HttpPictureInterceptor } from '@common/interceptors';
 import { API_MESSAGE_GLOBAL } from '@common/messages';
 import { HttpValibotPipe } from '@common/pipes';
@@ -58,7 +58,7 @@ export class UserHttpController {
   @HttpDocs(ME_CLOUD_USER_USER_DOCS)
   @Get(HTTP_CLOUD_ME_ROUTER.USER.USER)
   async user(
-    @HttpAuthorization() access_token: string | null,
+    @HttpCloudAuthorization() access_token: string | null,
     @Res() res: Response,
   ): Promise<Response> {
     const userResult = await this.service.user(access_token);
@@ -81,7 +81,7 @@ export class UserHttpController {
   @UseInterceptors(HttpPictureInterceptor)
   async uploadPicture(
     @UploadedFile() picture: PictureFileDto,
-    @HttpAuthorization() access_token: string | null,
+    @HttpCloudAuthorization() access_token: string | null,
     @Res() res: Response,
   ): Promise<Response> {
     const input = picture as unknown as TPictureFileSchema;
@@ -104,7 +104,7 @@ export class UserHttpController {
   @HttpDocs(ME_CLOUD_USER_REMOVE_PICTURE_DOCS)
   @Delete(HTTP_CLOUD_ME_ROUTER.USER.REMOVE_PICTURE)
   async removePicture(
-    @HttpAuthorization() access_token: string | null,
+    @HttpCloudAuthorization() access_token: string | null,
     @Res() res: Response,
   ): Promise<Response> {
     const removeResult = await this.service.removePicture(access_token);

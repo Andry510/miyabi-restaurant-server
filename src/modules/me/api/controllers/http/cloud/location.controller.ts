@@ -16,7 +16,7 @@ import { HTTP_CLOUD_ME_ROUTER } from '../../../routers';
 
 //Common
 import { HttpDocs } from '@common/decorators/docs';
-import { HttpAuthorization } from '@common/decorators/request';
+import { HttpCloudAuthorization } from '@common/decorators/request';
 import { HttpValibotPipe } from '@common/pipes';
 
 //Domain
@@ -42,7 +42,7 @@ export class LocationHttpController {
   @HttpDocs(ME_CLOUD_LOCATION_LOCATION_DOCS)
   @Get(HTTP_CLOUD_ME_ROUTER.LOCATION.LOCATION)
   async location(
-    @HttpAuthorization() access_token: string | null,
+    @HttpCloudAuthorization() access_token: string | null,
     @Res() res: Response,
   ): Promise<Response> {
     const locationResult = await this.service.location(access_token);

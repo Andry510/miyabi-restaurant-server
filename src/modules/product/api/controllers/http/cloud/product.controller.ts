@@ -26,7 +26,7 @@ import { ProductParamDto, ProductsQueryDto } from '../../../../application/dto';
 
 //Common
 import { HttpDocs } from '@common/decorators/docs';
-import { HttpAuthorization } from '@common/decorators/request';
+import { HttpCloudAuthorization } from '@common/decorators/request';
 import { HttpValibotPipe } from '@common/pipes';
 
 //Domain
@@ -57,7 +57,7 @@ export class ProductHttpController {
   @Get(HTTP_CLOUD_PRODUCT_ROUTER.PRODUCTS)
   async products(
     @Query() query: ProductsQueryDto,
-    @HttpAuthorization() access_token: string | null,
+    @HttpCloudAuthorization() access_token: string | null,
     @Res() res: Response,
   ): Promise<Response> {
     const input = query as unknown as TProductsQuerySchema;
@@ -82,7 +82,7 @@ export class ProductHttpController {
   @Get(HTTP_CLOUD_PRODUCT_ROUTER.PRODUCT)
   async product(
     @Param() params: ProductParamDto,
-    @HttpAuthorization() access_token: string | null,
+    @HttpCloudAuthorization() access_token: string | null,
     @Res() res: Response,
   ): Promise<Response> {
     const input = params as unknown as TProductParamSchema;
