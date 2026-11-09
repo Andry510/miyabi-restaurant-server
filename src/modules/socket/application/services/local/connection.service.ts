@@ -66,8 +66,8 @@ export class ConnectionService
   ) {}
 
   onModuleInit(): void {
-    this.manager_session_service.onClosed((sessionIds) =>
-      this.expireSessions(sessionIds),
+    this.manager_session_service.onClosed((sessionIds, reason) =>
+      this.expireSessions(sessionIds, reason.code),
     );
   }
 
@@ -235,15 +235,12 @@ export class ConnectionService
     }
   }
 
-  private expireSessions(sessionIds: string[]): void {
+  private expireSessions(sessionIds: string[], reason: string): void {
     const closed = new Set(sessionIds);
 
     for (const [socketId, { connection }] of this.connections) {
       if (connection.kind === 'manager' && closed.has(connection.session_id)) {
-        this.expire(
-          socketId,
-          API_SESSION_MESSAGE.ERROR.MANAGER_SESSION_EXPIRED.code,
-        );
+        this.expire(socketId, reason);
       }
     }
   }

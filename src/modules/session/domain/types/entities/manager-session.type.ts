@@ -1,3 +1,5 @@
+import type { TApiMessage } from '@domain/types/shared';
+
 export type TManagerSession = {
   id: string;
   email: string;
@@ -35,6 +37,7 @@ export type TManagerSessionTokens = Pick<
 
 export type TSessionClosedHandler = (
   sessionIds: string[],
+  reason: TApiMessage,
 ) => Promise<void> | void;
 
 export type TSessionAccess = {

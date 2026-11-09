@@ -14,6 +14,7 @@ import { HTTP_MANAGER_ACCESS_DECORATOR_KEY } from '@common/decorators/access';
 import { API_MESSAGE_GLOBAL } from '@common/messages';
 
 //Domain
+import type { ServiceError } from '@domain/errors';
 import { ServiceErrorFactory } from '@domain/patterns/errors';
 import type { IRepositoryService } from '../../modules/repository/domain/interfaces/services';
 import type { IManagerSessionService } from '../../modules/session/domain/interfaces/services';
@@ -66,12 +67,7 @@ export class HttpManagerAccessGuard implements CanActivate {
     const accessToken = request.cloud_access_token;
 
     if (!accessToken) {
-      HttpErrorMapper.reply(
-        response,
-        ServiceErrorFactory.Unauthorized(
-          API_MESSAGE_GLOBAL.ERROR.MISSING_TOKEN,
-        ),
-      );
+      HttpErrorMapper.reply(response, await this.withoutSession(bearer));
       return false;
     }
 
@@ -84,5 +80,20 @@ export class HttpManagerAccessGuard implements CanActivate {
     }
 
     return true;
+  }
+
+  //Functions
+  private async withoutSession(bearer: string | null): Promise<ServiceError> {
+    if (!bearer) {
+      return ServiceErrorFactory.Unauthorized(
+        API_MESSAGE_GLOBAL.ERROR.MISSING_TOKEN,
+      );
+    }
+
+    const employeeResult = await this.repository.validateAccess(bearer);
+
+    return employeeResult.IsFailure
+      ? employeeResult.Error
+      : ServiceErrorFactory.Forbidden(API_MESSAGE_GLOBAL.ERROR.FORBIDDEN);
   }
 }

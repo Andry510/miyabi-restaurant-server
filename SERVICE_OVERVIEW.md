@@ -327,7 +327,7 @@ No se usan cookies. La app del gerente corre en el webview de Tauri (`tauri.loca
 |---|---|---|---|
 | `HttpPairingGuard` | `@HttpPairingAccess()` lo salta | Que `pairing_status` no sea `unpaired` | 409 `ERROR_SERVER_NOT_PAIRED` |
 | `HttpLocalAccessGuard` | `@HttpLocalAccess()` | JWT local válido y vigente, sesión `active` con ese `session_key`, empleado activo | 401 `ERROR_MISSING_TOKEN`, `ERROR_INVALID_ACCESS_TOKEN`, `ERROR_EXPIRED_TOKEN`, `ERROR_UNAUTHORIZED` |
-| `HttpManagerAccessGuard` | Cualquier Bearer `mss_...`; `@HttpManagerAccess()` además valida | Sesión del gerente (existe, no inactiva, `access_token` vigente o renovado) y, con el decorador, caché de Redis o `session.validate` en la nube | 401 `ERROR_MISSING_TOKEN`, `ERROR_MANAGER_SESSION_INVALID`, `ERROR_MANAGER_SESSION_EXPIRED`; 503 `ERROR_CLOUD_UNAVAILABLE`, `ERROR_SERVER_UNLINKED`; el `code` de la nube (401/403) |
+| `HttpManagerAccessGuard` | Cualquier Bearer `mss_...`; `@HttpManagerAccess()` además valida | Sesión del gerente (existe, no inactiva, `access_token` vigente o renovado) y, con el decorador, caché de Redis o `session.validate` en la nube | 401 `ERROR_MISSING_TOKEN`, `ERROR_MANAGER_SESSION_INVALID`, `ERROR_MANAGER_SESSION_EXPIRED`; con un Bearer que no es `mss_`, el error del JWT de empleado (401) o, si es un empleado válido, 403 `ERROR_FORBIDDEN`; 503 `ERROR_CLOUD_UNAVAILABLE`, `ERROR_SERVER_UNLINKED`; el `code` de la nube (401/403) |
 
 Los guards son globales y se activan con su decorador; no se usa `@UseGuards`. Responden con `HttpErrorMapper.reply` y devuelven `false`.
 
@@ -381,13 +381,13 @@ Los cambios de productos se aplican en una cola, de uno en uno, y una hidrataci�
 - **Empleado:** se valida su JWT local y entra a `employee:<id>`.
 - **Gerente:** se resuelve su sesión sin marcar uso y se valida con la nube (`validateManagerAccess`, con caché). Entra a `managers` y, si la nube devuelve su perfil, también a `manager:<id de la nube>`. A la nube solo se le pregunta al conectar.
 - **Revalidación cada 60 s, sin llamar a la nube por el gerente:** el empleado con su JWT local; el gerente solo con su sesión local (que exista y no tenga más de 30 minutos sin uso). Si ya no es válida recibe `session.expired` y se desconecta.
-- **Cierre inmediato:** cuando una sesión de gerente se cierra en el local (logout, inactividad, limpieza, revocación de la nube o renovación rechazada), `ManagerSessionService.onClosed` avisa y el socket de esa sesión recibe `session.expired` y se desconecta en el momento.
+- **Cierre inmediato:** cuando una sesión de gerente se cierra en el local (logout, inactividad, limpieza, revocación de la nube o renovación rechazada), `ManagerSessionService.onClosed` avisa y el socket de esa sesión recibe `session.expired` y se desconecta en el momento. El motivo es `ERROR_MANAGER_SESSION_REVOKED` si la cerró un administrador desde la nube y `ERROR_MANAGER_SESSION_EXPIRED` en los demás casos.
 - Eventos:
   - `notification.created`: notificación local nueva, al empleado o a todos los gerentes.
   - `cloud.notification`: la que manda la nube por el canal, al gerente al que va dirigida.
   - `transfer.changed`: un pedido de la nube cambió (`kind`: `created`, `status_changed`…), a todos los gerentes.
   - `server.unlinked`: la nube desvinculó el servidor, con el estado de `pairing/status`, a todos los gerentes.
-  - `session.expired`: `{ reason }` con el `code`, antes de desconectar.
+  - `session.expired`: `{ reason }` con el `code`, antes de desconectar (`ERROR_MANAGER_SESSION_REVOKED` cuando un administrador cerró la sesión del gerente).
 - Si falla la conexión, `connect_error` trae `data: { status, code }` con el mismo `code` de la API.
 
 ## 9. Reglas de negocio del local

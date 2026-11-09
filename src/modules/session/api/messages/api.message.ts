@@ -9,6 +9,10 @@ export const API_SESSION_MESSAGE = Object.freeze({
       message:
         'La sesión venció por inactividad o fue cerrada; inicia sesión de nuevo',
     },
+    MANAGER_SESSION_REVOKED: {
+      code: 'ERROR_MANAGER_SESSION_REVOKED',
+      message: 'Un administrador cerró tu sesión; inicia sesión de nuevo',
+    },
   },
   SUCCESS: {
     TOKEN_UPDATED: {

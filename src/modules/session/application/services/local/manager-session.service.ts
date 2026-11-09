@@ -12,7 +12,7 @@ import { API_SESSION_MESSAGE } from '../../../api/messages';
 //Domain
 import type { ServiceError } from '@domain/errors';
 import { ResultPattern } from '@domain/patterns/results';
-import type { TClientInput } from '@domain/types/shared';
+import type { TApiMessage, TClientInput } from '@domain/types/shared';
 import type {
   ICloudSessionRepository,
   IManagerSessionRepository,
@@ -246,7 +246,10 @@ export class ManagerSessionService
       return;
     }
 
-    await this.notifyClosed(deleteResult.Value);
+    await this.notifyClosed(
+      deleteResult.Value,
+      API_SESSION_MESSAGE.ERROR.MANAGER_SESSION_REVOKED,
+    );
   }
 
   onClosed(handler: TSessionClosedHandler): void {
@@ -273,19 +276,25 @@ export class ManagerSessionService
     }
 
     await this.repository_service.forgetManagerSession(row.cloud_session_key);
-    await this.notifyClosed([row.id]);
+    await this.notifyClosed(
+      [row.id],
+      API_SESSION_MESSAGE.ERROR.MANAGER_SESSION_EXPIRED,
+    );
 
     return true;
   }
 
-  private async notifyClosed(sessionIds: string[]): Promise<void> {
+  private async notifyClosed(
+    sessionIds: string[],
+    reason: TApiMessage,
+  ): Promise<void> {
     if (!sessionIds.length) {
       return;
     }
 
     for (const handler of this.handlers) {
       try {
-        await handler(sessionIds);
+        await handler(sessionIds, reason);
       } catch (error) {
         this.logger.error(error);
       }
@@ -333,7 +342,10 @@ export class ManagerSessionService
       }
 
       await this.manager_session_repository.deleteById(row.id);
-      await this.notifyClosed([row.id]);
+      await this.notifyClosed(
+        [row.id],
+        API_SESSION_MESSAGE.ERROR.MANAGER_SESSION_EXPIRED,
+      );
       return ServiceResultMapper.Unauthorized(
         API_SESSION_MESSAGE.ERROR.MANAGER_SESSION_EXPIRED,
       );
