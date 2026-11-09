@@ -83,6 +83,12 @@ ENUM tip_pool_status {
   closed [note: 'Reparto cerrado y fijo; el empleado lo ve']
 }
 
+ENUM pairing_status {
+  unpaired [note: 'Nunca se emparejó; solo responde pairing/register y pairing/status']
+  paired [note: 'Emparejado; tiene su server_token y habla con la nube']
+  unlinked [note: 'La nube lo desvinculó; lo local sigue y espera un token nuevo en pairing/token']
+}
+
 //<---------------------- TABLAS ---------------------->
 
 TABLE server_settings {
@@ -96,6 +102,13 @@ TABLE server_settings {
   tip_sanction_destination tip_sanction_destination [default: 'fund', note: 'A dónde va el dinero que se quita por sanciones']
   week_start_day week_day [default: 'monday', note: 'Día en que empieza la semana del restaurante; se usa al copiar turnos']
   products_synced_at timestamp [null, note: 'Última sincronización de productos con la nube']
+
+  pairing_status pairing_status [default: 'unpaired', note: 'Estado del emparejamiento con la nube']
+  server_token_enc text [null, note: 'server_token cifrado con AES-256-GCM (DATA_ENCRYPTION_KEY); nunca en texto plano']
+  location_id uuid [null, note: 'Local de la nube al que está emparejado; sale del server_token']
+  unlinked_reason varchar(100) [null, note: 'Código de la nube por el que se desvinculó (por ejemplo ERROR_SERVER_TOKEN_REGENERATED)']
+  paired_at timestamp [null, note: 'Fecha del último emparejamiento o cambio de token']
+  unlinked_at timestamp [null, note: 'Fecha en que se desvinculó']
 
   updated_at timestamp [note: 'Fecha de la última modificación']
 }
@@ -166,6 +179,30 @@ TABLE sessions {
 
   indexes {
     (status, expire_at, last_access_at)
+  }
+}
+
+TABLE manager_sessions {
+  id uuid [pk, note: 'ID único de la sesión del gerente en el local']
+
+  token_hash varchar(64) [unique, note: 'Huella SHA-256 del session_token (mss_...) que tiene la app; el token no se guarda']
+  email varchar(255) [note: 'Correo del gerente en la nube']
+  cloud_session_key varchar(255) [note: 'session_key de la sesión en la nube; con él se borra cuando la nube la revoca']
+  access_token_enc text [note: 'access_token de la nube cifrado con AES-256-GCM']
+  refresh_token_enc text [note: 'refresh_token de la nube cifrado con AES-256-GCM']
+  access_expires_at timestamp [note: 'Vencimiento del access_token; un minuto antes se renueva con la nube']
+  last_access_at timestamp [default: 'now()', note: 'Último uso; a los 30 minutos sin uso la sesión vence']
+
+  requester_ip varchar(50) [null, note: 'IP desde donde se abrió']
+  device varchar(150) [null, note: 'Dispositivo']
+  browser varchar(150) [null, note: 'Navegador o app']
+
+  created_at timestamp [default: 'now()', note: 'Fecha de inicio de sesión']
+  updated_at timestamp [note: 'Fecha de la última modificación']
+
+  indexes {
+    cloud_session_key
+    last_access_at
   }
 }
 
@@ -528,6 +565,7 @@ TABLEGROUP usuario [color: #9305F2]
   profiles
   authentications
   sessions
+  manager_sessions
 }
 
 TABLEGROUP organización [color: #8C6D46]

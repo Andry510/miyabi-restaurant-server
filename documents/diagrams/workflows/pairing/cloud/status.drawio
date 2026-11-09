@@ -1,0 +1,16 @@
+<mxfile host="app.diagrams.net">
+    <diagram id="d" name="Page-1">
+        <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1120" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="2" value="Estado del emparejamiento&lt;br&gt;&lt;span style=&quot;font-size: 11px; font-weight: normal;&quot;&gt;REST GET /v1/pairing/status (público)&lt;/span&gt;" style="text;html=1;align=left;verticalAlign=middle;fontStyle=1;fontSize=14;" parent="1" vertex="1"><mxGeometry x="40" y="30" width="680" height="48" as="geometry"/></mxCell>
+                <mxCell id="3" value="Inicio" style="rounded=1;whiteSpace=wrap;html=1;arcSize=50;" parent="1" vertex="1"><mxGeometry x="460" y="95" width="80" height="40" as="geometry"/></mxCell>
+                <mxCell id="4" value="Lee el estado en memoria (se carga de server_settings al arrancar y cambia al emparejar, desvincular o cambiar el token)" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1"><mxGeometry x="390" y="165" width="220" height="70" as="geometry"/></mxCell>
+                <mxCell id="5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontStyle=1;" parent="1" source="3" target="4" edge="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+                <mxCell id="6" value="Responder 200 con STATUS_RETRIEVED: status, location_id, unlinked_reason, paired_at, unlinked_at" style="rounded=1;whiteSpace=wrap;html=1;arcSize=50;" parent="1" vertex="1"><mxGeometry x="410" y="265" width="180" height="50" as="geometry"/></mxCell>
+                <mxCell id="7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontStyle=1;" parent="1" source="4" target="6" edge="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

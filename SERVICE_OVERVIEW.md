@@ -35,23 +35,28 @@ Cómo está construido por dentro el servidor local del restaurante. Para instal
 - **Una sola entrada:** REST con versión en la URL (`enableVersioning`). No hay microservicio gRPC propio: el servidor es **cliente** del gRPC de la nube.
 - **Dos tipos de usuario:**
   - **Empleado:** existe en la base local, inicia sesión contra el servidor y usa tokens firmados con los secretos del `.env`.
-  - **Gerente:** es un usuario de la nube con rol `restaurant`. Inicia sesión en la nube (a través del servidor) y cada petición suya se valida contra la nube con `session.validate`.
+  - **Gerente:** es un usuario de la nube con rol `restaurant`. Inicia sesión en la nube a través del servidor (BFF):
+    - el servidor guarda cifrados los tokens de la nube y le da a la app un `session_token` opaco (`mss_...`);
+    - con ese token, el servidor usa el `access_token` de la nube, lo renueva cuando va a vencer y valida la sesión con `session.validate` (con caché en Redis).
 - **Dos lados en cada módulo:** `local/` atiende con la base del local; `cloud/` reenvía a la nube por gRPC. La separación se repite en controllers, routers, services, repositories, interfaces y tipos.
-- **Sin internet:** lo `local/` de empleados sigue funcionando. Lo que necesita a la nube responde **503** `ERROR_CLOUD_UNAVAILABLE`.
+- **Sin internet:** lo `local/` de empleados sigue funcionando. Lo que necesita a la nube responde **503** `ERROR_CLOUD_UNAVAILABLE`. Con un corte corto, el gerente sigue trabajando unos 15 minutos con la sesión en la caché (sección 7).
+- **Emparejamiento:** el `server_token` vive cifrado en `server_settings` con su estado (`unpaired`, `paired`, `unlinked`). Si la nube desvincula el servidor, lo local sigue y lo de la nube responde **503** `ERROR_SERVER_UNLINKED` hasta que se pegue un token nuevo.
 
 ## 2. Recorrido de una petición
 
 1. **Express + versionado** reciben `/v1/...`.
 2. **Guards globales** (`APP_GUARD`, en este orden):
-   1. `HttpPairingGuard`: sin `SERVER_TOKEN` responde 409 `ERROR_SERVER_NOT_PAIRED` (salvo `@HttpPairingAccess()`).
+   1. `HttpPairingGuard`: si el servidor nunca se emparejó (`unpaired`) responde 409 `ERROR_SERVER_NOT_PAIRED` (salvo `@HttpPairingAccess()`). Un servidor `unlinked` sí pasa: lo local sigue funcionando.
    2. `HttpLocalAccessGuard`: solo en `@HttpLocalAccess()`. Valida el JWT local, la sesión y que el empleado esté activo; deja el empleado en `request.user`.
-   3. `HttpManagerAccessGuard`: solo en `@HttpManagerAccess()`. Busca el token en la caché de Redis; si no está, llama a `session.validate` de la nube con el Bearer y el `server_token` y guarda el resultado.
+   3. `HttpManagerAccessGuard`, en dos pasos:
+      1. En cualquier ruta, si el Bearer es un `session_token` (`mss_...`), resuelve la sesión del gerente (`ManagerSessionService.resolve`): vence a los 30 minutos sin uso y renueva el `access_token` de la nube si le falta menos de un minuto. Deja ese token en `request.cloud_access_token`, que es lo que devuelve `@HttpAuthorization()`.
+      2. En `@HttpManagerAccess()` además valida ese token: lo busca en la caché de Redis y, si no está, llama a `session.validate` de la nube y guarda el resultado.
 3. **Pipe del controller** (`@UsePipes(HttpValibotPipe)`): valida `@Param`, `@Query` y `@Body` con el `static schema` de cada DTO; si falla lanza 400 `ERROR_BAD_REQUEST`.
 4. **Controller** llama a su `service` y responde con `@Res()`: `ControllerResponseMapper` si sale bien, `HttpErrorMapper.reply` si falla.
 5. **Service** orquesta y devuelve `ResultPattern`. Los repositorios `local/` usan Prisma; los `cloud/` usan `CloudRequest`.
 6. **`HttpExceptionFilter`** (global, en `main.ts`) da el mismo formato con `code` a lo que Nest responde por su cuenta (ruta inexistente, JSON mal formado, error inesperado).
 
-Los diagramas `documents/diagrams/workflows/common/local/*-guard.drawio` y `sequences/manager-access.drawio` muestran este recorrido.
+Los diagramas `documents/diagrams/workflows/common/local/*-guard.drawio` y `sequences/manager-access.drawio` muestran este recorrido; `states/manager-session.drawio`, la vida de la sesión del gerente; `sequences/server-pairing.drawio` y `sequences/server-unlink.drawio`, el emparejamiento y la desvinculación.
 
 ## 3. Estructura del código
 
@@ -114,7 +119,7 @@ Igual que en la nube (`miyabi-api/CLAUDE.md` §3), con `local/` y `cloud/` donde
 | Módulo | Lado | Qué hace |
 |---|---|---|
 | `authentication` | local + cloud | Login de empleados y cambio de contraseña obligatoria; login, MFA y contraseña del gerente reenviados a la nube. |
-| `session` | local + cloud | Renovar y cerrar la sesión del empleado (local) o del gerente (nube). |
+| `session` | local + cloud | Renovar y cerrar la sesión del empleado (local). Sesión del gerente (`ManagerSessionService`): abrirla al terminar el login, resolverla en cada petición, renovar sus tokens de la nube, vencerla por inactividad, cerrarla y borrarla cuando la nube la revoca. |
 | `me` | local + cloud | Perfil del empleado; perfil, foto, local y notificaciones de la nube del gerente. |
 | `notification` | local | Notificaciones del local: las guarda con su plantilla y las lee el empleado (las suyas) o el gerente (las del equipo). |
 | `user` | local | Empleados: alta, edición, baja, sesiones y asistencia. |
@@ -131,18 +136,18 @@ Igual que en la nube (`miyabi-api/CLAUDE.md` §3), con `local/` y `cloud/` donde
 | `product` | local + cloud | Productos del área del empleado (copia local) y catálogo de la nube. |
 | `server-product` | local + cloud | Sincronización de productos desde la nube (hidratación y mensajes del canal). |
 | `supplier`, `supplier-product`, `location` | cloud | Proveedores, sus productos y locales, leídos de la nube. |
-| `transfer`, `transfer-item` | cloud | Pedidos del restaurante en la nube: listar, ver, crear, recibir, cancelar y sus productos. |
-| `pairing` | cloud | Emparejar el servidor con la nube. |
+| `transfer`, `transfer-item` | cloud | Pedidos del restaurante en la nube: listar, ver, crear, recibir, cancelar y sus productos. Confirma los cambios que se quedaron sin respuesta de la nube y avisa a los gerentes por el socket (`transfer.changed`). |
+| `pairing` | cloud | Emparejar el servidor con la nube, cambiar el token cuando la nube lo desvinculó y consultar el estado. Avisa a los gerentes cuando se desvincula. |
 | `channel` | cloud | Canal gRPC con la nube (`server.channel`): reparte sus mensajes, responde sus solicitudes y reporta el estado del servidor. |
 | `socket` | local | Socket.io del local (`PORT_SOCKET`, 4520): avisos en vivo a las pantallas de empleados y gerentes. |
-| `repository` | local + cloud | Validación de acceso para los guards (`validateAccess`, `validateManagerAccess`, `serverToken`) y `CatalogService` (`workAreasExist`, `jobPositionsExist`, `productsExist`). |
+| `repository` | local + cloud | Validación de acceso para los guards (`validateAccess`, `validateManagerAccess`, `forgetManagerSession`), estado del emparejamiento (`ServerService`: `state`, `pair`, `unlink`, `onUnlinked`; guarda el `server_token` cifrado y lo deja en memoria para `CloudRequest`) y `CatalogService` (`workAreasExist`, `jobPositionsExist`, `productsExist`). |
 
 ## 6. Rutas REST
 
-**126 rutas**: 98 locales (78 de gerente, 16 de empleado y 4 públicas de sesión) y 28 que pasan por la nube. Todas, excepto `POST /v1/pairing/register`, exigen que el servidor esté emparejado.
+**128 rutas**: 99 locales (79 de gerente, 16 de empleado y 4 públicas de sesión) y 29 que pasan por la nube. Todas, excepto las tres de `pairing`, exigen que el servidor se haya emparejado alguna vez.
 
-- **gerente:** `@HttpManagerAccess()`; el Bearer de la nube se valida con `session.validate`.
-- **gerente (nube):** sin guard de acceso local; el servidor reenvía el Bearer y la nube lo valida en su propio RPC.
+- **gerente:** `@HttpManagerAccess()`; Bearer `mss_...`. El servidor resuelve la sesión y valida su `access_token` de la nube con `session.validate` (con caché).
+- **gerente (nube):** Bearer `mss_...`; el servidor resuelve la sesión, reenvía el `access_token` de la nube y la nube lo valida en su propio RPC.
 - **empleado:** `@HttpLocalAccess()`; JWT local.
 - **público:** login, cambio de contraseña obligatoria y sesión (usan su propio token del cuerpo o del header).
 
@@ -156,8 +161,7 @@ La última columna es el diagrama en `documents/diagrams/workflows/`; `—` indi
 | POST | `/v1/authentication/cloud/password/reset` | público | Cambiar la contraseña obligatoria | `authentication/cloud/reset` |
 | POST | `/v1/authentication/local/login` | público | Iniciar sesión | `authentication/local/login` |
 | POST | `/v1/authentication/local/password/reset` | público | Cambiar la contraseña obligatoria | `authentication/local/reset_password` |
-| POST | `/v1/sessions/cloud/logout` | público | Cerrar sesión | `session/cloud/logout` |
-| POST | `/v1/sessions/cloud/refresh` | público | Renovar la sesión | `session/cloud/refresh_token` |
+| POST | `/v1/sessions/cloud/logout` | público | Cerrar la sesión del gerente (Bearer `mss_...`): la cierra en la nube, la borra y desconecta su socket | `session/cloud/logout` |
 | POST | `/v1/sessions/local/logout` | público | Cerrar sesión | `session/local/logout` |
 | POST | `/v1/sessions/local/refresh` | público | Renovar la sesión | `session/local/refresh_token` |
 | GET | `/v1/me/cloud` | gerente (nube) | Mi perfil | `me/cloud/user` |
@@ -227,6 +231,7 @@ La última columna es el diagrama en `documents/diagrams/workflows/`; `—` indi
 | GET | `/v1/orders/local` | gerente | Listar pedidos | `order/local/orders` |
 | GET | `/v1/orders/local/:id` | gerente | Ver pedido | `order/local/order` |
 | POST | `/v1/orders/local/:id/retry` | gerente | Reintentar envíos del pedido | `order/local/retry` |
+| POST | `/v1/orders/local/retry` | gerente | Reintentar todos los pedidos con envíos pendientes | — |
 | GET | `/v1/orders/local/:id/export` | gerente | Excel del pedido | — |
 | GET | `/v1/orders/local/current` | gerente | Pedido abierto del día | `order/local/current` |
 | DELETE | `/v1/orders/local/current/items/:product_id` | gerente | Restablecer un producto del pedido | `order/local/reset_item` |
@@ -275,7 +280,9 @@ La última columna es el diagrama en `documents/diagrams/workflows/`; `—` indi
 | PATCH | `/v1/transfers/cloud/:id/cancel` | gerente (nube) | Cancelar pedido | `transfer/cloud/cancel` |
 | PATCH | `/v1/transfers/cloud/:id/receive` | gerente (nube) | Recibir pedido | `transfer/cloud/receive` |
 | GET | `/v1/transfers/cloud/:id/items` | gerente (nube) | Productos de un pedido | `transfer-item/cloud/items` |
-| POST | `/v1/pairing/register` | público (sin emparejar) | Emparejar el servidor | `pairing/cloud/register` |
+| POST | `/v1/pairing/register` | público (no `paired`) | Emparejar el servidor con un enrollment token | `pairing/cloud/register` |
+| POST | `/v1/pairing/token` | público (`unlinked`) | Guardar el token regenerado del mismo local | `pairing/cloud/token` |
+| GET | `/v1/pairing/status` | público | Estado del emparejamiento (`status`, `location_id`, `unlinked_reason`, fechas) | `pairing/cloud/status` |
 
 ## 7. Seguridad y acceso
 
@@ -286,37 +293,59 @@ La última columna es el diagrama en `documents/diagrams/workflows/`; `—` indi
 | `access_token` de empleado | El servidor | `JWT_SECRET_TOKEN` | Rutas `@HttpLocalAccess`. Lleva `email` y `session_key`. |
 | `refresh_token` de empleado | El servidor | `JWT_SECRET_REFRESH_TOKEN` | `POST /v1/sessions/local/refresh` y `logout`. |
 | `password_token` | El servidor | `JWT_SECRET_PASSWORD_TOKEN` | Cambio de contraseña obligatoria del empleado. |
-| `access_token` y `refresh_token` del gerente | La nube | Secretos de la nube | Rutas de gerente y `*/cloud`. El servidor no los valida solo: pregunta a la nube y guarda el resultado en Redis hasta que vence el token. |
-| `server_token` | La nube, al emparejar | — | Identifica al servidor ante la nube en cada llamada gRPC y al abrir el canal (metadata `server_token`). |
+| `session_token` del gerente (`mss_` + 32 bytes aleatorios en base64url) | El servidor, al terminar el login, el MFA o el cambio de contraseña del gerente | — (opaco) | Lo único que tiene la app del gerente: Bearer en las rutas y `access_token` en el socket. En la base solo se guarda su huella SHA-256 (`manager_sessions.token_hash`). |
+| `access_token` y `refresh_token` del gerente | La nube | Secretos de la nube | Nunca salen del servidor: se guardan cifrados con AES-256-GCM en `manager_sessions`. El servidor manda el `access_token` a la nube en cada llamada y lo renueva con el `refresh_token`. |
+| `server_token` | La nube, al emparejar | — | Identifica al servidor ante la nube en cada llamada gRPC y al abrir el canal (metadata `server_token`). Se guarda cifrado en `server_settings.server_token_enc` y en memoria para `CloudRequest`. |
 
-### Caché de la sesión del gerente
+### Sesión del gerente (BFF)
+
+No se usan cookies. La app del gerente corre en el webview de Tauri (`tauri.localhost`) y llama al servidor por la LAN sin HTTPS, así que el navegador no mandaría una cookie `SameSite`. Por eso el `session_token` viaja en `Authorization: Bearer`.
+
+- **Abrir:** el login (o el MFA, o el cambio de contraseña) de la nube devuelve tokens; `ManagerSessionService.exchange` los cifra, crea la fila en `manager_sessions` y responde `access: { session_token }` en lugar de los tokens.
+- **Usar:** en cada petición `resolve` busca la sesión por su huella.
+  - Si pasaron más de **30 minutos sin uso**, la cierra (como un logout) y responde 401 `ERROR_MANAGER_SESSION_EXPIRED`.
+  - Si al `access_token` le queda menos de **1 minuto**, lo renueva con la nube. Si varias peticiones llegan a la vez, solo una renueva y las demás esperan ese resultado.
+  - El último uso se guarda como mucho una vez por minuto.
+- **Renovación rechazada:** si la nube rechaza el `refresh_token` (401), la sesión se borra y responde `ERROR_MANAGER_SESSION_EXPIRED`. Si la nube no responde, la sesión **no** se borra: responde 503 `ERROR_CLOUD_UNAVAILABLE` y se reintenta en la siguiente petición.
+- **Cerrar:** el logout, la inactividad y la limpieza de cada hora siguen el mismo camino:
+  - piden a la nube cerrar la sesión (si no responde, sigue igual), borran la fila y la caché, y desconectan al momento los sockets de esa sesión;
+  - si la nube no responde al cerrar, su sesión queda activa allá hasta que venza el `refresh_token`, pero ya no se puede usar porque el servidor borró los tokens.
+- **Revocar desde la nube:** `session_revoked` por el canal borra las sesiones con ese `cloud_session_key`, su caché y sus sockets.
+- Un token que no existe responde 401 `ERROR_MANAGER_SESSION_INVALID`.
+
+### Caché de la validación del gerente
 
 - Cuando la nube valida un `access_token` de gerente, el servidor lo guarda en Redis (con su huella SHA-256, no el token) hasta que el token vence. Así responde más rápido y el gerente sigue trabajando si se cae el internet.
-- La caché de esa sesión se borra al instante cuando la nube manda `session_revoked` por el canal o cuando el gerente cierra sesión por `POST /v1/sessions/cloud/logout`.
+- **Sin internet**, el gerente sigue trabajando mientras dure esa caché, unos 15 minutos (lo que dura el `access_token` de la nube). Después necesita renovar con la nube y sus rutas responden 503 `ERROR_CLOUD_UNAVAILABLE` hasta que vuelva.
+- **Sin Redis**, no hay caché: cada petición del gerente consulta a la nube.
+- La caché de esa sesión se borra al instante cuando la nube manda `session_revoked` por el canal o cuando la sesión se cierra en el local.
 - Riesgo aceptado: si la nube cierra la sesión mientras el servidor no tiene internet, el aviso no llega y el token sirve en el local hasta que vence.
 
 ### Guards
 
 | Guard | Decorador | Valida | Errores |
 |---|---|---|---|
-| `HttpPairingGuard` | `@HttpPairingAccess()` lo salta | Que exista `SERVER_TOKEN` | 409 `ERROR_SERVER_NOT_PAIRED` |
+| `HttpPairingGuard` | `@HttpPairingAccess()` lo salta | Que `pairing_status` no sea `unpaired` | 409 `ERROR_SERVER_NOT_PAIRED` |
 | `HttpLocalAccessGuard` | `@HttpLocalAccess()` | JWT local válido y vigente, sesión `active` con ese `session_key`, empleado activo | 401 `ERROR_MISSING_TOKEN`, `ERROR_INVALID_ACCESS_TOKEN`, `ERROR_EXPIRED_TOKEN`, `ERROR_UNAUTHORIZED` |
-| `HttpManagerAccessGuard` | `@HttpManagerAccess()` | Caché de Redis o `session.validate` en la nube | 401 `ERROR_MISSING_TOKEN`; 503 `ERROR_CLOUD_UNAVAILABLE`; el `code` de la nube (401/403) |
+| `HttpManagerAccessGuard` | Cualquier Bearer `mss_...`; `@HttpManagerAccess()` además valida | Sesión del gerente (existe, no inactiva, `access_token` vigente o renovado) y, con el decorador, caché de Redis o `session.validate` en la nube | 401 `ERROR_MISSING_TOKEN`, `ERROR_MANAGER_SESSION_INVALID`, `ERROR_MANAGER_SESSION_EXPIRED`; 503 `ERROR_CLOUD_UNAVAILABLE`, `ERROR_SERVER_UNLINKED`; el `code` de la nube (401/403) |
 
 Los guards son globales y se activan con su decorador; no se usa `@UseGuards`. Responden con `HttpErrorMapper.reply` y devuelven `false`.
 
 ### Datos sensibles
 
 - Contraseñas con **Argon2**.
-- `.env` está en `.gitignore`; el `SERVER_TOKEN` y los secretos JWT nunca van al repositorio.
-- El gerente no tiene credenciales guardadas en el servidor: todo pasa por la nube.
+- `.env` está en `.gitignore`; `DATA_ENCRYPTION_KEY` y los secretos JWT nunca van al repositorio.
+- **Cifrado en la base** (`Crypto.encrypt` / `decrypt`, `infrastructure/securities`): AES-256-GCM con `DATA_ENCRYPTION_KEY`, en el formato base64(iv de 12 bytes | tag de 16 | texto cifrado). Lo usan el `server_token` y los tokens de la nube de cada gerente. Si la llave cambia, el servidor no puede leer su token y queda `unlinked` con `ERROR_LOCAL_TOKEN_UNREADABLE`.
+- La contraseña del gerente no se guarda: el login pasa por la nube. Sus tokens de la nube sí se guardan, cifrados, y la app nunca los ve.
 
 ## 8. Comunicación con la nube
 
 ### gRPC
 
 - `CloudModule` registra el cliente con los protos de `src/infrastructure/grpc/cloud/proto/` (copias de los de la nube): `authentication`, `location`, `me`, `product`, `server_product`, `server`, `session`, `supplier_product`, `supplier`, `transfer_item`, `transfer`.
-- `CloudRequest.metadata()` agrega `server_token` y, si hay, `authorization: Bearer <token>`. `CloudRequest.options()` pone un plazo de **10 s** (`CLOUD_GRPC_DEADLINE_MS`).
+- El cliente reintenta la conexión cada 1 a 5 s (`CLOUD_GRPC_RECONNECT_MS`, opciones `grpc.initial_reconnect_backoff_ms` y `grpc.max_reconnect_backoff_ms`). Sin ese tope, grpc-js deja crecer la espera hasta 120 s y el servidor tardaba más de un minuto en volver a hablar con la nube.
+- `CloudRequest.metadata()` agrega el `server_token` que tiene en memoria y, si hay, `authorization: Bearer <token>`. `CloudRequest.options()` pone un plazo de **10 s** (`CLOUD_GRPC_DEADLINE_MS`).
+- Sin `server_token` (servidor `unpaired` o `unlinked`), `CloudRequest.send()` no llama a la nube y responde 503 `ERROR_SERVER_UNLINKED`. Si la nube responde `ERROR_INVALID_SERVER_TOKEN`, el servidor se desvincula.
 - `CloudRequest.send()` convierte la respuesta en `ResultPattern`. Si falla, `CloudErrorMapper.toServiceError()`:
   - toma el estado gRPC y lo traduce: 3/11 → 400, 16 → 401, 7 → 403, 5 → 404, 6/10/9 → 409, 8 → 413, 14/4 → 503, el resto → 500;
   - toma el `code` de los **trailers** (metadata `code`) que manda la nube, y el texto de `details`;
@@ -324,8 +353,11 @@ Los guards son globales y se activan con su decorador; no se usa `@UseGuards`. R
 
 ### Canal con la nube (`server.channel`)
 
-- `ChannelService` (módulo `channel`) abre al arrancar el stream bidireccional `server_service.channel` de `proto/v1/server.proto`, con el `server_token` en la metadata.
-- Si se corta o la nube no responde, reintenta con espera creciente (de 1 a 30 s). Si la nube lo rechaza (16 o 7) o le cierra el canal por `ERROR_SERVER_DISABLED`, `ERROR_SERVER_REVOKED`, `ERROR_SERVER_TOKEN_REGENERATED` o `ERROR_SERVER_CHANNEL_REPLACED`, se detiene hasta reiniciar o volver a emparejar.
+- `ChannelService` (módulo `channel`) abre el stream bidireccional `server_service.channel` de `proto/v1/server.proto`, con el `server_token` en la metadata. Lo abre al arrancar (si está `paired`) y al emparejar o cambiar el token, sin reiniciar.
+- Si se corta o la nube no responde, reintenta con espera creciente (de 1 a 30 s).
+- Si la nube lo rechaza (16 o 7) o le cierra el canal, se detiene:
+  - Por `ERROR_SERVER_DISABLED`, `ERROR_SERVER_REVOKED`, `ERROR_SERVER_TOKEN_REGENERATED` o `ERROR_INVALID_SERVER_TOKEN` (`SERVER_UNLINK_REASONS`), además **desvincula** el servidor: `ServerService.unlink` pasa a `unlinked`, borra el token de memoria y avisa (`onUnlinked`). El módulo `pairing` manda `server.unlinked` por el socket y crea la notificación `SERVER_UNLINKED` para los gerentes.
+  - Por `ERROR_SERVER_CHANNEL_REPLACED` (otro proceso abrió el canal con el mismo token) solo se detiene, hasta reiniciar.
 - Los módulos se suscriben con `channel_service.on(mensaje, handler)` y responden solicitudes con `channel_service.onRequest(solicitud, handler)`:
 
 | Mensaje de la nube (`CHANNEL_EVENT`) | Quién lo atiende | Qué hace |
@@ -333,8 +365,8 @@ Los guards son globales y se activan con su decorador; no se usa `@UseGuards`. R
 | `sync_required` | `server-product` | Hidratación: pide `server_product.server_products(synced_at)`, guarda los productos, borra `removed_ids` y guarda `products_synced_at`. |
 | `product` (`created` / `updated`) | `server-product` | Upsert del producto. |
 | `product_removed` | `server-product` | Borra el producto por su id de la nube. |
-| `session_revoked` | `session` | Borra de la caché la sesión de ese gerente. |
-| `transfer` | — | Llega por el canal; el aviso a las pantallas de los gerentes es otra implementación. |
+| `session_revoked` | `session` (`RevocationService`) | Borra las sesiones de ese gerente en el local (`manager_sessions` con ese `cloud_session_key`), su caché y sus sockets. |
+| `transfer` | `transfer` (`ConfirmationService`) | Reenvía el cambio a los gerentes por el socket (`transfer.changed`, `{ kind, transfer }`) y da por confirmado un cambio que se había quedado sin respuesta. |
 | `session_expired` | `channel` | Cierra el canal y, según el motivo, reintenta o se detiene. |
 | `notification` | `notification` (`RelayService`) | Notificación de la nube para un gerente. Se guarda en la nube (la lista es `me/cloud/notifications`) y se le reenvía en vivo por el socket local como `cloud.notification`. |
 | `attendance_request` (solicitud) | `shift` (`ReportService`) | Responde con los turnos del rango y su asistencia (empleado, fecha, horario, entrada, salida, estado, retardo, salida anticipada e incidencias). |
@@ -345,10 +377,17 @@ Los cambios de productos se aplican en una cola, de uno en uno, y una hidrataci�
 
 ### Socket local
 
-- Socket.io en su propio puerto (`PORT_SOCKET`, 4520 por defecto). Se conecta con `access_token` en `auth` o en un header; el gerente manda además `audience: "manager"`.
-- **Empleado:** se valida su JWT local y entra a `employee:<id>`. **Gerente:** se valida con la nube (`validateManagerAccess`, con caché) y entra a `managers`; si la nube responde, también a `manager:<id de la nube>`.
-- Cada 60 s se revalida cada conexión; si ya no es válida recibe `session.expired` y se desconecta.
-- Eventos: `notification.created` (notificación local nueva: al empleado o a todos los gerentes) y `cloud.notification` (la que manda la nube por el canal, al gerente al que va dirigida).
+- Socket.io en su propio puerto (`PORT_SOCKET`, 4520 por defecto). Se conecta con `access_token` en `auth` o en un header; el gerente manda ahí su `session_token` (`mss_...`) y además `audience: "manager"`.
+- **Empleado:** se valida su JWT local y entra a `employee:<id>`.
+- **Gerente:** se resuelve su sesión sin marcar uso y se valida con la nube (`validateManagerAccess`, con caché). Entra a `managers` y, si la nube devuelve su perfil, también a `manager:<id de la nube>`. A la nube solo se le pregunta al conectar.
+- **Revalidación cada 60 s, sin llamar a la nube por el gerente:** el empleado con su JWT local; el gerente solo con su sesión local (que exista y no tenga más de 30 minutos sin uso). Si ya no es válida recibe `session.expired` y se desconecta.
+- **Cierre inmediato:** cuando una sesión de gerente se cierra en el local (logout, inactividad, limpieza, revocación de la nube o renovación rechazada), `ManagerSessionService.onClosed` avisa y el socket de esa sesión recibe `session.expired` y se desconecta en el momento.
+- Eventos:
+  - `notification.created`: notificación local nueva, al empleado o a todos los gerentes.
+  - `cloud.notification`: la que manda la nube por el canal, al gerente al que va dirigida.
+  - `transfer.changed`: un pedido de la nube cambió (`kind`: `created`, `status_changed`…), a todos los gerentes.
+  - `server.unlinked`: la nube desvinculó el servidor, con el estado de `pairing/status`, a todos los gerentes.
+  - `session.expired`: `{ reason }` con el `code`, antes de desconectar.
 - Si falla la conexión, `connect_error` trae `data: { status, code }` con el mismo `code` de la API.
 
 ## 9. Reglas de negocio del local
@@ -381,12 +420,28 @@ Los cambios de productos se aplican en una cola, de uno en uno, y una hidrataci�
 - Hay un solo pedido `open` a la vez (`transfer_drafts.open_lock` único).
 - El empleado crea solicitudes con productos **de su área**; necesita tener área asignada.
 - El gerente ajusta la cantidad y el almacén de cada producto, o lo restablece a lo que pidieron los empleados.
+- Si la nube borra un producto, su línea sale con `available: false` y no se envía (cuenta como cantidad 0).
 - El almacén es opcional (hoy no hay almacenes en producción). Los productos sin almacén van juntos en un solo envío sin destino; la nube registra ese pedido sin almacén y el restaurante lo marca como recibido con `transfer` (`receive_transfer`), sin aceptar, rechazar, repartidor ni envío.
-- Al enviar: `open → sending`, se crea un envío por almacén (y uno sin destino) con su `idempotency_key` y se registra en la nube con `transfer.register`. Cada envío queda `sent` (con su `transfer_id`) o `failed` (con `last_error`); el pedido queda `sent` o `partially_sent`. Un fallo no detiene a los demás.
-- `POST /v1/orders/local/:id/retry` reintenta los envíos que no quedaron `sent`, con la misma `idempotency_key`, así la nube no duplica el pedido.
+- Al enviar: `open → sending`, se crea un envío por almacén (y uno sin destino) con su `idempotency_key` y se registra en la nube con `transfer.register`. Un fallo no detiene a los demás.
+  - Cada envío queda `sent` (con su `transfer_id`), `pending` (error que se puede reintentar, por ejemplo la nube sin responder) o `failed` (la nube lo rechazó), con su `last_error`.
+  - El pedido queda `sent` o `partially_sent`.
+  - El pedido en curso queda libre para armar otro aunque haya envíos pendientes.
+- `POST /v1/orders/local/:id/retry` reintenta los envíos que no quedaron `sent`, con la misma `idempotency_key`, así la nube no duplica el pedido. Sin nada que reintentar responde 409 `ERROR_ORDER_NOTHING_TO_RETRY`. `POST /v1/orders/local/retry` hace lo mismo con todos los pedidos que tengan envíos pendientes. El servidor no reintenta solo, porque el envío necesita el token de un gerente: al volver el canal avisa a los gerentes (`ORDER_DISPATCH_PENDING`).
+- La respuesta de `send` y `retry` siempre es 200 con el pedido, pero el mensaje dice cómo quedó. La app debe usar el `code`:
+  - `SUCCESS_ORDER_FAILED`: algún envío quedó `failed`.
+  - `SUCCESS_ORDER_PENDING`: algún envío quedó `pending` ("se enviará cuando vuelva la conexión").
+  - `SUCCESS_ORDER_SENT`: todo llegó.
 - `GET /v1/orders/local/:id/export` arma el Excel del pedido para compartirlo (WhatsApp u otra app) sin internet: fecha, estado, quién lo envió y, por producto, código, unidad, cantidad, lo que pidieron los empleados, estado del envío y notas. Las fechas van en la zona horaria del local.
 
 Ver `states/order.drawio`, `states/order-dispatch.drawio` y `sequences/order-send.drawio`.
+
+### Pedidos en la nube (recibir y cancelar)
+
+- `receive` y `cancel` pasan por `ConfirmationService`, que las confirma:
+  - Si la nube **no responde**, el cambio pudo haberse aplicado o no. El servidor responde 503 `ERROR_TRANSFER_UNCONFIRMED` y deja el pedido pendiente de confirmar hasta 30 minutos (`TRANSFER_LIMITS.PENDING_TTL_MS`).
+  - Mientras está pendiente, otro cambio al mismo pedido responde 409 `ERROR_TRANSFER_PROCESSING`.
+  - Se confirma cuando llega el evento `transfer` por el canal o, al reconectar (`sync_required`), consultando el pedido a la nube. En los dos casos se avisa a los gerentes con `transfer.changed`.
+  - Si la nube responde que el pedido ya cambió de estado, el servidor responde 409 `ERROR_TRANSFER_INVALID_STATUS` ("actualízalo para ver cómo quedó").
 
 ### Propinas
 
@@ -407,7 +462,7 @@ Ver `states/tip-pool.drawio`.
 - Cada aviso usa una plantilla (`notification_templates`, con `audience` `employee` o `manager`). El servidor crea al arrancar las que falten y no cambia las que ya existen; una plantilla con `status` falso no genera avisos.
 - El título y el texto se guardan ya armados, con las fechas en la zona horaria de `server_settings.timezone`.
 - **Al empleado** (una fila por empleado, `read_at` vacío = sin leer): `SHIFT_SCHEDULED` (alta de turnos y copiar semana), `SHIFT_CHANGED`, `SHIFT_CANCELLED`, `ATTENDANCE_CORRECTED`, `INCIDENT_JUSTIFIED`, `TIP_POOL_CLOSED` (a cada quien con lo que le tocó) y `TIP_SANCTION_APPLIED`.
-- **A los gerentes** (una fila para todos los gerentes del local): `ORDER_REQUEST_SUBMITTED` (cuando un empleado pide un producto nuevo; cambiar la cantidad no avisa), `ATTENDANCE_LATE` (entrada con retardo) y `ORDER_DISPATCH_FAILED` (envíos a la nube que fallaron). El gerente es un usuario de la nube, así que lo que ya leyó se guarda por su correo en `notification_reads` (el correo no cambia en la nube).
+- **A los gerentes** (una fila para todos los gerentes del local): `ORDER_REQUEST_SUBMITTED` (cuando un empleado pide un producto nuevo; cambiar la cantidad no avisa), `ATTENDANCE_LATE` (entrada con retardo), `ORDER_DISPATCH_FAILED` (envíos a la nube que fallaron), `ORDER_DISPATCH_PENDING` (al volver el canal quedan envíos pendientes; como mucho cada 15 minutos) y `SERVER_UNLINKED` (la nube desvinculó el servidor). El gerente es un usuario de la nube, así que lo que ya leyó se guarda por su correo en `notification_reads` (el correo no cambia en la nube).
 - Se avisa después de guardar y nunca si el paso falla. Si el aviso falla, el paso no falla.
 - La lista usa paginación por cursor (`next_cursor`), las más nuevas primero.
 
@@ -443,8 +498,9 @@ Ver `states/tip-pool.drawio`.
 | `RedisManager` | `infrastructure/cache` | Caché en Redis (`get`, `set`, `forget`, `forgetGroup`); si Redis no responde, el servidor sigue sin caché. |
 | `Xlsx` | `infrastructure/exporters` | Excel de credenciales y de reparto de propinas. |
 | `Machine` | `infrastructure/utils` | Plataforma y MAC para emparejar. |
-| `TokenPayload` | `infrastructure/utils` | Leer el correo del token del gerente ya validado (quién envió el pedido, corrigió, justificó o sancionó). |
+| `TokenPayload` | `infrastructure/utils` | Leer datos de un token ya validado: el correo del gerente (quién envió el pedido, corrigió, justificó o sancionó), su `session_key`, su vencimiento y el `locationId` del `server_token`. |
 | `JwtManager`, `Argon2` | `infrastructure/securities` | Tokens y contraseñas. |
+| `Crypto` | `infrastructure/securities` | `sha256` y cifrado AES-256-GCM (`encrypt` / `decrypt`) con `DATA_ENCRYPTION_KEY`. |
 | `CatalogService` | módulo `repository` | Existencia de áreas, puestos y productos, compartida por los módulos. |
 
 ## 12. Nomenclatura
