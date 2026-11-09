@@ -31,6 +31,10 @@ export class SessionAggregate {
     return this.session.RefreshTokenHash;
   }
 
+  get PreviousRefreshTokenHash(): string | null {
+    return this.session.PreviousRefreshTokenHash;
+  }
+
   get IsExpired(): boolean {
     return this.session.IsExpired;
   }
@@ -42,6 +46,8 @@ export class SessionAggregate {
   get WillExpireWithin24Hours(): boolean {
     return this.session.willExpireWithin(24);
   }
+
+  rotatedWithin = (ms: number): boolean => this.session.rotatedWithin(ms);
 
   verifyRequesterIp = (ip: string): boolean => this.session.RequesterIp === ip;
 
@@ -60,8 +66,8 @@ export class SessionAggregate {
     return this;
   }
 
-  setRefreshTokenHash(token: string): SessionAggregate {
-    this.session.setRefreshTokenHash(token);
+  rotateRefreshTokenHash(token: string): SessionAggregate {
+    this.session.rotateRefreshTokenHash(token);
     return this;
   }
 

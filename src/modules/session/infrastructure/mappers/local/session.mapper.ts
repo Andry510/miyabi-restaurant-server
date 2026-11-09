@@ -15,6 +15,8 @@ type TSessionPrisma = Pick<
   | 'id'
   | 'secret_key'
   | 'refresh_token_hash'
+  | 'previous_refresh_token_hash'
+  | 'refresh_rotated_at'
   | 'status'
   | 'user_id'
   | 'requester_ip'
@@ -40,6 +42,8 @@ export class SessionMapper {
   static toPersistence(session: UserSession): sessionsUpdateInput {
     return {
       refresh_token_hash: session.RefreshTokenHash,
+      previous_refresh_token_hash: session.PreviousRefreshTokenHash,
+      refresh_rotated_at: session.RefreshRotatedAt,
       status: session.Status as session_status,
       requester_ip: session.RequesterIp,
       revoked_by: session.RevokedBy,

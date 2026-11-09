@@ -17,6 +17,8 @@ const SESSION_SELECT = {
   id: true,
   secret_key: true,
   refresh_token_hash: true,
+  previous_refresh_token_hash: true,
+  refresh_rotated_at: true,
   status: true,
   user_id: true,
   requester_ip: true,
@@ -57,6 +59,23 @@ export class SessionRepository implements ISessionRepository {
           where: { id: session.Id },
           data: SessionMapper.toPersistence(session),
         });
+      },
+    );
+
+  updateIfRefreshTokenHash = (
+    session: UserSession,
+    refreshTokenHash: string,
+  ): Promise<ResultPattern<boolean>> =>
+    ResultPattern.tryCatchAsync(
+      'Infrastructure',
+      SessionRepository.name,
+      async (): Promise<boolean> => {
+        const response = await this.primaryDatabase.sessions.updateMany({
+          where: { id: session.Id, refresh_token_hash: refreshTokenHash },
+          data: SessionMapper.toPersistence(session),
+        });
+
+        return response.count > 0;
       },
     );
 

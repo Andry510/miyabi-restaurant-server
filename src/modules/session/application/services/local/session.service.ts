@@ -21,9 +21,13 @@ import { ServiceResultMapper } from '@infrastructure/mappers/shared';
 // oxlint-disable-next-line typescript/consistent-type-imports
 import { Argon2, JwtManager } from '@infrastructure/securities';
 import {
+  SESSION_LIMITS,
   SESSION_LOGGER_NAME,
   SESSION_PROVIDER_TOKENS,
 } from '../../../infrastructure/constants';
+
+//Api
+import { API_SESSION_MESSAGE } from '../../../api/messages';
 
 @Injectable()
 export class LocalSessionService implements ILocalSessionService {
@@ -71,6 +75,45 @@ export class LocalSessionService implements ILocalSessionService {
     return ServiceResultMapper.Ok(undefined);
   }
 
+  private async rejectStaleRefreshToken(
+    sessionAggregate: SessionAggregate,
+    refreshToken: string,
+  ): Promise<ResultPattern<TRefreshTokenOutput, ServiceError>> {
+    const previousHash = sessionAggregate.PreviousRefreshTokenHash;
+
+    if (
+      previousHash &&
+      sessionAggregate.rotatedWithin(SESSION_LIMITS.ROTATION_GRACE_MS)
+    ) {
+      const isPreviousResult = await Argon2.verify(previousHash, refreshToken);
+
+      if (isPreviousResult.IsFailure) {
+        this.logger.error(isPreviousResult.Error);
+        return ServiceResultMapper.InternalServerError();
+      }
+
+      if (isPreviousResult.Value) {
+        return ServiceResultMapper.Conflict(
+          API_SESSION_MESSAGE.ERROR.REFRESH_TOKEN_ROTATED,
+        );
+      }
+    }
+
+    this.logger.warn(SYSTEM_MESSAGE.ERROR.REFRESH_TOKEN_REUSED);
+
+    sessionAggregate.revoke(SESSION_REVOCATION_ACTOR.SYSTEM);
+
+    const updateResult = await this.updateSession(sessionAggregate.Session);
+
+    if (updateResult.IsFailure) {
+      return ResultPattern.Failure(updateResult.Error);
+    }
+
+    return ServiceResultMapper.Unauthorized(
+      API_SESSION_MESSAGE.ERROR.REFRESH_TOKEN_REUSED,
+    );
+  }
+
   async refreshToken(
     input: TClientInput,
     refreshToken: string,
@@ -110,7 +153,7 @@ export class LocalSessionService implements ILocalSessionService {
     }
 
     if (!isMatchRefreshTokenResult.Value) {
-      return ServiceResultMapper.Unauthorized();
+      return this.rejectStaleRefreshToken(sessionAggregate, refreshToken);
     }
 
     if (tokenPolicy.IsExpired || sessionAggregate.IsExpired) {
@@ -144,16 +187,11 @@ export class LocalSessionService implements ILocalSessionService {
       return ServiceResultMapper.Unauthorized();
     }
 
-    let hasChanges = false;
-
     if (!sessionAggregate.verifyRequesterIp(input.requester_ip)) {
       this.logger.warn(SYSTEM_MESSAGE.ERROR.IP_CHANGED(input.requester_ip));
 
       sessionAggregate.setRequestIp(input.requester_ip);
-      hasChanges = true;
     }
-
-    let newRefreshToken = refreshToken;
 
     const accessTokenResult = await this.jwt_service.generateToken({
       email: sessionAggregate.Email,
@@ -165,45 +203,50 @@ export class LocalSessionService implements ILocalSessionService {
       return ServiceResultMapper.InternalServerError();
     }
 
-    if (sessionAggregate.WillExpireWithin24Hours) {
-      const refreshTokenResult = await this.jwt_service.generateRefreshToken({
-        user_id: sessionAggregate.UserId,
-        session_key: sessionAggregate.SecretKey,
-      });
+    const refreshTokenResult = await this.jwt_service.generateRefreshToken({
+      user_id: sessionAggregate.UserId,
+      session_key: sessionAggregate.SecretKey,
+    });
 
-      if (refreshTokenResult.IsFailure) {
-        this.logger.error(refreshTokenResult.Error);
-        return ServiceResultMapper.InternalServerError();
-      }
-
-      const hashRefreshTokenResult = await Argon2.hash(
-        refreshTokenResult.Value,
-      );
-
-      if (hashRefreshTokenResult.IsFailure) {
-        this.logger.error(hashRefreshTokenResult.Error);
-        return ServiceResultMapper.InternalServerError();
-      }
-
-      sessionAggregate
-        .renewExpiration(Env.SESSION_EXPIRES_MS)
-        .setRefreshTokenHash(hashRefreshTokenResult.Value);
-
-      newRefreshToken = refreshTokenResult.Value;
-      hasChanges = true;
+    if (refreshTokenResult.IsFailure) {
+      this.logger.error(refreshTokenResult.Error);
+      return ServiceResultMapper.InternalServerError();
     }
 
-    if (hasChanges) {
-      const updateResult = await this.updateSession(sessionAggregate.Session);
+    const hashRefreshTokenResult = await Argon2.hash(refreshTokenResult.Value);
 
-      if (updateResult.IsFailure) {
-        return ResultPattern.Failure(updateResult.Error);
-      }
+    if (hashRefreshTokenResult.IsFailure) {
+      this.logger.error(hashRefreshTokenResult.Error);
+      return ServiceResultMapper.InternalServerError();
+    }
+
+    const currentHash = sessionAggregate.RefreshTokenHash;
+
+    if (sessionAggregate.WillExpireWithin24Hours) {
+      sessionAggregate.renewExpiration(Env.SESSION_EXPIRES_MS);
+    }
+
+    sessionAggregate.rotateRefreshTokenHash(hashRefreshTokenResult.Value);
+
+    const rotateResult = await this.session_repository.updateIfRefreshTokenHash(
+      sessionAggregate.Session,
+      currentHash,
+    );
+
+    if (rotateResult.IsFailure) {
+      this.logger.error(rotateResult.Error);
+      return ServiceResultMapper.InternalServerError();
+    }
+
+    if (!rotateResult.Value) {
+      return ServiceResultMapper.Conflict(
+        API_SESSION_MESSAGE.ERROR.REFRESH_TOKEN_ROTATED,
+      );
     }
 
     return ServiceResultMapper.Ok({
       access_token: accessTokenResult.Value,
-      refresh_token: newRefreshToken,
+      refresh_token: refreshTokenResult.Value,
     });
   }
 

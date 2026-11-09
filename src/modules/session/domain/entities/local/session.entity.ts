@@ -7,6 +7,8 @@ export class UserSession {
 
   private secret_key: string;
   private refresh_token_hash: string;
+  private previous_refresh_token_hash: string | null;
+  private refresh_rotated_at: Date | null;
   private status: SESSION_STATUS;
 
   private readonly user_id: string;
@@ -22,6 +24,8 @@ export class UserSession {
     this.id = props.id;
     this.secret_key = props.secret_key;
     this.refresh_token_hash = props.refresh_token_hash;
+    this.previous_refresh_token_hash = props.previous_refresh_token_hash;
+    this.refresh_rotated_at = props.refresh_rotated_at;
     this.status = props.status;
     this.user_id = props.user_id;
     this.requester_ip = props.requester_ip;
@@ -47,6 +51,14 @@ export class UserSession {
 
   get RefreshTokenHash(): string {
     return this.refresh_token_hash;
+  }
+
+  get PreviousRefreshTokenHash(): string | null {
+    return this.previous_refresh_token_hash;
+  }
+
+  get RefreshRotatedAt(): Date | null {
+    return this.refresh_rotated_at;
   }
 
   get Status(): SESSION_STATUS {
@@ -85,6 +97,13 @@ export class UserSession {
     return this.expire_at === null || this.expire_at <= new Date();
   }
 
+  rotatedWithin(ms: number): boolean {
+    return (
+      this.refresh_rotated_at !== null &&
+      Date.now() - this.refresh_rotated_at.getTime() <= ms
+    );
+  }
+
   willExpireWithin(hours: number): boolean {
     if (!this.expire_at) {
       return false;
@@ -98,8 +117,10 @@ export class UserSession {
     return remainingHours > 0 && remainingHours <= hours;
   }
 
-  setRefreshTokenHash(token: string): UserSession {
+  rotateRefreshTokenHash(token: string): UserSession {
+    this.previous_refresh_token_hash = this.refresh_token_hash;
     this.refresh_token_hash = token;
+    this.refresh_rotated_at = new Date();
     return this;
   }
 

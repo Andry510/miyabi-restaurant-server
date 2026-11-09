@@ -15,4 +15,9 @@ export interface ISessionRepository {
   ): Promise<ResultPattern<SessionAggregate | null>>;
 
   update(session: UserSession): Promise<ResultPattern<void>>;
+
+  updateIfRefreshTokenHash(
+    session: UserSession,
+    refreshTokenHash: string,
+  ): Promise<ResultPattern<boolean>>;
 }

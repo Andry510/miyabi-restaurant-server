@@ -1,5 +1,15 @@
 export const API_SESSION_MESSAGE = Object.freeze({
   ERROR: {
+    REFRESH_TOKEN_ROTATED: {
+      code: 'ERROR_REFRESH_TOKEN_ROTATED',
+      message:
+        'La sesión ya se renovó con este token; usa el último token que recibiste',
+    },
+    REFRESH_TOKEN_REUSED: {
+      code: 'ERROR_REFRESH_TOKEN_REUSED',
+      message:
+        'Se usó un token de renovación anterior; por seguridad cerramos la sesión, inicia sesión de nuevo',
+    },
     MANAGER_SESSION_INVALID: {
       code: 'ERROR_MANAGER_SESSION_INVALID',
       message: 'La sesión no es válida; inicia sesión de nuevo',

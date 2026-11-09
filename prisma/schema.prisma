@@ -176,9 +176,11 @@ model authentications {
 model sessions {
   id String @id @default(uuid(7))
 
-  secret_key         String         @unique @db.VarChar(255)
-  refresh_token_hash String         @db.VarChar(255)
-  status             session_status @default(active)
+  secret_key                  String         @unique @db.VarChar(255)
+  refresh_token_hash          String         @db.VarChar(255)
+  previous_refresh_token_hash String?        @db.VarChar(255)
+  refresh_rotated_at          DateTime?
+  status                      session_status @default(active)
 
   requester_ip String? @db.VarChar(50)
   device       String? @db.VarChar(150)

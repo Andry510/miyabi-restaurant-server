@@ -11,7 +11,7 @@ import { ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 
 //Api
-import { PRODUCT_TAG, PRODUCT_LOCAL_PRODUCTS_DOCS } from '../../../swagger';
+import { PRODUCT_TAG, PRODUCT_LOCAL_MINE_DOCS } from '../../../swagger';
 import { API_PRODUCT_MESSAGE } from '../../../messages';
 import { HTTP_LOCAL_PRODUCT_ROUTER } from '../../../routers';
 
@@ -46,10 +46,10 @@ export class LocalProductHttpController {
     private readonly service: ILocalProductService,
   ) {}
 
-  @HttpDocs(PRODUCT_LOCAL_PRODUCTS_DOCS)
-  @Get(HTTP_LOCAL_PRODUCT_ROUTER.PRODUCTS)
+  @HttpDocs(PRODUCT_LOCAL_MINE_DOCS)
+  @Get(HTTP_LOCAL_PRODUCT_ROUTER.MINE)
   @HttpLocalAccess()
-  async products(
+  async mine(
     @Query() query: LocalProductsQueryDto,
     @HttpUser() user: TUserDetail,
     @Res() res: Response,

@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto';
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 
@@ -56,7 +57,8 @@ export class JwtManager {
     ResultPattern.tryCatchAsync(
       'Infrastructure',
       JwtManager.name,
-      async (): Promise<string> => await this.refresh_token.signAsync(payload),
+      async (): Promise<string> =>
+        await this.refresh_token.signAsync(payload, { jwtid: randomUUID() }),
     );
 
   generatePasswordToken = (

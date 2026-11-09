@@ -24,6 +24,8 @@ export const SYSTEM_MESSAGE = Object.freeze({
       `Falló la respuesta a la solicitud ${request}.`,
     IP_CHANGED: (ip: string) => `La dirección IP ha cambiado por ${ip}.`,
     INVALID_DEVICE_OR_BROWSER: 'El dispositivo o navegador no es válido.',
+    REFRESH_TOKEN_REUSED:
+      'Se reusó un refresh token anterior; se revoca la sesión.',
     HYDRATION_INVALID_PRODUCT:
       'La nube envió un producto que no cumple el formato esperado.',
   },

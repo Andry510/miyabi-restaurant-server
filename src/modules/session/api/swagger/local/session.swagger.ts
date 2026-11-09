@@ -11,6 +11,8 @@ import type { THttpDocs } from '@infrastructure/http';
 
 export const SESSION_LOCAL_REFRESH_TOKEN_DOCS: THttpDocs = {
   summary: 'Renovar la sesión',
+  description:
+    'Con el refresh_token (Bearer). Cada renovación entrega un refresh_token nuevo y el anterior deja de servir: guarda siempre el último. Si el anterior se vuelve a usar en los 30 s siguientes responde 409; después se toma como robo y se cierra la sesión.',
   bearer: true,
   success: API_SESSION_MESSAGE.SUCCESS.TOKEN_UPDATED,
   errors: [
@@ -29,6 +31,14 @@ export const SESSION_LOCAL_REFRESH_TOKEN_DOCS: THttpDocs = {
     {
       status: HttpStatus.UNAUTHORIZED,
       message: API_MESSAGE_GLOBAL.ERROR.EXPIRED_REFRESH_TOKEN,
+    },
+    {
+      status: HttpStatus.UNAUTHORIZED,
+      message: API_SESSION_MESSAGE.ERROR.REFRESH_TOKEN_REUSED,
+    },
+    {
+      status: HttpStatus.CONFLICT,
+      message: API_SESSION_MESSAGE.ERROR.REFRESH_TOKEN_ROTATED,
     },
   ],
 };

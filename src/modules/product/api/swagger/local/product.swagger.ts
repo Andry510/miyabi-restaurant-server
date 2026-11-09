@@ -12,8 +12,10 @@ import { API_MESSAGE_GLOBAL } from '@common/messages';
 //Infrastructure
 import type { THttpDocs } from '@infrastructure/http';
 
-export const PRODUCT_LOCAL_PRODUCTS_DOCS: THttpDocs = {
-  summary: 'Listar productos',
+export const PRODUCT_LOCAL_MINE_DOCS: THttpDocs = {
+  summary: 'Mis productos',
+  description:
+    'Los productos asignados al área de trabajo del empleado, según su asignación.',
   access: 'employee',
   query: LocalProductsQueryDto,
   success: API_PRODUCT_MESSAGE.SUCCESS.PRODUCTS_RETRIEVED,

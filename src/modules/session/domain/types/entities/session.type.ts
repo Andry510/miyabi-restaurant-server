@@ -10,6 +10,8 @@ export type TSessionProps = {
   id: string;
   secret_key: string;
   refresh_token_hash: string;
+  previous_refresh_token_hash: string | null;
+  refresh_rotated_at: Date | null;
   status: SESSION_STATUS;
   user_id: string;
   requester_ip: string | null;

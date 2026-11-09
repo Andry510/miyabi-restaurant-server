@@ -267,7 +267,7 @@ La última columna es el diagrama en `documents/diagrams/workflows/`; `—` indi
 | PATCH | `/v1/notifications/local/read` | gerente | Marcar como leídas las del equipo (todas o `notification_ids`) | — |
 | GET | `/v1/products/cloud` | gerente (nube) | Listar productos | `product/cloud/products` |
 | GET | `/v1/products/cloud/:id` | gerente (nube) | Ver producto | `product/cloud/product` |
-| GET | `/v1/products/local` | empleado | Listar productos | `product/local/products` |
+| GET | `/v1/me/local/products` | empleado | Mis productos (los de su área de trabajo) | `product/local/products` |
 | GET | `/v1/suppliers/cloud` | gerente (nube) | Listar proveedores | `supplier/cloud/suppliers` |
 | GET | `/v1/suppliers/cloud/:id` | gerente (nube) | Ver proveedor | `supplier/cloud/supplier` |
 | GET | `/v1/products/cloud/:id/suppliers` | gerente (nube) | Proveedores de un producto | `supplier-product/cloud/suppliers` |
@@ -291,7 +291,7 @@ La última columna es el diagrama en `documents/diagrams/workflows/`; `—` indi
 | Token | Quién lo emite | Firma | Para qué |
 |---|---|---|---|
 | `access_token` de empleado | El servidor | `JWT_SECRET_TOKEN` | Rutas `@HttpLocalAccess`. Lleva `email` y `session_key`. |
-| `refresh_token` de empleado | El servidor | `JWT_SECRET_REFRESH_TOKEN` | `POST /v1/sessions/local/refresh` y `logout`. |
+| `refresh_token` de empleado | El servidor | `JWT_SECRET_REFRESH_TOKEN` | `POST /v1/sessions/local/refresh` y `logout`. Cada refresh entrega uno nuevo y el anterior deja de servir: si se reusa en los 30 s siguientes responde 409 `ERROR_REFRESH_TOKEN_ROTATED`; después, 401 `ERROR_REFRESH_TOKEN_REUSED` y la sesión se revoca. La nube hace lo mismo con el del gerente, y el servidor guarda el nuevo en cada renovación. |
 | `password_token` | El servidor | `JWT_SECRET_PASSWORD_TOKEN` | Cambio de contraseña obligatoria del empleado. |
 | `session_token` del gerente (`mss_` + 32 bytes aleatorios en base64url) | El servidor, al terminar el login, el MFA o el cambio de contraseña del gerente | — (opaco) | Lo único que tiene la app del gerente: Bearer en las rutas y `access_token` en el socket. En la base solo se guarda su huella SHA-256 (`manager_sessions.token_hash`). |
 | `access_token` y `refresh_token` del gerente | La nube | Secretos de la nube | Nunca salen del servidor: se guardan cifrados con AES-256-GCM en `manager_sessions`. El servidor manda el `access_token` a la nube en cada llamada y lo renueva con el `refresh_token`. |
