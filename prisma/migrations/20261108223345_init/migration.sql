@@ -2,6 +2,9 @@
 CREATE TYPE "units" AS ENUM ('box', 'piece', 'pack', 'bag', 'crate', 'sack', 'kg', 'liter');
 
 -- CreateEnum
+CREATE TYPE "pairing_status" AS ENUM ('unpaired', 'paired', 'unlinked');
+
+-- CreateEnum
 CREATE TYPE "session_status" AS ENUM ('active', 'expired', 'revoked');
 
 -- CreateEnum
@@ -48,6 +51,12 @@ CREATE TABLE "server_settings" (
     "tip_sanction_destination" "tip_sanction_destination" NOT NULL DEFAULT 'fund',
     "week_start_day" "week_day" NOT NULL DEFAULT 'monday',
     "products_synced_at" TIMESTAMP(3),
+    "pairing_status" "pairing_status" NOT NULL DEFAULT 'unpaired',
+    "server_token_enc" TEXT,
+    "location_id" UUID,
+    "unlinked_reason" VARCHAR(100),
+    "paired_at" TIMESTAMP(3),
+    "unlinked_at" TIMESTAMP(3),
     "updated_at" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "server_settings_pkey" PRIMARY KEY ("id")
@@ -106,6 +115,25 @@ CREATE TABLE "sessions" (
     "updated_at" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "sessions_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "manager_sessions" (
+    "id" TEXT NOT NULL,
+    "token_hash" VARCHAR(64) NOT NULL,
+    "email" VARCHAR(255) NOT NULL,
+    "cloud_session_key" VARCHAR(255) NOT NULL,
+    "access_token_enc" TEXT NOT NULL,
+    "refresh_token_enc" TEXT NOT NULL,
+    "access_expires_at" TIMESTAMP(3) NOT NULL,
+    "last_access_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "requester_ip" VARCHAR(50),
+    "device" VARCHAR(150),
+    "browser" VARCHAR(150),
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "manager_sessions_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -471,6 +499,15 @@ CREATE UNIQUE INDEX "sessions_secret_key_key" ON "sessions"("secret_key");
 
 -- CreateIndex
 CREATE INDEX "sessions_status_expire_at_last_access_at_idx" ON "sessions"("status", "expire_at", "last_access_at");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "manager_sessions_token_hash_key" ON "manager_sessions"("token_hash");
+
+-- CreateIndex
+CREATE INDEX "manager_sessions_cloud_session_key_idx" ON "manager_sessions"("cloud_session_key");
+
+-- CreateIndex
+CREATE INDEX "manager_sessions_last_access_at_idx" ON "manager_sessions"("last_access_at");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "work_areas_name_key" ON "work_areas"("name");
