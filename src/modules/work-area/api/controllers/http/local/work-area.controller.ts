@@ -12,9 +12,18 @@ import {
   Res,
   UsePipes,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 
 //Api
+import {
+  WORK_AREA_TAG,
+  WORK_AREA_LOCAL_REGISTER_DOCS,
+  WORK_AREA_LOCAL_REMOVE_DOCS,
+  WORK_AREA_LOCAL_UPDATE_DOCS,
+  WORK_AREA_LOCAL_WORK_AREAS_DOCS,
+  WORK_AREA_LOCAL_WORK_AREA_DOCS,
+} from '../../../swagger';
 import { API_WORK_AREA_MESSAGE } from '../../../messages';
 import { HTTP_LOCAL_WORK_AREA_ROUTER } from '../../../routers';
 
@@ -28,6 +37,7 @@ import {
 } from '../../../../application/dto';
 
 //Common
+import { HttpDocs } from '@common/decorators/docs';
 import { HttpManagerAccess } from '@common/decorators/access';
 import { HttpValibotPipe } from '@common/pipes';
 
@@ -49,12 +59,14 @@ import { WORK_AREA_PROVIDER_TOKENS } from '../../../../infrastructure/constants'
 
 @Controller()
 @UsePipes(HttpValibotPipe)
+@ApiTags(WORK_AREA_TAG)
 export class WorkAreaHttpController {
   constructor(
     @Inject(WORK_AREA_PROVIDER_TOKENS.SERVICES.WORK_AREA)
     private readonly service: IWorkAreaService,
   ) {}
 
+  @HttpDocs(WORK_AREA_LOCAL_WORK_AREAS_DOCS)
   @Get(HTTP_LOCAL_WORK_AREA_ROUTER.WORK_AREAS)
   @HttpManagerAccess()
   async workAreas(
@@ -78,6 +90,7 @@ export class WorkAreaHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(WORK_AREA_LOCAL_REGISTER_DOCS)
   @Post(HTTP_LOCAL_WORK_AREA_ROUTER.REGISTER)
   @HttpManagerAccess()
   async register(
@@ -100,6 +113,7 @@ export class WorkAreaHttpController {
     return res.status(HttpStatus.CREATED).json(response);
   }
 
+  @HttpDocs(WORK_AREA_LOCAL_WORK_AREA_DOCS)
   @Get(HTTP_LOCAL_WORK_AREA_ROUTER.WORK_AREA)
   @HttpManagerAccess()
   async workArea(
@@ -122,6 +136,7 @@ export class WorkAreaHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(WORK_AREA_LOCAL_UPDATE_DOCS)
   @Patch(HTTP_LOCAL_WORK_AREA_ROUTER.UPDATE)
   @HttpManagerAccess()
   async update(
@@ -146,6 +161,7 @@ export class WorkAreaHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(WORK_AREA_LOCAL_REMOVE_DOCS)
   @Delete(HTTP_LOCAL_WORK_AREA_ROUTER.REMOVE)
   @HttpManagerAccess()
   async remove(

@@ -7,13 +7,21 @@ import {
   Res,
   UsePipes,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 
 //Api
+import {
+  CHECK_TAG,
+  CHECK_LOCAL_CHECK_IN_DOCS,
+  CHECK_LOCAL_CHECK_OUT_DOCS,
+  CHECK_LOCAL_CURRENT_DOCS,
+} from '../../../swagger';
 import { API_CHECK_MESSAGE } from '../../../messages';
 import { HTTP_LOCAL_CHECK_ROUTER } from '../../../routers';
 
 //Common
+import { HttpDocs } from '@common/decorators/docs';
 import { HttpLocalAccess } from '@common/decorators/access';
 import { HttpUser } from '@common/decorators/request';
 import { HttpValibotPipe } from '@common/pipes';
@@ -31,12 +39,14 @@ import { CHECK_PROVIDER_TOKENS } from '../../../../infrastructure/constants';
 
 @Controller()
 @UsePipes(HttpValibotPipe)
+@ApiTags(CHECK_TAG)
 export class CheckHttpController {
   constructor(
     @Inject(CHECK_PROVIDER_TOKENS.SERVICES.CHECK)
     private readonly service: ICheckService,
   ) {}
 
+  @HttpDocs(CHECK_LOCAL_CURRENT_DOCS)
   @Get(HTTP_LOCAL_CHECK_ROUTER.CURRENT)
   @HttpLocalAccess()
   async current(
@@ -57,6 +67,7 @@ export class CheckHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(CHECK_LOCAL_CHECK_IN_DOCS)
   @Post(HTTP_LOCAL_CHECK_ROUTER.IN)
   @HttpLocalAccess()
   async checkIn(
@@ -77,6 +88,7 @@ export class CheckHttpController {
     return res.status(HttpStatus.CREATED).json(response);
   }
 
+  @HttpDocs(CHECK_LOCAL_CHECK_OUT_DOCS)
   @Post(HTTP_LOCAL_CHECK_ROUTER.OUT)
   @HttpLocalAccess()
   async checkOut(

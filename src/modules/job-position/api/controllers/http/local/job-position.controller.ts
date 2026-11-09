@@ -12,9 +12,18 @@ import {
   Res,
   UsePipes,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 
 //Api
+import {
+  JOB_POSITION_TAG,
+  JOB_POSITION_LOCAL_JOB_POSITIONS_DOCS,
+  JOB_POSITION_LOCAL_JOB_POSITION_DOCS,
+  JOB_POSITION_LOCAL_REGISTER_DOCS,
+  JOB_POSITION_LOCAL_REMOVE_DOCS,
+  JOB_POSITION_LOCAL_UPDATE_DOCS,
+} from '../../../swagger';
 import { API_JOB_POSITION_MESSAGE } from '../../../messages';
 import { HTTP_LOCAL_JOB_POSITION_ROUTER } from '../../../routers';
 
@@ -28,6 +37,7 @@ import {
 } from '../../../../application/dto';
 
 //Common
+import { HttpDocs } from '@common/decorators/docs';
 import { HttpManagerAccess } from '@common/decorators/access';
 import { HttpValibotPipe } from '@common/pipes';
 
@@ -49,12 +59,14 @@ import { JOB_POSITION_PROVIDER_TOKENS } from '../../../../infrastructure/constan
 
 @Controller()
 @UsePipes(HttpValibotPipe)
+@ApiTags(JOB_POSITION_TAG)
 export class JobPositionHttpController {
   constructor(
     @Inject(JOB_POSITION_PROVIDER_TOKENS.SERVICES.JOB_POSITION)
     private readonly service: IJobPositionService,
   ) {}
 
+  @HttpDocs(JOB_POSITION_LOCAL_JOB_POSITIONS_DOCS)
   @Get(HTTP_LOCAL_JOB_POSITION_ROUTER.JOB_POSITIONS)
   @HttpManagerAccess()
   async jobPositions(
@@ -78,6 +90,7 @@ export class JobPositionHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(JOB_POSITION_LOCAL_REGISTER_DOCS)
   @Post(HTTP_LOCAL_JOB_POSITION_ROUTER.REGISTER)
   @HttpManagerAccess()
   async register(
@@ -100,6 +113,7 @@ export class JobPositionHttpController {
     return res.status(HttpStatus.CREATED).json(response);
   }
 
+  @HttpDocs(JOB_POSITION_LOCAL_JOB_POSITION_DOCS)
   @Get(HTTP_LOCAL_JOB_POSITION_ROUTER.JOB_POSITION)
   @HttpManagerAccess()
   async jobPosition(
@@ -122,6 +136,7 @@ export class JobPositionHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(JOB_POSITION_LOCAL_UPDATE_DOCS)
   @Patch(HTTP_LOCAL_JOB_POSITION_ROUTER.UPDATE)
   @HttpManagerAccess()
   async update(
@@ -146,6 +161,7 @@ export class JobPositionHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(JOB_POSITION_LOCAL_REMOVE_DOCS)
   @Delete(HTTP_LOCAL_JOB_POSITION_ROUTER.REMOVE)
   @HttpManagerAccess()
   async remove(

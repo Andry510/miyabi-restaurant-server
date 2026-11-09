@@ -9,9 +9,15 @@ import {
   Res,
   UsePipes,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 
 //Api
+import {
+  AUTHENTICATION_TAG,
+  AUTHENTICATION_LOCAL_LOGIN_DOCS,
+  AUTHENTICATION_LOCAL_RESET_PASSWORD_DOCS,
+} from '../../../swagger';
 import { API_AUTHENTICATION_MESSAGE } from '../../../messages';
 import { HTTP_LOCAL_AUTHENTICATION_ROUTER } from '../../../routers';
 
@@ -23,6 +29,7 @@ import {
 } from '../../../../application/dto';
 
 //Common
+import { HttpDocs } from '@common/decorators/docs';
 import { HttpAuthorization } from '@common/decorators/request';
 import { HttpValibotPipe } from '@common/pipes';
 
@@ -48,12 +55,14 @@ import { AUTHENTICATION_PROVIDER_TOKENS } from '../../../../infrastructure/const
 
 @Controller()
 @UsePipes(HttpValibotPipe)
+@ApiTags(AUTHENTICATION_TAG)
 export class LocalAuthenticationHttpController {
   constructor(
     @Inject(AUTHENTICATION_PROVIDER_TOKENS.SERVICES.LOCAL)
     private readonly service: ILocalAuthenticationService,
   ) {}
 
+  @HttpDocs(AUTHENTICATION_LOCAL_LOGIN_DOCS)
   @Post(HTTP_LOCAL_AUTHENTICATION_ROUTER.LOGIN)
   async login(
     @Body() body: LoginBodyDto,
@@ -85,6 +94,7 @@ export class LocalAuthenticationHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(AUTHENTICATION_LOCAL_RESET_PASSWORD_DOCS)
   @Post(HTTP_LOCAL_AUTHENTICATION_ROUTER.PASSWORD_RESET)
   async resetPassword(
     @Body() body: ResetPasswordBodyDto,

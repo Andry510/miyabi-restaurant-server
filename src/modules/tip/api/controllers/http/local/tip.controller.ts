@@ -12,9 +12,20 @@ import {
   Res,
   UsePipes,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 
 //Api
+import {
+  TIP_TAG,
+  TIP_LOCAL_CLOSE_DOCS,
+  TIP_LOCAL_POOLS_DOCS,
+  TIP_LOCAL_POOL_DOCS,
+  TIP_LOCAL_REGISTER_DOCS,
+  TIP_LOCAL_REMOVE_DOCS,
+  TIP_LOCAL_REOPEN_DOCS,
+  TIP_LOCAL_UPDATE_DOCS,
+} from '../../../swagger';
 import { API_TIP_MESSAGE } from '../../../messages';
 import { HTTP_LOCAL_TIP_ROUTER } from '../../../routers';
 
@@ -28,6 +39,7 @@ import {
 } from '../../../../application/dto';
 
 //Common
+import { HttpDocs } from '@common/decorators/docs';
 import { HttpManagerAccess } from '@common/decorators/access';
 import { HttpValibotPipe } from '@common/pipes';
 
@@ -49,12 +61,14 @@ import { TIP_PROVIDER_TOKENS } from '../../../../infrastructure/constants';
 
 @Controller()
 @UsePipes(HttpValibotPipe)
+@ApiTags(TIP_TAG)
 export class TipHttpController {
   constructor(
     @Inject(TIP_PROVIDER_TOKENS.SERVICES.TIP)
     private readonly service: ITipService,
   ) {}
 
+  @HttpDocs(TIP_LOCAL_POOLS_DOCS)
   @Get(HTTP_LOCAL_TIP_ROUTER.POOLS)
   @HttpManagerAccess()
   async pools(
@@ -78,6 +92,7 @@ export class TipHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(TIP_LOCAL_REGISTER_DOCS)
   @Post(HTTP_LOCAL_TIP_ROUTER.REGISTER)
   @HttpManagerAccess()
   async register(
@@ -100,6 +115,7 @@ export class TipHttpController {
     return res.status(HttpStatus.CREATED).json(response);
   }
 
+  @HttpDocs(TIP_LOCAL_POOL_DOCS)
   @Get(HTTP_LOCAL_TIP_ROUTER.POOL)
   @HttpManagerAccess()
   async pool(
@@ -122,6 +138,7 @@ export class TipHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(TIP_LOCAL_UPDATE_DOCS)
   @Patch(HTTP_LOCAL_TIP_ROUTER.UPDATE)
   @HttpManagerAccess()
   async update(
@@ -146,6 +163,7 @@ export class TipHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(TIP_LOCAL_CLOSE_DOCS)
   @Patch(HTTP_LOCAL_TIP_ROUTER.CLOSE)
   @HttpManagerAccess()
   async close(
@@ -168,6 +186,7 @@ export class TipHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(TIP_LOCAL_REOPEN_DOCS)
   @Patch(HTTP_LOCAL_TIP_ROUTER.REOPEN)
   @HttpManagerAccess()
   async reopen(
@@ -190,6 +209,7 @@ export class TipHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(TIP_LOCAL_REMOVE_DOCS)
   @Delete(HTTP_LOCAL_TIP_ROUTER.REMOVE)
   @HttpManagerAccess()
   async remove(

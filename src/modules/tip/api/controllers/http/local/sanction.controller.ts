@@ -11,9 +11,19 @@ import {
   Res,
   UsePipes,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 
 //Api
+import {
+  TIP_TAG,
+  TIP_LOCAL_SANCTION_ADD_DOCS,
+  TIP_LOCAL_SANCTION_CREATE_TYPE_DOCS,
+  TIP_LOCAL_SANCTION_REMOVE_DOCS,
+  TIP_LOCAL_SANCTION_REMOVE_TYPE_DOCS,
+  TIP_LOCAL_SANCTION_TYPES_DOCS,
+  TIP_LOCAL_SANCTION_UPDATE_TYPE_DOCS,
+} from '../../../swagger';
 import { API_TIP_MESSAGE } from '../../../messages';
 import { HTTP_LOCAL_TIP_ROUTER } from '../../../routers';
 
@@ -28,6 +38,7 @@ import {
 } from '../../../../application/dto';
 
 //Common
+import { HttpDocs } from '@common/decorators/docs';
 import { HttpManagerAccess } from '@common/decorators/access';
 import { HttpAuthorization } from '@common/decorators/request';
 import { HttpValibotPipe } from '@common/pipes';
@@ -51,12 +62,14 @@ import { TIP_PROVIDER_TOKENS } from '../../../../infrastructure/constants';
 
 @Controller()
 @UsePipes(HttpValibotPipe)
+@ApiTags(TIP_TAG)
 export class SanctionHttpController {
   constructor(
     @Inject(TIP_PROVIDER_TOKENS.SERVICES.SANCTION)
     private readonly service: ISanctionService,
   ) {}
 
+  @HttpDocs(TIP_LOCAL_SANCTION_TYPES_DOCS)
   @Get(HTTP_LOCAL_TIP_ROUTER.SANCTION_TYPES)
   @HttpManagerAccess()
   async types(@Res() res: Response): Promise<Response> {
@@ -74,6 +87,7 @@ export class SanctionHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(TIP_LOCAL_SANCTION_CREATE_TYPE_DOCS)
   @Post(HTTP_LOCAL_TIP_ROUTER.SANCTION_TYPES)
   @HttpManagerAccess()
   async createType(
@@ -96,6 +110,7 @@ export class SanctionHttpController {
     return res.status(HttpStatus.CREATED).json(response);
   }
 
+  @HttpDocs(TIP_LOCAL_SANCTION_UPDATE_TYPE_DOCS)
   @Patch(HTTP_LOCAL_TIP_ROUTER.SANCTION_TYPE)
   @HttpManagerAccess()
   async updateType(
@@ -120,6 +135,7 @@ export class SanctionHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(TIP_LOCAL_SANCTION_REMOVE_TYPE_DOCS)
   @Delete(HTTP_LOCAL_TIP_ROUTER.SANCTION_TYPE)
   @HttpManagerAccess()
   async removeType(
@@ -141,6 +157,7 @@ export class SanctionHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(TIP_LOCAL_SANCTION_ADD_DOCS)
   @Post(HTTP_LOCAL_TIP_ROUTER.SANCTIONS)
   @HttpManagerAccess()
   async add(
@@ -166,6 +183,7 @@ export class SanctionHttpController {
     return res.status(HttpStatus.CREATED).json(response);
   }
 
+  @HttpDocs(TIP_LOCAL_SANCTION_REMOVE_DOCS)
   @Delete(HTTP_LOCAL_TIP_ROUTER.SANCTION)
   @HttpManagerAccess()
   async remove(

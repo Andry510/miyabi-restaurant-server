@@ -1,7 +1,12 @@
 import { NestFactory } from '@nestjs/core';
 
 //Config
-import { CorsConfig, Env, VersionConfig } from '@infrastructure/config';
+import {
+  CorsConfig,
+  Env,
+  SwaggerRoot,
+  VersionConfig,
+} from '@infrastructure/config';
 
 //Common
 import { HttpExceptionFilter } from '@common/filters';
@@ -16,6 +21,8 @@ const bootstrap = async (): Promise<void> => {
   app.enableCors(CorsConfig);
   app.enableVersioning(VersionConfig);
   app.useGlobalFilters(new HttpExceptionFilter());
+
+  SwaggerRoot(app);
 
   await app.listen(Env.PORT);
 };

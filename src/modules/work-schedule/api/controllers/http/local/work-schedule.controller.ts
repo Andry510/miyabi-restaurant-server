@@ -12,9 +12,18 @@ import {
   Res,
   UsePipes,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 
 //Api
+import {
+  WORK_SCHEDULE_TAG,
+  WORK_SCHEDULE_LOCAL_REGISTER_DOCS,
+  WORK_SCHEDULE_LOCAL_REMOVE_DOCS,
+  WORK_SCHEDULE_LOCAL_UPDATE_DOCS,
+  WORK_SCHEDULE_LOCAL_WORK_SCHEDULES_DOCS,
+  WORK_SCHEDULE_LOCAL_WORK_SCHEDULE_DOCS,
+} from '../../../swagger';
 import { API_WORK_SCHEDULE_MESSAGE } from '../../../messages';
 import { HTTP_LOCAL_WORK_SCHEDULE_ROUTER } from '../../../routers';
 
@@ -28,6 +37,7 @@ import {
 } from '../../../../application/dto';
 
 //Common
+import { HttpDocs } from '@common/decorators/docs';
 import { HttpManagerAccess } from '@common/decorators/access';
 import { HttpValibotPipe } from '@common/pipes';
 
@@ -49,12 +59,14 @@ import { WORK_SCHEDULE_PROVIDER_TOKENS } from '../../../../infrastructure/consta
 
 @Controller()
 @UsePipes(HttpValibotPipe)
+@ApiTags(WORK_SCHEDULE_TAG)
 export class WorkScheduleHttpController {
   constructor(
     @Inject(WORK_SCHEDULE_PROVIDER_TOKENS.SERVICES.WORK_SCHEDULE)
     private readonly service: IWorkScheduleService,
   ) {}
 
+  @HttpDocs(WORK_SCHEDULE_LOCAL_WORK_SCHEDULES_DOCS)
   @Get(HTTP_LOCAL_WORK_SCHEDULE_ROUTER.WORK_SCHEDULES)
   @HttpManagerAccess()
   async workSchedules(
@@ -78,6 +90,7 @@ export class WorkScheduleHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(WORK_SCHEDULE_LOCAL_REGISTER_DOCS)
   @Post(HTTP_LOCAL_WORK_SCHEDULE_ROUTER.REGISTER)
   @HttpManagerAccess()
   async register(
@@ -100,6 +113,7 @@ export class WorkScheduleHttpController {
     return res.status(HttpStatus.CREATED).json(response);
   }
 
+  @HttpDocs(WORK_SCHEDULE_LOCAL_WORK_SCHEDULE_DOCS)
   @Get(HTTP_LOCAL_WORK_SCHEDULE_ROUTER.WORK_SCHEDULE)
   @HttpManagerAccess()
   async workSchedule(
@@ -122,6 +136,7 @@ export class WorkScheduleHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(WORK_SCHEDULE_LOCAL_UPDATE_DOCS)
   @Patch(HTTP_LOCAL_WORK_SCHEDULE_ROUTER.UPDATE)
   @HttpManagerAccess()
   async update(
@@ -146,6 +161,7 @@ export class WorkScheduleHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(WORK_SCHEDULE_LOCAL_REMOVE_DOCS)
   @Delete(HTTP_LOCAL_WORK_SCHEDULE_ROUTER.REMOVE)
   @HttpManagerAccess()
   async remove(

@@ -9,9 +9,14 @@ import {
   Res,
   UsePipes,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 
 //Api
+import {
+  AUTHENTICATION_TAG,
+  AUTHENTICATION_CLOUD_PASSWORD_RESET_DOCS,
+} from '../../../swagger';
 import { API_AUTHENTICATION_MESSAGE } from '../../../messages';
 import { HTTP_CLOUD_AUTHENTICATION_ROUTER } from '../../../routers';
 
@@ -20,6 +25,7 @@ import { HTTP_CLOUD_AUTHENTICATION_ROUTER } from '../../../routers';
 import { ResetPasswordBodyDto } from '../../../../application/dto';
 
 //Common
+import { HttpDocs } from '@common/decorators/docs';
 import { HttpAuthorization } from '@common/decorators/request';
 import { HttpValibotPipe } from '@common/pipes';
 
@@ -40,12 +46,14 @@ import { AUTHENTICATION_PROVIDER_TOKENS } from '../../../../infrastructure/const
 
 @Controller()
 @UsePipes(HttpValibotPipe)
+@ApiTags(AUTHENTICATION_TAG)
 export class PasswordHttpController {
   constructor(
     @Inject(AUTHENTICATION_PROVIDER_TOKENS.SERVICES.PASSWORD)
     private readonly service: IPasswordService,
   ) {}
 
+  @HttpDocs(AUTHENTICATION_CLOUD_PASSWORD_RESET_DOCS)
   @Post(HTTP_CLOUD_AUTHENTICATION_ROUTER.PASSWORD.RESET)
   async reset(
     @Body() body: ResetPasswordBodyDto,

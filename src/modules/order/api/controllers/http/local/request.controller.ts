@@ -12,9 +12,17 @@ import {
   Res,
   UsePipes,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 
 //Api
+import {
+  ORDER_TAG,
+  ORDER_LOCAL_REQUEST_MINE_DOCS,
+  ORDER_LOCAL_REQUEST_REMOVE_DOCS,
+  ORDER_LOCAL_REQUEST_SAVE_DOCS,
+  ORDER_LOCAL_REQUEST_UPDATE_DOCS,
+} from '../../../swagger';
 import { API_ORDER_MESSAGE } from '../../../messages';
 import { HTTP_LOCAL_ORDER_ROUTER } from '../../../routers';
 
@@ -28,6 +36,7 @@ import {
 } from '../../../../application/dto';
 
 //Common
+import { HttpDocs } from '@common/decorators/docs';
 import { HttpLocalAccess } from '@common/decorators/access';
 import { HttpUser } from '@common/decorators/request';
 import { HttpValibotPipe } from '@common/pipes';
@@ -51,12 +60,14 @@ import { ORDER_PROVIDER_TOKENS } from '../../../../infrastructure/constants';
 
 @Controller()
 @UsePipes(HttpValibotPipe)
+@ApiTags(ORDER_TAG)
 export class RequestHttpController {
   constructor(
     @Inject(ORDER_PROVIDER_TOKENS.SERVICES.REQUEST)
     private readonly service: IRequestService,
   ) {}
 
+  @HttpDocs(ORDER_LOCAL_REQUEST_MINE_DOCS)
   @Get(HTTP_LOCAL_ORDER_ROUTER.MINE)
   @HttpLocalAccess()
   async mine(
@@ -80,6 +91,7 @@ export class RequestHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(ORDER_LOCAL_REQUEST_SAVE_DOCS)
   @Post(HTTP_LOCAL_ORDER_ROUTER.REQUESTS)
   @HttpLocalAccess()
   async save(
@@ -103,6 +115,7 @@ export class RequestHttpController {
     return res.status(HttpStatus.CREATED).json(response);
   }
 
+  @HttpDocs(ORDER_LOCAL_REQUEST_UPDATE_DOCS)
   @Patch(HTTP_LOCAL_ORDER_ROUTER.REQUEST)
   @HttpLocalAccess()
   async update(
@@ -128,6 +141,7 @@ export class RequestHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(ORDER_LOCAL_REQUEST_REMOVE_DOCS)
   @Delete(HTTP_LOCAL_ORDER_ROUTER.REQUEST)
   @HttpLocalAccess()
   async remove(

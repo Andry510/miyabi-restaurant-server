@@ -12,9 +12,21 @@ import {
   Res,
   UsePipes,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 
 //Api
+import {
+  ORDER_TAG,
+  ORDER_LOCAL_CURRENT_DOCS,
+  ORDER_LOCAL_ORDERS_DOCS,
+  ORDER_LOCAL_ORDER_DOCS,
+  ORDER_LOCAL_RESET_ITEM_DOCS,
+  ORDER_LOCAL_RETRY_ALL_DOCS,
+  ORDER_LOCAL_RETRY_DOCS,
+  ORDER_LOCAL_SAVE_ITEM_DOCS,
+  ORDER_LOCAL_SEND_DOCS,
+} from '../../../swagger';
 import { API_ORDER_MESSAGE } from '../../../messages';
 import { HTTP_LOCAL_ORDER_ROUTER } from '../../../routers';
 
@@ -28,6 +40,7 @@ import {
 } from '../../../../application/dto';
 
 //Common
+import { HttpDocs } from '@common/decorators/docs';
 import { HttpManagerAccess } from '@common/decorators/access';
 import { HttpAuthorization } from '@common/decorators/request';
 import { HttpValibotPipe } from '@common/pipes';
@@ -53,12 +66,14 @@ import { ORDER_PROVIDER_TOKENS } from '../../../../infrastructure/constants';
 
 @Controller()
 @UsePipes(HttpValibotPipe)
+@ApiTags(ORDER_TAG)
 export class OrderHttpController {
   constructor(
     @Inject(ORDER_PROVIDER_TOKENS.SERVICES.ORDER)
     private readonly service: IOrderService,
   ) {}
 
+  @HttpDocs(ORDER_LOCAL_CURRENT_DOCS)
   @Get(HTTP_LOCAL_ORDER_ROUTER.CURRENT)
   @HttpManagerAccess()
   async current(@Res() res: Response): Promise<Response> {
@@ -76,6 +91,7 @@ export class OrderHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(ORDER_LOCAL_SAVE_ITEM_DOCS)
   @Put(HTTP_LOCAL_ORDER_ROUTER.ITEM)
   @HttpManagerAccess()
   async saveItem(
@@ -100,6 +116,7 @@ export class OrderHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(ORDER_LOCAL_RESET_ITEM_DOCS)
   @Delete(HTTP_LOCAL_ORDER_ROUTER.ITEM)
   @HttpManagerAccess()
   async resetItem(
@@ -122,6 +139,7 @@ export class OrderHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(ORDER_LOCAL_SEND_DOCS)
   @Post(HTTP_LOCAL_ORDER_ROUTER.SEND)
   @HttpManagerAccess()
   async send(
@@ -142,6 +160,7 @@ export class OrderHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(ORDER_LOCAL_ORDERS_DOCS)
   @Get(HTTP_LOCAL_ORDER_ROUTER.ORDERS)
   @HttpManagerAccess()
   async orders(
@@ -165,6 +184,7 @@ export class OrderHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(ORDER_LOCAL_ORDER_DOCS)
   @Get(HTTP_LOCAL_ORDER_ROUTER.ORDER)
   @HttpManagerAccess()
   async order(
@@ -187,6 +207,7 @@ export class OrderHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(ORDER_LOCAL_RETRY_DOCS)
   @Post(HTTP_LOCAL_ORDER_ROUTER.RETRY)
   @HttpManagerAccess()
   async retry(
@@ -210,6 +231,7 @@ export class OrderHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(ORDER_LOCAL_RETRY_ALL_DOCS)
   @Post(HTTP_LOCAL_ORDER_ROUTER.RETRY_ALL)
   @HttpManagerAccess()
   async retryAll(

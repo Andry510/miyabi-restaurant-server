@@ -12,9 +12,18 @@ import {
   Res,
   UsePipes,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 
 //Api
+import {
+  TIP_TAG,
+  TIP_LOCAL_ALLOCATION_AREA_DOCS,
+  TIP_LOCAL_ALLOCATION_AREA_STATUS_DOCS,
+  TIP_LOCAL_ALLOCATION_EXPORT_DOCS,
+  TIP_LOCAL_ALLOCATION_MINE_DOCS,
+  TIP_LOCAL_ALLOCATION_RESET_AREA_DOCS,
+} from '../../../swagger';
 import { API_TIP_MESSAGE } from '../../../messages';
 import { HTTP_LOCAL_TIP_ROUTER } from '../../../routers';
 
@@ -29,6 +38,7 @@ import {
 } from '../../../../application/dto';
 
 //Common
+import { HttpDocs } from '@common/decorators/docs';
 import { HttpLocalAccess, HttpManagerAccess } from '@common/decorators/access';
 import { HttpAuthorization, HttpUser } from '@common/decorators/request';
 import { HttpValibotPipe } from '@common/pipes';
@@ -53,12 +63,14 @@ import { TIP_PROVIDER_TOKENS } from '../../../../infrastructure/constants';
 
 @Controller()
 @UsePipes(HttpValibotPipe)
+@ApiTags(TIP_TAG)
 export class AllocationHttpController {
   constructor(
     @Inject(TIP_PROVIDER_TOKENS.SERVICES.ALLOCATION)
     private readonly service: IAllocationService,
   ) {}
 
+  @HttpDocs(TIP_LOCAL_ALLOCATION_MINE_DOCS)
   @Get(HTTP_LOCAL_TIP_ROUTER.MINE)
   @HttpLocalAccess()
   async mine(
@@ -82,6 +94,7 @@ export class AllocationHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(TIP_LOCAL_ALLOCATION_RESET_AREA_DOCS)
   @Delete(HTTP_LOCAL_TIP_ROUTER.AREA)
   @HttpManagerAccess()
   async resetArea(
@@ -105,6 +118,7 @@ export class AllocationHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(TIP_LOCAL_ALLOCATION_AREA_DOCS)
   @Put(HTTP_LOCAL_TIP_ROUTER.AREA)
   @HttpManagerAccess()
   async area(
@@ -130,6 +144,7 @@ export class AllocationHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(TIP_LOCAL_ALLOCATION_AREA_STATUS_DOCS)
   @Patch(HTTP_LOCAL_TIP_ROUTER.AREA_STATUS)
   @HttpManagerAccess()
   async areaStatus(
@@ -155,6 +170,7 @@ export class AllocationHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(TIP_LOCAL_ALLOCATION_EXPORT_DOCS)
   @Get(HTTP_LOCAL_TIP_ROUTER.EXPORT)
   @HttpManagerAccess()
   async export(

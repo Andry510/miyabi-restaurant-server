@@ -12,9 +12,19 @@ import {
   Res,
   UsePipes,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 
 //Api
+import {
+  USER_TAG,
+  USER_LOCAL_REGISTER_DOCS,
+  USER_LOCAL_REMOVE_DOCS,
+  USER_LOCAL_RESET_PASSWORD_DOCS,
+  USER_LOCAL_UPDATE_DOCS,
+  USER_LOCAL_USERS_DOCS,
+  USER_LOCAL_USER_DOCS,
+} from '../../../swagger';
 import { API_USER_MESSAGE } from '../../../messages';
 import { HTTP_LOCAL_USER_ROUTER } from '../../../routers';
 
@@ -28,6 +38,7 @@ import {
 } from '../../../../application/dto';
 
 //Common
+import { HttpDocs } from '@common/decorators/docs';
 import { HttpManagerAccess } from '@common/decorators/access';
 import { HttpAuthorization } from '@common/decorators/request';
 import { HttpValibotPipe } from '@common/pipes';
@@ -50,12 +61,14 @@ import { USER_PROVIDER_TOKENS } from '../../../../infrastructure/constants';
 
 @Controller()
 @UsePipes(HttpValibotPipe)
+@ApiTags(USER_TAG)
 export class UserHttpController {
   constructor(
     @Inject(USER_PROVIDER_TOKENS.SERVICES.USER)
     private readonly service: IUserService,
   ) {}
 
+  @HttpDocs(USER_LOCAL_USERS_DOCS)
   @Get(HTTP_LOCAL_USER_ROUTER.USERS)
   @HttpManagerAccess()
   async users(
@@ -79,6 +92,7 @@ export class UserHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(USER_LOCAL_REGISTER_DOCS)
   @Post(HTTP_LOCAL_USER_ROUTER.REGISTER)
   @HttpManagerAccess()
   async register(
@@ -102,6 +116,7 @@ export class UserHttpController {
     return res.status(HttpStatus.CREATED).json(response);
   }
 
+  @HttpDocs(USER_LOCAL_USER_DOCS)
   @Get(HTTP_LOCAL_USER_ROUTER.USER)
   @HttpManagerAccess()
   async user(
@@ -124,6 +139,7 @@ export class UserHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(USER_LOCAL_UPDATE_DOCS)
   @Patch(HTTP_LOCAL_USER_ROUTER.UPDATE)
   @HttpManagerAccess()
   async update(
@@ -148,6 +164,7 @@ export class UserHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(USER_LOCAL_RESET_PASSWORD_DOCS)
   @Post(HTTP_LOCAL_USER_ROUTER.PASSWORD_RESET)
   @HttpManagerAccess()
   async resetPassword(
@@ -171,6 +188,7 @@ export class UserHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(USER_LOCAL_REMOVE_DOCS)
   @Delete(HTTP_LOCAL_USER_ROUTER.REMOVE)
   @HttpManagerAccess()
   async remove(

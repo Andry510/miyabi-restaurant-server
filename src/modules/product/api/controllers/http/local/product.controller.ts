@@ -7,9 +7,11 @@ import {
   Res,
   UsePipes,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 
 //Api
+import { PRODUCT_TAG, PRODUCT_LOCAL_PRODUCTS_DOCS } from '../../../swagger';
 import { API_PRODUCT_MESSAGE } from '../../../messages';
 import { HTTP_LOCAL_PRODUCT_ROUTER } from '../../../routers';
 
@@ -18,6 +20,7 @@ import { HTTP_LOCAL_PRODUCT_ROUTER } from '../../../routers';
 import { LocalProductsQueryDto } from '../../../../application/dto';
 
 //Common
+import { HttpDocs } from '@common/decorators/docs';
 import { HttpLocalAccess } from '@common/decorators/access';
 import { HttpUser } from '@common/decorators/request';
 import { HttpValibotPipe } from '@common/pipes';
@@ -36,12 +39,14 @@ import { PRODUCT_PROVIDER_TOKENS } from '../../../../infrastructure/constants';
 
 @Controller()
 @UsePipes(HttpValibotPipe)
+@ApiTags(PRODUCT_TAG)
 export class LocalProductHttpController {
   constructor(
     @Inject(PRODUCT_PROVIDER_TOKENS.SERVICES.LOCAL)
     private readonly service: ILocalProductService,
   ) {}
 
+  @HttpDocs(PRODUCT_LOCAL_PRODUCTS_DOCS)
   @Get(HTTP_LOCAL_PRODUCT_ROUTER.PRODUCTS)
   @HttpLocalAccess()
   async products(

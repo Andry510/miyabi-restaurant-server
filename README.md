@@ -84,6 +84,7 @@ Crea un archivo `.env` en la raíz (puedes copiar `.env.example`). El servidor v
 
 | Variable | Obligatoria | Ejemplo | Uso |
 |---|---|---|---|
+| `ENVIRONMENT` | No | `development` | `development` publica la documentación de la API (Swagger) en `/document`; `production` (el valor por defecto) no la publica. |
 | `PORT` | Sí | `3520` | Puerto HTTP. |
 | `PORT_SOCKET` | No | `4520` | Puerto del socket local (avisos en vivo a las pantallas del local). |
 | `DATABASE_URL` | Sí | `postgresql://user:pass@localhost:5432/miyabi_restaurant` | Base del local. |
@@ -165,6 +166,8 @@ Si el servidor ya está `paired`, la ruta responde **409** `ERROR_SERVER_ALREADY
 | Formato | `pnpm format` |
 
 No hay suite de pruebas automáticas (`test`) definida.
+
+**Documentación de la API (Swagger):** con `ENVIRONMENT=development`, en `http://127.0.0.1:3520/document` (el JSON en `/document-json`). Cada ruta trae su resumen en español, sus parámetros y cuerpo (sacados de los schemas de valibot) y sus respuestas con el `code` real. Para probar las rutas protegidas, pega en **Authorize** el `access_token` del empleado o el `session_token` (`mss_...`) del gerente.
 
 **Docker** (PostgreSQL queda fuera del contenedor):
 

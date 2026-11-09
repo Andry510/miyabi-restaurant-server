@@ -9,9 +9,19 @@ import {
   Res,
   UsePipes,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 
 //Api
+import {
+  NOTIFICATION_TAG,
+  NOTIFICATION_LOCAL_EMPLOYEE_NOTIFICATIONS_DOCS,
+  NOTIFICATION_LOCAL_EMPLOYEE_READ_DOCS,
+  NOTIFICATION_LOCAL_EMPLOYEE_UNREAD_COUNT_DOCS,
+  NOTIFICATION_LOCAL_MANAGER_NOTIFICATIONS_DOCS,
+  NOTIFICATION_LOCAL_MANAGER_READ_DOCS,
+  NOTIFICATION_LOCAL_MANAGER_UNREAD_COUNT_DOCS,
+} from '../../../swagger';
 import { API_NOTIFICATION_MESSAGE } from '../../../messages';
 import { HTTP_LOCAL_NOTIFICATION_ROUTER } from '../../../routers';
 
@@ -23,6 +33,7 @@ import {
 } from '../../../../application/dto';
 
 //Common
+import { HttpDocs } from '@common/decorators/docs';
 import { HttpLocalAccess, HttpManagerAccess } from '@common/decorators/access';
 import { HttpAuthorization, HttpUser } from '@common/decorators/request';
 import { API_MESSAGE_GLOBAL } from '@common/messages';
@@ -47,12 +58,14 @@ import { NOTIFICATION_PROVIDER_TOKENS } from '../../../../infrastructure/constan
 
 @Controller()
 @UsePipes(HttpValibotPipe)
+@ApiTags(NOTIFICATION_TAG)
 export class NotificationHttpController {
   constructor(
     @Inject(NOTIFICATION_PROVIDER_TOKENS.SERVICES.READER)
     private readonly service: IReaderService,
   ) {}
 
+  @HttpDocs(NOTIFICATION_LOCAL_EMPLOYEE_NOTIFICATIONS_DOCS)
   @Get(HTTP_LOCAL_NOTIFICATION_ROUTER.EMPLOYEE.NOTIFICATIONS)
   @HttpLocalAccess()
   employeeNotifications(
@@ -67,6 +80,7 @@ export class NotificationHttpController {
     );
   }
 
+  @HttpDocs(NOTIFICATION_LOCAL_EMPLOYEE_UNREAD_COUNT_DOCS)
   @Get(HTTP_LOCAL_NOTIFICATION_ROUTER.EMPLOYEE.UNREAD_COUNT)
   @HttpLocalAccess()
   employeeUnreadCount(
@@ -76,6 +90,7 @@ export class NotificationHttpController {
     return this.unreadCount({ audience: 'employee', user_id: userId }, res);
   }
 
+  @HttpDocs(NOTIFICATION_LOCAL_EMPLOYEE_READ_DOCS)
   @Patch(HTTP_LOCAL_NOTIFICATION_ROUTER.EMPLOYEE.READ)
   @HttpLocalAccess()
   employeeRead(
@@ -90,6 +105,7 @@ export class NotificationHttpController {
     );
   }
 
+  @HttpDocs(NOTIFICATION_LOCAL_MANAGER_NOTIFICATIONS_DOCS)
   @Get(HTTP_LOCAL_NOTIFICATION_ROUTER.MANAGER.NOTIFICATIONS)
   @HttpManagerAccess()
   managerNotifications(
@@ -104,6 +120,7 @@ export class NotificationHttpController {
     );
   }
 
+  @HttpDocs(NOTIFICATION_LOCAL_MANAGER_UNREAD_COUNT_DOCS)
   @Get(HTTP_LOCAL_NOTIFICATION_ROUTER.MANAGER.UNREAD_COUNT)
   @HttpManagerAccess()
   managerUnreadCount(
@@ -113,6 +130,7 @@ export class NotificationHttpController {
     return this.unreadCount(this.managerReader(access_token), res);
   }
 
+  @HttpDocs(NOTIFICATION_LOCAL_MANAGER_READ_DOCS)
   @Patch(HTTP_LOCAL_NOTIFICATION_ROUTER.MANAGER.READ)
   @HttpManagerAccess()
   managerRead(

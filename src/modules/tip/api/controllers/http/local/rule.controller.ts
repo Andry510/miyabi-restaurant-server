@@ -8,9 +8,15 @@ import {
   Res,
   UsePipes,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 
 //Api
+import {
+  TIP_TAG,
+  TIP_LOCAL_RULE_RULES_DOCS,
+  TIP_LOCAL_RULE_UPDATE_DOCS,
+} from '../../../swagger';
 import { API_TIP_MESSAGE } from '../../../messages';
 import { HTTP_LOCAL_TIP_ROUTER } from '../../../routers';
 
@@ -19,6 +25,7 @@ import { HTTP_LOCAL_TIP_ROUTER } from '../../../routers';
 import { RulesBodyDto } from '../../../../application/dto';
 
 //Common
+import { HttpDocs } from '@common/decorators/docs';
 import { HttpManagerAccess } from '@common/decorators/access';
 import { HttpValibotPipe } from '@common/pipes';
 
@@ -35,12 +42,14 @@ import { TIP_PROVIDER_TOKENS } from '../../../../infrastructure/constants';
 
 @Controller()
 @UsePipes(HttpValibotPipe)
+@ApiTags(TIP_TAG)
 export class RuleHttpController {
   constructor(
     @Inject(TIP_PROVIDER_TOKENS.SERVICES.RULE)
     private readonly service: IRuleService,
   ) {}
 
+  @HttpDocs(TIP_LOCAL_RULE_RULES_DOCS)
   @Get(HTTP_LOCAL_TIP_ROUTER.RULES)
   @HttpManagerAccess()
   async rules(@Res() res: Response): Promise<Response> {
@@ -58,6 +67,7 @@ export class RuleHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(TIP_LOCAL_RULE_UPDATE_DOCS)
   @Put(HTTP_LOCAL_TIP_ROUTER.UPDATE_RULES)
   @HttpManagerAccess()
   async update(

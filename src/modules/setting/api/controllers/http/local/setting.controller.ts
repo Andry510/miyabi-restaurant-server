@@ -8,9 +8,15 @@ import {
   Res,
   UsePipes,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 
 //Api
+import {
+  SETTING_TAG,
+  SETTING_LOCAL_SETTINGS_DOCS,
+  SETTING_LOCAL_UPDATE_DOCS,
+} from '../../../swagger';
 import { API_SETTING_MESSAGE } from '../../../messages';
 import { HTTP_LOCAL_SETTING_ROUTER } from '../../../routers';
 
@@ -19,6 +25,7 @@ import { HTTP_LOCAL_SETTING_ROUTER } from '../../../routers';
 import { UpdateSettingsDto } from '../../../../application/dto';
 
 //Common
+import { HttpDocs } from '@common/decorators/docs';
 import { HttpManagerAccess } from '@common/decorators/access';
 import { HttpValibotPipe } from '@common/pipes';
 
@@ -35,12 +42,14 @@ import { SETTING_PROVIDER_TOKENS } from '../../../../infrastructure/constants';
 
 @Controller()
 @UsePipes(HttpValibotPipe)
+@ApiTags(SETTING_TAG)
 export class SettingHttpController {
   constructor(
     @Inject(SETTING_PROVIDER_TOKENS.SERVICES.SETTING)
     private readonly service: ISettingService,
   ) {}
 
+  @HttpDocs(SETTING_LOCAL_SETTINGS_DOCS)
   @Get(HTTP_LOCAL_SETTING_ROUTER.SETTINGS)
   @HttpManagerAccess()
   async settings(@Res() res: Response): Promise<Response> {
@@ -58,6 +67,7 @@ export class SettingHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(SETTING_LOCAL_UPDATE_DOCS)
   @Patch(HTTP_LOCAL_SETTING_ROUTER.UPDATE)
   @HttpManagerAccess()
   async update(

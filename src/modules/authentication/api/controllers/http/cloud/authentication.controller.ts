@@ -9,9 +9,14 @@ import {
   Res,
   UsePipes,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 
 //Api
+import {
+  AUTHENTICATION_TAG,
+  AUTHENTICATION_CLOUD_LOGIN_DOCS,
+} from '../../../swagger';
 import { API_AUTHENTICATION_MESSAGE } from '../../../messages';
 import { HTTP_CLOUD_AUTHENTICATION_ROUTER } from '../../../routers';
 
@@ -20,6 +25,7 @@ import { HTTP_CLOUD_AUTHENTICATION_ROUTER } from '../../../routers';
 import { LoginBodyDto } from '../../../../application/dto';
 
 //Common
+import { HttpDocs } from '@common/decorators/docs';
 import { HttpValibotPipe } from '@common/pipes';
 
 //Domain
@@ -38,12 +44,14 @@ import { AUTHENTICATION_PROVIDER_TOKENS } from '../../../../infrastructure/const
 
 @Controller()
 @UsePipes(HttpValibotPipe)
+@ApiTags(AUTHENTICATION_TAG)
 export class AuthenticationHttpController {
   constructor(
     @Inject(AUTHENTICATION_PROVIDER_TOKENS.SERVICES.AUTHENTICATION)
     private readonly service: IAuthenticationService,
   ) {}
 
+  @HttpDocs(AUTHENTICATION_CLOUD_LOGIN_DOCS)
   @Post(HTTP_CLOUD_AUTHENTICATION_ROUTER.AUTHENTICATION.LOGIN)
   async login(
     @Body() body: LoginBodyDto,

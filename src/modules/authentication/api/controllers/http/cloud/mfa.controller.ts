@@ -10,9 +10,15 @@ import {
   Res,
   UsePipes,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 
 //Api
+import {
+  AUTHENTICATION_TAG,
+  AUTHENTICATION_CLOUD_MFA_CODE_DOCS,
+  AUTHENTICATION_CLOUD_MFA_QR_DOCS,
+} from '../../../swagger';
 import { API_AUTHENTICATION_MESSAGE } from '../../../messages';
 import { HTTP_CLOUD_AUTHENTICATION_ROUTER } from '../../../routers';
 
@@ -21,6 +27,7 @@ import { HTTP_CLOUD_AUTHENTICATION_ROUTER } from '../../../routers';
 import { MfaCodeBodyDto } from '../../../../application/dto';
 
 //Common
+import { HttpDocs } from '@common/decorators/docs';
 import { HttpAuthorization } from '@common/decorators/request';
 import { HttpValibotPipe } from '@common/pipes';
 
@@ -41,12 +48,14 @@ import { AUTHENTICATION_PROVIDER_TOKENS } from '../../../../infrastructure/const
 
 @Controller()
 @UsePipes(HttpValibotPipe)
+@ApiTags(AUTHENTICATION_TAG)
 export class MfaHttpController {
   constructor(
     @Inject(AUTHENTICATION_PROVIDER_TOKENS.SERVICES.MFA)
     private readonly service: IMfaService,
   ) {}
 
+  @HttpDocs(AUTHENTICATION_CLOUD_MFA_QR_DOCS)
   @Get(HTTP_CLOUD_AUTHENTICATION_ROUTER.MFA.QR)
   async qr(
     @HttpAuthorization() mfa_token: string | null,
@@ -74,6 +83,7 @@ export class MfaHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(AUTHENTICATION_CLOUD_MFA_CODE_DOCS)
   @Post(HTTP_CLOUD_AUTHENTICATION_ROUTER.MFA.CODE)
   async code(
     @Body() body: MfaCodeBodyDto,

@@ -8,9 +8,16 @@ import {
   Res,
   UsePipes,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 
 //Api
+import {
+  PAIRING_TAG,
+  PAIRING_CLOUD_REGISTER_DOCS,
+  PAIRING_CLOUD_REPLACE_TOKEN_DOCS,
+  PAIRING_CLOUD_STATUS_DOCS,
+} from '../../../swagger';
 import { API_PAIRING_MESSAGE } from '../../../messages';
 import { HTTP_CLOUD_PAIRING_ROUTER } from '../../../routers';
 
@@ -19,6 +26,7 @@ import { HTTP_CLOUD_PAIRING_ROUTER } from '../../../routers';
 import { RegisterDto, ReplaceTokenDto } from '../../../../application/dto';
 
 //Common
+import { HttpDocs } from '@common/decorators/docs';
 import { HttpPairingAccess } from '@common/decorators/access';
 import { HttpValibotPipe } from '@common/pipes';
 
@@ -42,6 +50,7 @@ import { PAIRING_PROVIDER_TOKENS } from '../../../../infrastructure/constants';
 
 @Controller()
 @UsePipes(HttpValibotPipe)
+@ApiTags(PAIRING_TAG)
 export class PairingHttpController {
   constructor(
     @Inject(PAIRING_PROVIDER_TOKENS.SERVICES.PAIRING)
@@ -49,6 +58,7 @@ export class PairingHttpController {
   ) {}
 
   @HttpPairingAccess()
+  @HttpDocs(PAIRING_CLOUD_REGISTER_DOCS)
   @Post(HTTP_CLOUD_PAIRING_ROUTER.REGISTER)
   async register(
     @Body() data: RegisterDto,
@@ -72,6 +82,7 @@ export class PairingHttpController {
   }
 
   @HttpPairingAccess()
+  @HttpDocs(PAIRING_CLOUD_REPLACE_TOKEN_DOCS)
   @Post(HTTP_CLOUD_PAIRING_ROUTER.TOKEN)
   async replaceToken(
     @Body() data: ReplaceTokenDto,
@@ -96,6 +107,7 @@ export class PairingHttpController {
   }
 
   @HttpPairingAccess()
+  @HttpDocs(PAIRING_CLOUD_STATUS_DOCS)
   @Get(HTTP_CLOUD_PAIRING_ROUTER.STATUS)
   status(@Res() res: Response): Response {
     const statusResult = this.service.status();

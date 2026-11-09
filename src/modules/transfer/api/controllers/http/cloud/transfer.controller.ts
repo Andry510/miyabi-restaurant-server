@@ -11,9 +11,18 @@ import {
   Res,
   UsePipes,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 
 //Api
+import {
+  TRANSFER_TAG,
+  TRANSFER_CLOUD_CANCEL_DOCS,
+  TRANSFER_CLOUD_RECEIVE_DOCS,
+  TRANSFER_CLOUD_REGISTER_DOCS,
+  TRANSFER_CLOUD_TRANSFERS_DOCS,
+  TRANSFER_CLOUD_TRANSFER_DOCS,
+} from '../../../swagger';
 import { API_TRANSFER_MESSAGE } from '../../../messages';
 import { HTTP_CLOUD_TRANSFER_ROUTER } from '../../../routers';
 
@@ -27,6 +36,7 @@ import {
 } from '../../../../application/dto';
 
 //Common
+import { HttpDocs } from '@common/decorators/docs';
 import { HttpAuthorization } from '@common/decorators/request';
 import { HttpValibotPipe } from '@common/pipes';
 
@@ -49,12 +59,14 @@ import { TRANSFER_PROVIDER_TOKENS } from '../../../../infrastructure/constants';
 
 @Controller()
 @UsePipes(HttpValibotPipe)
+@ApiTags(TRANSFER_TAG)
 export class TransferHttpController {
   constructor(
     @Inject(TRANSFER_PROVIDER_TOKENS.SERVICES.TRANSFER)
     private readonly service: ITransferService,
   ) {}
 
+  @HttpDocs(TRANSFER_CLOUD_REGISTER_DOCS)
   @Post(HTTP_CLOUD_TRANSFER_ROUTER.TRANSFER.REGISTER)
   async register(
     @Body() body: RegisterBodyDto,
@@ -78,6 +90,7 @@ export class TransferHttpController {
     return res.status(HttpStatus.CREATED).json(response);
   }
 
+  @HttpDocs(TRANSFER_CLOUD_TRANSFERS_DOCS)
   @Get(HTTP_CLOUD_TRANSFER_ROUTER.TRANSFER.TRANSFERS)
   async transfers(
     @Query() query: TransfersQueryDto,
@@ -102,6 +115,7 @@ export class TransferHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(TRANSFER_CLOUD_TRANSFER_DOCS)
   @Get(HTTP_CLOUD_TRANSFER_ROUTER.TRANSFER.TRANSFER)
   async transfer(
     @Param() params: TransferParamDto,
@@ -125,6 +139,7 @@ export class TransferHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(TRANSFER_CLOUD_RECEIVE_DOCS)
   @Patch(HTTP_CLOUD_TRANSFER_ROUTER.FLOW.RECEIVE)
   async receive(
     @Param() params: TransferParamDto,
@@ -152,6 +167,7 @@ export class TransferHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(TRANSFER_CLOUD_CANCEL_DOCS)
   @Patch(HTTP_CLOUD_TRANSFER_ROUTER.FLOW.CANCEL)
   async cancel(
     @Param() params: TransferParamDto,

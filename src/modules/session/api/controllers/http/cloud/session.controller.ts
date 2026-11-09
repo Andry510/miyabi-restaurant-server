@@ -7,13 +7,16 @@ import {
   Res,
   UsePipes,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
 
 //Api
+import { SESSION_TAG, SESSION_CLOUD_LOGOUT_DOCS } from '../../../swagger';
 import { API_SESSION_MESSAGE } from '../../../messages';
 import { HTTP_CLOUD_SESSION_ROUTER } from '../../../routers';
 
 //Common
+import { HttpDocs } from '@common/decorators/docs';
 import { API_MESSAGE_GLOBAL } from '@common/messages';
 import { HttpValibotPipe } from '@common/pipes';
 
@@ -31,12 +34,14 @@ import { SESSION_PROVIDER_TOKENS } from '../../../../infrastructure/constants';
 
 @Controller()
 @UsePipes(HttpValibotPipe)
+@ApiTags(SESSION_TAG)
 export class SessionHttpController {
   constructor(
     @Inject(SESSION_PROVIDER_TOKENS.SERVICES.SESSION)
     private readonly service: ISessionService,
   ) {}
 
+  @HttpDocs(SESSION_CLOUD_LOGOUT_DOCS)
   @Post(HTTP_CLOUD_SESSION_ROUTER.LOGOUT)
   async logout(@Req() req: Request, @Res() res: Response): Promise<Response> {
     const sessionToken = ExtractHttpToken.authorization(req);

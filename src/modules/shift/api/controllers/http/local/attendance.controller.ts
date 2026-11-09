@@ -9,9 +9,15 @@ import {
   Res,
   UsePipes,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 
 //Api
+import {
+  SHIFT_TAG,
+  SHIFT_LOCAL_ATTENDANCE_CORRECT_DOCS,
+  SHIFT_LOCAL_ATTENDANCE_JUSTIFY_DOCS,
+} from '../../../swagger';
 import { API_SHIFT_MESSAGE } from '../../../messages';
 import { HTTP_LOCAL_SHIFT_ROUTER } from '../../../routers';
 
@@ -24,6 +30,7 @@ import {
 } from '../../../../application/dto';
 
 //Common
+import { HttpDocs } from '@common/decorators/docs';
 import { HttpManagerAccess } from '@common/decorators/access';
 import { HttpAuthorization } from '@common/decorators/request';
 import { HttpValibotPipe } from '@common/pipes';
@@ -45,12 +52,14 @@ import { SHIFT_PROVIDER_TOKENS } from '../../../../infrastructure/constants';
 
 @Controller()
 @UsePipes(HttpValibotPipe)
+@ApiTags(SHIFT_TAG)
 export class AttendanceHttpController {
   constructor(
     @Inject(SHIFT_PROVIDER_TOKENS.SERVICES.ATTENDANCE)
     private readonly service: IAttendanceService,
   ) {}
 
+  @HttpDocs(SHIFT_LOCAL_ATTENDANCE_CORRECT_DOCS)
   @Patch(HTTP_LOCAL_SHIFT_ROUTER.ATTENDANCE)
   @HttpManagerAccess()
   async correct(
@@ -76,6 +85,7 @@ export class AttendanceHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(SHIFT_LOCAL_ATTENDANCE_JUSTIFY_DOCS)
   @Post(HTTP_LOCAL_SHIFT_ROUTER.JUSTIFICATION)
   @HttpManagerAccess()
   async justify(

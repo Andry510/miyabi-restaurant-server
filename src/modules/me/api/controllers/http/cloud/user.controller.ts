@@ -10,9 +10,16 @@ import {
   UseInterceptors,
   UsePipes,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 
 //Api
+import {
+  ME_TAG,
+  ME_CLOUD_USER_REMOVE_PICTURE_DOCS,
+  ME_CLOUD_USER_UPLOAD_PICTURE_DOCS,
+  ME_CLOUD_USER_USER_DOCS,
+} from '../../../swagger';
 import { API_ME_MESSAGE } from '../../../messages';
 import { HTTP_CLOUD_ME_ROUTER } from '../../../routers';
 
@@ -21,6 +28,7 @@ import { HTTP_CLOUD_ME_ROUTER } from '../../../routers';
 import { PictureFileDto } from '../../../../application/dto';
 
 //Common
+import { HttpDocs } from '@common/decorators/docs';
 import { HttpAuthorization } from '@common/decorators/request';
 import { HttpPictureInterceptor } from '@common/interceptors';
 import { API_MESSAGE_GLOBAL } from '@common/messages';
@@ -40,12 +48,14 @@ import { ME_PROVIDER_TOKENS } from '../../../../infrastructure/constants';
 
 @Controller()
 @UsePipes(HttpValibotPipe)
+@ApiTags(ME_TAG)
 export class UserHttpController {
   constructor(
     @Inject(ME_PROVIDER_TOKENS.SERVICES.USER)
     private readonly service: IUserService,
   ) {}
 
+  @HttpDocs(ME_CLOUD_USER_USER_DOCS)
   @Get(HTTP_CLOUD_ME_ROUTER.USER.USER)
   async user(
     @HttpAuthorization() access_token: string | null,
@@ -66,6 +76,7 @@ export class UserHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(ME_CLOUD_USER_UPLOAD_PICTURE_DOCS)
   @Post(HTTP_CLOUD_ME_ROUTER.USER.UPLOAD_PICTURE)
   @UseInterceptors(HttpPictureInterceptor)
   async uploadPicture(
@@ -90,6 +101,7 @@ export class UserHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(ME_CLOUD_USER_REMOVE_PICTURE_DOCS)
   @Delete(HTTP_CLOUD_ME_ROUTER.USER.REMOVE_PICTURE)
   async removePicture(
     @HttpAuthorization() access_token: string | null,

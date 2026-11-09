@@ -11,9 +11,16 @@ import {
   Res,
   UsePipes,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 
 //Api
+import {
+  AREA_PRODUCT_TAG,
+  AREA_PRODUCT_LOCAL_WORK_AREA_ASSIGN_DOCS,
+  AREA_PRODUCT_LOCAL_WORK_AREA_PRODUCTS_DOCS,
+  AREA_PRODUCT_LOCAL_WORK_AREA_REMOVE_DOCS,
+} from '../../../swagger';
 import { API_AREA_PRODUCT_MESSAGE } from '../../../messages';
 import { HTTP_LOCAL_AREA_PRODUCT_ROUTER } from '../../../routers';
 
@@ -26,6 +33,7 @@ import {
 } from '../../../../application/dto';
 
 //Common
+import { HttpDocs } from '@common/decorators/docs';
 import { HttpManagerAccess } from '@common/decorators/access';
 import { HttpValibotPipe } from '@common/pipes';
 
@@ -46,12 +54,14 @@ import { AREA_PRODUCT_PROVIDER_TOKENS } from '../../../../infrastructure/constan
 
 @Controller()
 @UsePipes(HttpValibotPipe)
+@ApiTags(AREA_PRODUCT_TAG)
 export class WorkAreaHttpController {
   constructor(
     @Inject(AREA_PRODUCT_PROVIDER_TOKENS.SERVICES.WORK_AREA)
     private readonly service: IWorkAreaService,
   ) {}
 
+  @HttpDocs(AREA_PRODUCT_LOCAL_WORK_AREA_PRODUCTS_DOCS)
   @Get(HTTP_LOCAL_AREA_PRODUCT_ROUTER.WORK_AREA.PRODUCTS)
   @HttpManagerAccess()
   async products(
@@ -77,6 +87,7 @@ export class WorkAreaHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(AREA_PRODUCT_LOCAL_WORK_AREA_ASSIGN_DOCS)
   @Post(HTTP_LOCAL_AREA_PRODUCT_ROUTER.WORK_AREA.ASSIGN)
   @HttpManagerAccess()
   async assign(
@@ -100,6 +111,7 @@ export class WorkAreaHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(AREA_PRODUCT_LOCAL_WORK_AREA_REMOVE_DOCS)
   @Delete(HTTP_LOCAL_AREA_PRODUCT_ROUTER.WORK_AREA.REMOVE)
   @HttpManagerAccess()
   async remove(

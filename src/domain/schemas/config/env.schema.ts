@@ -4,6 +4,7 @@ import {
   number,
   objectWithRest,
   optional,
+  picklist,
   pipe,
   string,
   transform,
@@ -22,6 +23,10 @@ export const EnvSchema = pipe(
   objectWithRest(
     {
       //SERVER
+      ENVIRONMENT: optional(
+        picklist(['production', 'development']),
+        'production',
+      ),
       PORT: requiredNumberSchema,
       PORT_SOCKET: pipe(
         optional(string(), '4520'),
@@ -63,6 +68,7 @@ export const EnvSchema = pipe(
     ...res,
 
     SESSION_EXPIRES_MS: res.JWT_EXPIRES_REFRESH_TOKEN * 1000,
+    IS_PRODUCTION: res.ENVIRONMENT === 'production',
   })),
 );
 

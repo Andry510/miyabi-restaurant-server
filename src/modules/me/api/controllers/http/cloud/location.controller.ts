@@ -6,13 +6,16 @@ import {
   Res,
   UsePipes,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 
 //Api
+import { ME_TAG, ME_CLOUD_LOCATION_LOCATION_DOCS } from '../../../swagger';
 import { API_ME_MESSAGE } from '../../../messages';
 import { HTTP_CLOUD_ME_ROUTER } from '../../../routers';
 
 //Common
+import { HttpDocs } from '@common/decorators/docs';
 import { HttpAuthorization } from '@common/decorators/request';
 import { HttpValibotPipe } from '@common/pipes';
 
@@ -29,12 +32,14 @@ import { ME_PROVIDER_TOKENS } from '../../../../infrastructure/constants';
 
 @Controller()
 @UsePipes(HttpValibotPipe)
+@ApiTags(ME_TAG)
 export class LocationHttpController {
   constructor(
     @Inject(ME_PROVIDER_TOKENS.SERVICES.LOCATION)
     private readonly service: ILocationService,
   ) {}
 
+  @HttpDocs(ME_CLOUD_LOCATION_LOCATION_DOCS)
   @Get(HTTP_CLOUD_ME_ROUTER.LOCATION.LOCATION)
   async location(
     @HttpAuthorization() access_token: string | null,

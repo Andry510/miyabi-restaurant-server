@@ -8,9 +8,15 @@ import {
   Res,
   UsePipes,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 
 //Api
+import {
+  PRODUCT_TAG,
+  PRODUCT_CLOUD_PRODUCTS_DOCS,
+  PRODUCT_CLOUD_PRODUCT_DOCS,
+} from '../../../swagger';
 import { API_PRODUCT_MESSAGE } from '../../../messages';
 import { HTTP_CLOUD_PRODUCT_ROUTER } from '../../../routers';
 
@@ -19,6 +25,7 @@ import { HTTP_CLOUD_PRODUCT_ROUTER } from '../../../routers';
 import { ProductParamDto, ProductsQueryDto } from '../../../../application/dto';
 
 //Common
+import { HttpDocs } from '@common/decorators/docs';
 import { HttpAuthorization } from '@common/decorators/request';
 import { HttpValibotPipe } from '@common/pipes';
 
@@ -39,12 +46,14 @@ import { PRODUCT_PROVIDER_TOKENS } from '../../../../infrastructure/constants';
 
 @Controller()
 @UsePipes(HttpValibotPipe)
+@ApiTags(PRODUCT_TAG)
 export class ProductHttpController {
   constructor(
     @Inject(PRODUCT_PROVIDER_TOKENS.SERVICES.PRODUCT)
     private readonly service: IProductService,
   ) {}
 
+  @HttpDocs(PRODUCT_CLOUD_PRODUCTS_DOCS)
   @Get(HTTP_CLOUD_PRODUCT_ROUTER.PRODUCTS)
   async products(
     @Query() query: ProductsQueryDto,
@@ -69,6 +78,7 @@ export class ProductHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(PRODUCT_CLOUD_PRODUCT_DOCS)
   @Get(HTTP_CLOUD_PRODUCT_ROUTER.PRODUCT)
   async product(
     @Param() params: ProductParamDto,

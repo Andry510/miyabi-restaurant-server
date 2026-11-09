@@ -7,9 +7,11 @@ import {
   Res,
   UsePipes,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 
 //Api
+import { LOCATION_TAG, LOCATION_CLOUD_LOCATIONS_DOCS } from '../../../swagger';
 import { HTTP_CLOUD_LOCATION_ROUTER } from '../../../routers';
 
 //Application
@@ -17,6 +19,7 @@ import { HTTP_CLOUD_LOCATION_ROUTER } from '../../../routers';
 import { LocationsQueryDto } from '../../../../application/dto';
 
 //Common
+import { HttpDocs } from '@common/decorators/docs';
 import { HttpAuthorization } from '@common/decorators/request';
 import { API_MESSAGE_GLOBAL } from '@common/messages';
 import { HttpValibotPipe } from '@common/pipes';
@@ -34,12 +37,14 @@ import { LOCATION_PROVIDER_TOKENS } from '../../../../infrastructure/constants';
 
 @Controller()
 @UsePipes(HttpValibotPipe)
+@ApiTags(LOCATION_TAG)
 export class LocationHttpController {
   constructor(
     @Inject(LOCATION_PROVIDER_TOKENS.SERVICES.LOCATION)
     private readonly service: ILocationService,
   ) {}
 
+  @HttpDocs(LOCATION_CLOUD_LOCATIONS_DOCS)
   @Get(HTTP_CLOUD_LOCATION_ROUTER.LOCATION.LOCATIONS)
   async locations(
     @Query() query: LocationsQueryDto,

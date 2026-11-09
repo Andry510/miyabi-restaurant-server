@@ -7,9 +7,14 @@ import {
   Res,
   UsePipes,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 
 //Api
+import {
+  SUPPLIER_PRODUCT_TAG,
+  SUPPLIER_PRODUCT_CLOUD_DETAIL_DOCS,
+} from '../../../swagger';
 import { API_SUPPLIER_PRODUCT_MESSAGE } from '../../../messages';
 import { HTTP_CLOUD_SUPPLIER_PRODUCT_ROUTER } from '../../../routers';
 
@@ -18,6 +23,7 @@ import { HTTP_CLOUD_SUPPLIER_PRODUCT_ROUTER } from '../../../routers';
 import { SupplierProductParamDto } from '../../../../application/dto';
 
 //Common
+import { HttpDocs } from '@common/decorators/docs';
 import { HttpAuthorization } from '@common/decorators/request';
 import { HttpValibotPipe } from '@common/pipes';
 
@@ -35,12 +41,14 @@ import { SUPPLIER_PRODUCT_PROVIDER_TOKENS } from '../../../../infrastructure/con
 
 @Controller()
 @UsePipes(HttpValibotPipe)
+@ApiTags(SUPPLIER_PRODUCT_TAG)
 export class SupplierProductHttpController {
   constructor(
     @Inject(SUPPLIER_PRODUCT_PROVIDER_TOKENS.SERVICES.SUPPLIER_PRODUCT)
     private readonly service: ISupplierProductService,
   ) {}
 
+  @HttpDocs(SUPPLIER_PRODUCT_CLOUD_DETAIL_DOCS)
   @Get(HTTP_CLOUD_SUPPLIER_PRODUCT_ROUTER.LINK.DETAIL)
   async detail(
     @Param() params: SupplierProductParamDto,

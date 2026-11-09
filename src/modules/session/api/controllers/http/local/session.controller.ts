@@ -8,13 +8,20 @@ import {
   Res,
   UsePipes,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 
 //Api
+import {
+  SESSION_TAG,
+  SESSION_LOCAL_LOGOUT_DOCS,
+  SESSION_LOCAL_REFRESH_TOKEN_DOCS,
+} from '../../../swagger';
 import { API_SESSION_MESSAGE } from '../../../messages';
 import { HTTP_LOCAL_SESSION_ROUTER } from '../../../routers';
 
 //Common
+import { HttpDocs } from '@common/decorators/docs';
 import { HttpAuthorization } from '@common/decorators/request';
 import { API_MESSAGE_GLOBAL } from '@common/messages';
 import { HttpValibotPipe } from '@common/pipes';
@@ -34,12 +41,14 @@ import { SESSION_PROVIDER_TOKENS } from '../../../../infrastructure/constants';
 
 @Controller()
 @UsePipes(HttpValibotPipe)
+@ApiTags(SESSION_TAG)
 export class LocalSessionHttpController {
   constructor(
     @Inject(SESSION_PROVIDER_TOKENS.SERVICES.LOCAL)
     private readonly service: ILocalSessionService,
   ) {}
 
+  @HttpDocs(SESSION_LOCAL_REFRESH_TOKEN_DOCS)
   @Post(HTTP_LOCAL_SESSION_ROUTER.REFRESH_TOKEN)
   async refreshToken(
     @Ip() ip: string,
@@ -71,6 +80,7 @@ export class LocalSessionHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(SESSION_LOCAL_LOGOUT_DOCS)
   @Post(HTTP_LOCAL_SESSION_ROUTER.LOGOUT)
   async logout(
     @HttpAuthorization() refresh_token: string | null,

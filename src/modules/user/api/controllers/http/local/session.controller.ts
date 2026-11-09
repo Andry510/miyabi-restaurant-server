@@ -9,9 +9,15 @@ import {
   Res,
   UsePipes,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 
 //Api
+import {
+  USER_TAG,
+  USER_LOCAL_SESSION_REVOKE_DOCS,
+  USER_LOCAL_SESSION_SESSIONS_DOCS,
+} from '../../../swagger';
 import { API_USER_MESSAGE } from '../../../messages';
 import { HTTP_LOCAL_USER_ROUTER } from '../../../routers';
 
@@ -20,6 +26,7 @@ import { HTTP_LOCAL_USER_ROUTER } from '../../../routers';
 import { SessionsQueryDto, UserParamDto } from '../../../../application/dto';
 
 //Common
+import { HttpDocs } from '@common/decorators/docs';
 import { HttpManagerAccess } from '@common/decorators/access';
 import { HttpValibotPipe } from '@common/pipes';
 
@@ -37,12 +44,14 @@ import { USER_PROVIDER_TOKENS } from '../../../../infrastructure/constants';
 
 @Controller()
 @UsePipes(HttpValibotPipe)
+@ApiTags(USER_TAG)
 export class SessionHttpController {
   constructor(
     @Inject(USER_PROVIDER_TOKENS.SERVICES.SESSION)
     private readonly service: ISessionService,
   ) {}
 
+  @HttpDocs(USER_LOCAL_SESSION_SESSIONS_DOCS)
   @Get(HTTP_LOCAL_USER_ROUTER.SESSIONS)
   @HttpManagerAccess()
   async sessions(
@@ -68,6 +77,7 @@ export class SessionHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(USER_LOCAL_SESSION_REVOKE_DOCS)
   @Delete(HTTP_LOCAL_USER_ROUTER.REVOKE_SESSION)
   @HttpManagerAccess()
   async revoke(

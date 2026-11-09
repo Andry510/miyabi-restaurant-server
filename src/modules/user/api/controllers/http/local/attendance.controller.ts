@@ -8,9 +8,15 @@ import {
   Res,
   UsePipes,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 
 //Api
+import {
+  USER_TAG,
+  USER_LOCAL_ATTENDANCE_ATTENDANCE_DOCS,
+  USER_LOCAL_ATTENDANCE_MY_ATTENDANCE_DOCS,
+} from '../../../swagger';
 import { API_USER_MESSAGE } from '../../../messages';
 import { HTTP_LOCAL_USER_ROUTER } from '../../../routers';
 
@@ -19,6 +25,7 @@ import { HTTP_LOCAL_USER_ROUTER } from '../../../routers';
 import { AttendanceQueryDto, UserParamDto } from '../../../../application/dto';
 
 //Common
+import { HttpDocs } from '@common/decorators/docs';
 import { HttpLocalAccess, HttpManagerAccess } from '@common/decorators/access';
 import { HttpUser } from '@common/decorators/request';
 import { HttpValibotPipe } from '@common/pipes';
@@ -38,12 +45,14 @@ import { USER_PROVIDER_TOKENS } from '../../../../infrastructure/constants';
 
 @Controller()
 @UsePipes(HttpValibotPipe)
+@ApiTags(USER_TAG)
 export class AttendanceHttpController {
   constructor(
     @Inject(USER_PROVIDER_TOKENS.SERVICES.ATTENDANCE)
     private readonly service: IAttendanceService,
   ) {}
 
+  @HttpDocs(USER_LOCAL_ATTENDANCE_ATTENDANCE_DOCS)
   @Get(HTTP_LOCAL_USER_ROUTER.ATTENDANCE)
   @HttpManagerAccess()
   async attendance(
@@ -68,6 +77,7 @@ export class AttendanceHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(USER_LOCAL_ATTENDANCE_MY_ATTENDANCE_DOCS)
   @Get(HTTP_LOCAL_USER_ROUTER.MY_ATTENDANCE)
   @HttpLocalAccess()
   async myAttendance(

@@ -11,9 +11,18 @@ import {
   Res,
   UsePipes,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 
 //Api
+import {
+  SHIFT_TAG,
+  SHIFT_LOCAL_CANCEL_DOCS,
+  SHIFT_LOCAL_REGISTER_DOCS,
+  SHIFT_LOCAL_SHIFTS_DOCS,
+  SHIFT_LOCAL_SHIFT_DOCS,
+  SHIFT_LOCAL_UPDATE_DOCS,
+} from '../../../swagger';
 import { API_SHIFT_MESSAGE } from '../../../messages';
 import { HTTP_LOCAL_SHIFT_ROUTER } from '../../../routers';
 
@@ -27,6 +36,7 @@ import {
 } from '../../../../application/dto';
 
 //Common
+import { HttpDocs } from '@common/decorators/docs';
 import { HttpManagerAccess } from '@common/decorators/access';
 import { HttpValibotPipe } from '@common/pipes';
 
@@ -48,12 +58,14 @@ import { SHIFT_PROVIDER_TOKENS } from '../../../../infrastructure/constants';
 
 @Controller()
 @UsePipes(HttpValibotPipe)
+@ApiTags(SHIFT_TAG)
 export class ShiftHttpController {
   constructor(
     @Inject(SHIFT_PROVIDER_TOKENS.SERVICES.SHIFT)
     private readonly service: IShiftService,
   ) {}
 
+  @HttpDocs(SHIFT_LOCAL_SHIFTS_DOCS)
   @Get(HTTP_LOCAL_SHIFT_ROUTER.SHIFTS)
   @HttpManagerAccess()
   async shifts(
@@ -77,6 +89,7 @@ export class ShiftHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(SHIFT_LOCAL_REGISTER_DOCS)
   @Post(HTTP_LOCAL_SHIFT_ROUTER.REGISTER)
   @HttpManagerAccess()
   async register(
@@ -99,6 +112,7 @@ export class ShiftHttpController {
     return res.status(HttpStatus.CREATED).json(response);
   }
 
+  @HttpDocs(SHIFT_LOCAL_SHIFT_DOCS)
   @Get(HTTP_LOCAL_SHIFT_ROUTER.SHIFT)
   @HttpManagerAccess()
   async shift(
@@ -121,6 +135,7 @@ export class ShiftHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(SHIFT_LOCAL_UPDATE_DOCS)
   @Patch(HTTP_LOCAL_SHIFT_ROUTER.UPDATE)
   @HttpManagerAccess()
   async update(
@@ -145,6 +160,7 @@ export class ShiftHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(SHIFT_LOCAL_CANCEL_DOCS)
   @Patch(HTTP_LOCAL_SHIFT_ROUTER.CANCEL)
   @HttpManagerAccess()
   async cancel(

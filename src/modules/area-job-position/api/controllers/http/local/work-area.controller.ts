@@ -11,9 +11,17 @@ import {
   Res,
   UsePipes,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 
 //Api
+import {
+  AREA_JOB_POSITION_TAG,
+  AREA_JOB_POSITION_LOCAL_WORK_AREA_ASSIGN_DOCS,
+  AREA_JOB_POSITION_LOCAL_WORK_AREA_JOB_POSITIONS_DOCS,
+  AREA_JOB_POSITION_LOCAL_WORK_AREA_REMOVE_DOCS,
+  AREA_JOB_POSITION_LOCAL_WORK_AREA_USERS_DOCS,
+} from '../../../swagger';
 import { API_AREA_JOB_POSITION_MESSAGE } from '../../../messages';
 import { HTTP_LOCAL_AREA_JOB_POSITION_ROUTER } from '../../../routers';
 
@@ -26,6 +34,7 @@ import {
 } from '../../../../application/dto';
 
 //Common
+import { HttpDocs } from '@common/decorators/docs';
 import { HttpManagerAccess } from '@common/decorators/access';
 import { HttpValibotPipe } from '@common/pipes';
 
@@ -46,12 +55,14 @@ import { AREA_JOB_POSITION_PROVIDER_TOKENS } from '../../../../infrastructure/co
 
 @Controller()
 @UsePipes(HttpValibotPipe)
+@ApiTags(AREA_JOB_POSITION_TAG)
 export class WorkAreaHttpController {
   constructor(
     @Inject(AREA_JOB_POSITION_PROVIDER_TOKENS.SERVICES.WORK_AREA)
     private readonly service: IWorkAreaService,
   ) {}
 
+  @HttpDocs(AREA_JOB_POSITION_LOCAL_WORK_AREA_JOB_POSITIONS_DOCS)
   @Get(HTTP_LOCAL_AREA_JOB_POSITION_ROUTER.WORK_AREA.JOB_POSITIONS)
   @HttpManagerAccess()
   async jobPositions(
@@ -77,6 +88,7 @@ export class WorkAreaHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(AREA_JOB_POSITION_LOCAL_WORK_AREA_ASSIGN_DOCS)
   @Post(HTTP_LOCAL_AREA_JOB_POSITION_ROUTER.WORK_AREA.ASSIGN)
   @HttpManagerAccess()
   async assign(
@@ -100,6 +112,7 @@ export class WorkAreaHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(AREA_JOB_POSITION_LOCAL_WORK_AREA_REMOVE_DOCS)
   @Delete(HTTP_LOCAL_AREA_JOB_POSITION_ROUTER.WORK_AREA.REMOVE)
   @HttpManagerAccess()
   async remove(
@@ -123,6 +136,7 @@ export class WorkAreaHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(AREA_JOB_POSITION_LOCAL_WORK_AREA_USERS_DOCS)
   @Get(HTTP_LOCAL_AREA_JOB_POSITION_ROUTER.WORK_AREA.USERS)
   @HttpManagerAccess()
   async users(

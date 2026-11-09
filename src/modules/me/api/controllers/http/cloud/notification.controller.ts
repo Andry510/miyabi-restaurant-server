@@ -9,9 +9,16 @@ import {
   Res,
   UsePipes,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 
 //Api
+import {
+  ME_TAG,
+  ME_CLOUD_NOTIFICATION_NOTIFICATIONS_DOCS,
+  ME_CLOUD_NOTIFICATION_READ_DOCS,
+  ME_CLOUD_NOTIFICATION_UNREAD_COUNT_DOCS,
+} from '../../../swagger';
 import { API_ME_MESSAGE } from '../../../messages';
 import { HTTP_CLOUD_ME_ROUTER } from '../../../routers';
 
@@ -23,6 +30,7 @@ import {
 } from '../../../../../notification/application/dto';
 
 //Common
+import { HttpDocs } from '@common/decorators/docs';
 import { HttpAuthorization } from '@common/decorators/request';
 import { HttpValibotPipe } from '@common/pipes';
 
@@ -42,12 +50,14 @@ import { ME_PROVIDER_TOKENS } from '../../../../infrastructure/constants';
 
 @Controller()
 @UsePipes(HttpValibotPipe)
+@ApiTags(ME_TAG)
 export class NotificationHttpController {
   constructor(
     @Inject(ME_PROVIDER_TOKENS.SERVICES.NOTIFICATION)
     private readonly service: INotificationService,
   ) {}
 
+  @HttpDocs(ME_CLOUD_NOTIFICATION_NOTIFICATIONS_DOCS)
   @Get(HTTP_CLOUD_ME_ROUTER.NOTIFICATION.NOTIFICATIONS)
   async notifications(
     @HttpAuthorization() access_token: string | null,
@@ -70,6 +80,7 @@ export class NotificationHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(ME_CLOUD_NOTIFICATION_UNREAD_COUNT_DOCS)
   @Get(HTTP_CLOUD_ME_ROUTER.NOTIFICATION.UNREAD_COUNT)
   async unreadCount(
     @HttpAuthorization() access_token: string | null,
@@ -89,6 +100,7 @@ export class NotificationHttpController {
     return res.status(HttpStatus.OK).json(response);
   }
 
+  @HttpDocs(ME_CLOUD_NOTIFICATION_READ_DOCS)
   @Patch(HTTP_CLOUD_ME_ROUTER.NOTIFICATION.READ)
   async read(
     @HttpAuthorization() access_token: string | null,

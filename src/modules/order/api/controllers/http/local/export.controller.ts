@@ -7,9 +7,11 @@ import {
   Res,
   UsePipes,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 
 //Api
+import { ORDER_TAG, ORDER_LOCAL_EXPORT_EXPORT_DOCS } from '../../../swagger';
 import { API_ORDER_MESSAGE } from '../../../messages';
 import { HTTP_LOCAL_ORDER_ROUTER } from '../../../routers';
 
@@ -18,6 +20,7 @@ import { HTTP_LOCAL_ORDER_ROUTER } from '../../../routers';
 import { OrderParamDto } from '../../../../application/dto';
 
 //Common
+import { HttpDocs } from '@common/decorators/docs';
 import { HttpManagerAccess } from '@common/decorators/access';
 import { HttpAuthorization } from '@common/decorators/request';
 import { HttpValibotPipe } from '@common/pipes';
@@ -35,12 +38,14 @@ import { ORDER_PROVIDER_TOKENS } from '../../../../infrastructure/constants';
 
 @Controller()
 @UsePipes(HttpValibotPipe)
+@ApiTags(ORDER_TAG)
 export class ExportHttpController {
   constructor(
     @Inject(ORDER_PROVIDER_TOKENS.SERVICES.EXPORT)
     private readonly service: IExportService,
   ) {}
 
+  @HttpDocs(ORDER_LOCAL_EXPORT_EXPORT_DOCS)
   @Get(HTTP_LOCAL_ORDER_ROUTER.EXPORT)
   @HttpManagerAccess()
   async export(
