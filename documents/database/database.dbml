@@ -83,6 +83,11 @@ ENUM tip_pool_status {
   closed [note: 'Reparto cerrado y fijo; el empleado lo ve']
 }
 
+ENUM notification_audience {
+  employee [note: 'Aviso para un empleado; una fila por empleado']
+  manager [note: 'Aviso para los gerentes del local; una fila para todos']
+}
+
 ENUM pairing_status {
   unpaired [note: 'Nunca se emparejó; solo responde pairing/register y pairing/status']
   paired [note: 'Emparejado; tiene su server_token y habla con la nube']
@@ -553,6 +558,56 @@ TABLE tip_pool_shifts {
   }
 }
 
+TABLE notification_templates {
+  code varchar(80) [pk, note: 'Código de la plantilla (por ejemplo SHIFT_SCHEDULED); el servidor crea al arrancar las que falten']
+  category varchar(30) [note: 'Grupo del aviso: shift, attendance, tip, order o server']
+  audience notification_audience [note: 'A quién va: empleado o gerentes']
+  title varchar(150) [note: 'Título; puede llevar marcadores {{campo}} que se llenan con data al crear el aviso']
+  body varchar(500) [note: 'Texto con marcadores {{campo}} (por ejemplo {{count}}) que se llenan con data al crear el aviso']
+  status boolean [default: true, note: 'Apagada no genera avisos']
+
+  created_at timestamp [default: 'now()', note: 'Fecha de registro']
+  updated_at timestamp [note: 'Fecha de la última modificación']
+}
+
+TABLE notifications {
+  id uuid [pk, note: 'ID único del aviso']
+
+  audience notification_audience [note: 'Copia de la audiencia de la plantilla']
+
+  user_id uuid [null, ref: > users.id, note: 'Empleado al que va; vacío si es para los gerentes']
+  template_code varchar(80) [ref: > notification_templates.code, note: 'Plantilla con la que se armó']
+
+  data jsonb [note: 'Datos con los que se llenó la plantilla']
+  title varchar(150) [note: 'Título ya armado, con fechas en la zona del local']
+  body varchar(500) [note: 'Texto ya armado, con fechas en la zona del local']
+  entity_type varchar(30) [null, note: 'Tipo de lo que lo originó (turno, pedido, bolsa de propinas…)']
+  entity_id varchar(100) [null, note: 'ID de lo que lo originó']
+
+  read_at timestamp [null, note: 'Cuándo lo leyó el empleado; vacío = sin leer. Los gerentes usan notification_reads']
+  created_at timestamp [default: 'now()', note: 'Fecha del aviso']
+
+  indexes {
+    (user_id, created_at, id)
+    (user_id, read_at)
+    (audience, created_at, id)
+  }
+}
+
+TABLE notification_reads {
+  id uuid [pk, note: 'ID único de la lectura']
+
+  notification_id uuid [ref: > notifications.id, note: 'Aviso de gerentes que se leyó; se borra con él']
+  reader_email varchar(255) [note: 'Correo del gerente en la nube que lo leyó (el gerente no existe en la base local)']
+
+  read_at timestamp [default: 'now()', note: 'Cuándo lo leyó']
+
+  indexes {
+    (notification_id, reader_email) [unique]
+    reader_email
+  }
+}
+
 //<---------------------- GRUPOS ---------------------->
 TABLEGROUP configuración [color: #5D6663]
 {
@@ -607,4 +662,11 @@ TABLEGROUP propinas [color: #62D97F]
   tip_pool_shifts
   tip_sanction_types
   tip_sanctions
+}
+
+TABLEGROUP notificaciones [color: #D9A404]
+{
+  notification_templates
+  notifications
+  notification_reads
 }
